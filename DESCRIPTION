@@ -1,0 +1,40 @@
+Package: NLPStudio
+Type: Package
+Title: Natural Language Processing in Objected Oriented R Environment
+Version: 0.1.0
+Authors@: person("John", "James", email = "jjames@datasciencesalon.org",
+                  role = c("aut", "cre"))
+Maintainer: John James <jjames@datasciencesalon.org>
+Description: NLPStudio 
+License: MIT
+Encoding: UTF-8
+LazyData: true
+Depends:
+    data.table,
+    dplyr,
+    futile.logger,
+    parallel,
+    R (>= 3.4.1),
+    R.utils
+Suggests:
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
+Imports:
+    doParallel,
+    hashids,
+    Hmisc,
+    installr,
+    NLP,
+    openNLP,
+    parsedate,
+    qdap,
+    quanteda,
+    R6,
+    readtext,
+    textclean,
+    tm,
+    tools,
+    NLPLists
+Remotes: github::DataScienceSalon/NLPLists
+RoxygenNote: 6.0.1
