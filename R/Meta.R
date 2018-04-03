@@ -2,9 +2,7 @@
 #'
 #' \code{Meta} Base class for metadata objects.
 #'
-#' Contains object metadata and the methods for adding, removing, and reporting
-#' metadata.  Also includes convenience methods for updating state metadata
-#' relating to datetimes of creating, update, and access.
+#' @template metadataDescription.R
 #'
 #' @section Meta methods:
 #' @template metadataMethods.R
@@ -44,6 +42,7 @@ Meta <- R6::R6Class(
         private$logR$log(cls = private$..identity$class, method = "getIdentity",
                          level = "Warn")
       }
+      invisible(self)
     },
 
     setIdentity = function(x, name = NULL, purpose = NULL) {
@@ -51,7 +50,6 @@ Meta <- R6::R6Class(
       # Designate family, class and purpose
       private$..identity$family <- class(x)[2]
       private$..identity$class <- class(x)[1]
-      private$..identity$purpose <- purpose
 
       # Creates unique identifier
       settings <- hashids::hashid_settings(salt = 'this is my salt', min_length = 8)
@@ -63,7 +61,20 @@ Meta <- R6::R6Class(
                                         paste0(private$..identity$class,
                                                " (", toupper(private$..identity$id),
                                                ")"), name)
-      invisible(private$..identity)
+      private$..identity$purpose <- purpose
+      invisible(self)
+    },
+
+    checkIdentity = function(family = NULL, cls = NULL, name = NULL, id = NULL,
+                             purpose = NULL) {
+
+      if (!is.null(family) & (sum(private$..identity$family %in% family) == 0)) return(FALSE)
+      if (!is.null(cls) & (sum(private$..identity$class %in% cls) == 0)) return(FALSE)
+      if (!is.null(name) & (sum(private$..identity$name %in% name) == 0)) return(FALSE)
+      if (!is.null(id) & (sum(private$..identity$id %in% id) == 0)) return(FALSE)
+      if (!is.null(purpose) & (sum(private$..identity$purpose %in% purpose) == 0)) return(FALSE)
+      return(TRUE)
+
     },
 
     #-------------------------------------------------------------------------#
@@ -73,11 +84,22 @@ Meta <- R6::R6Class(
 
     modified = function(event = NULL) {
 
-      private$..state$modifiedBy <- Sys.info()[["user"]]
+      private$..state$modifier <- Sys.info()[["user"]]
       private$..state$current <- ifelse(is.null(event), "Modified.", event)
       private$..state$modified <- Sys.time()
 
       invisible(self)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                           Summary Method                                #
+    #-------------------------------------------------------------------------#
+    summary = function() {
+
+      s <- c(private$..identity, created = private$..state$created,
+             creator = private$..state$creator)
+
+      return(s)
     }
   )
 )
