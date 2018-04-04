@@ -88,9 +88,7 @@ Meta0 <- R6::R6Class(
     getStats = function(key = NULL) {
 
       if (is.null(private$..stats)) {
-        event <- paste0("No Stats metadata exists for this object.")
-        private$logR$log(cls = class(self)[1], method = 'getStats',
-                         event = event, level = "Warn")
+        return(NULL)
       } else if (is.null(key)) {
         return(private$..stats)
       } else if (!is.null(private$..stats[[key]])) {
@@ -101,8 +99,8 @@ Meta0 <- R6::R6Class(
                         " for further assistance.")
         private$logR$log(cls = class(self)[1], method = 'getStats',
                          event = event, level = "Warn")
+        invisible(self)
       }
-      invisible(self)
     },
 
     setStats = function(key, value) {
@@ -127,8 +125,9 @@ Meta0 <- R6::R6Class(
 
     modified = function(event = NULL) {
 
-      private$..state$modifier <- Sys.info()[["user"]]
+
       private$..state$current <- ifelse(is.null(event), "Modified.", event)
+      private$..state$modifier <- Sys.info()[["user"]]
       private$..state$modified <- Sys.time()
 
       invisible(self)
