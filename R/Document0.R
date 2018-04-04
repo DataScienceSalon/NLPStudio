@@ -12,7 +12,7 @@
 #' @section Document0 methods:
 #'  \itemize{
 #'   \item{\code{new()}}{Method not implemented for this component class.}
-#'   \item{\code{print()}}{Prints a summary of a Document family class object.}
+#'   \item{\code{summary()}}{Prints a summary of a Document family class object.}
 #'  }
 #'
 #' @docType class
@@ -73,7 +73,7 @@ Document0 <- R6::R6Class(
       private$summarizeStats()
       private$summarizeState()
 
-      invisible(result)
+      invisible(self)
     }
   )
 )

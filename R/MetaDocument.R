@@ -46,18 +46,14 @@ MetaDocument <- R6::R6Class(
   lock_class = FALSE,
   inherit = Meta0,
 
-  private = list(
-    ..custom = NULL
-  ),
-
   public = list(
 
     initialize = function() {
 
       private$loadDependencies()
-      private$..state$current <- paste0("Instantiated.")
-      private$..state$creator <- Sys.info()[['user']]
-      private$..state$created <- Sys.time()
+      private$..meta$state$current <- paste0("Instantiated.")
+      private$..meta$state$creator <- Sys.info()[['user']]
+      private$..meta$state$created <- Sys.time()
       invisible(self)
 
     },
@@ -66,14 +62,14 @@ MetaDocument <- R6::R6Class(
     #-------------------------------------------------------------------------#
     getCustom = function(key = NULL) {
 
-      if (is.null(private$..custom)) {
+      if (is.null(private$..meta$custom)) {
         event <- paste0("No custom metadata exists for this object.")
         private$logR$log(cls = class(self)[1], method = 'getCustom',
                          event = event, level = "Warn")
       } else if (is.null(key)) {
-        return(private$..custom)
-      } else if (!is.null(private$..custom[[key]])) {
-        return(private$..custom[[key]])
+        return(private$..meta$custom)
+      } else if (!is.null(private$..meta$custom[[key]])) {
+        return(private$..meta$custom[[key]])
       } else {
         event <- paste0("Key, '", key, "', is not a valid custom metadata ",
                         "variable. See ?", class(self)[1],
@@ -86,9 +82,9 @@ MetaDocument <- R6::R6Class(
 
     setCustom = function(key, value) {
 
-      private$..params$kv$key <- key
-      private$..params$kv$value <- value
-      private$..params$kv$equalLen <- TRUE
+      private$..meta$params$kv$key <- key
+      private$..meta$params$kv$value <- value
+      private$..meta$params$kv$equalLen <- TRUE
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(cls = class(self)[1], method = 'setCustom',
@@ -96,36 +92,11 @@ MetaDocument <- R6::R6Class(
         stop()
       }
 
-      if (is.null(private$..custom)) private$..custom <- list()
+      if (is.null(private$..meta$custom)) private$..meta$custom <- list()
       for (i in 1:length(key)) {
-        private$..custom[[key[i]]] <- value[i]
+        private$..meta$custom[[key[i]]] <- value[i]
       }
       invisible(self)
-    },
-
-    checkCustom = function(key, value) {
-
-      if (is.null(private$..custom)) return(FALSE)
-
-      private$..params$kv$key <- key
-      private$..params$kv$value <- value
-      private$..params$kv$equalLen <- FALSE
-      v <- private$validator$validate(self)
-      if (v$code == FALSE) {
-        private$logR$log(cls = class(self)[1], method = 'setCustom',
-                         event = v$msg, level = 'Error')
-        stop()
-      }
-
-      if (length(value) > length(key)) key <- rep(key, length(value))
-      for (i in 1:length(key)) {
-        if (!is.null(private$..custom[[key[i]]])) {
-          if (private$..custom[[key[i]]] %in% value[i]) {
-            return(TRUE)
-          }
-        }
-      }
-      return(FALSE)
     },
 
     #-------------------------------------------------------------------------#
@@ -133,9 +104,9 @@ MetaDocument <- R6::R6Class(
     #-------------------------------------------------------------------------#
     summary = function() {
 
-      created <- format(private$..state$created, format="%Y-%m-%d at %H:%M:%S")
-      s <- c(private$..identity, private$..custom, private$..stats,
-             creator = private$..state$creator,
+      created <- format(private$..meta$state$created, format="%Y-%m-%d at %H:%M:%S")
+      s <- c(private$..meta$identity, private$..meta$custom, private$..meta$stats,
+             creator = private$..meta$state$creator,
              created = created)
       s <- Filter(Negate(is.null), s)
 

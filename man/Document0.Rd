@@ -20,7 +20,7 @@ Corpus, TextDocument, TermFreq, POS, NGram, and Tokens objects.
 
  \itemize{
   \item{\code{new()}}{Method not implemented for this component class.}
-  \item{\code{print()}}{Prints a summary of a Document family class object.}
+  \item{\code{summary()}}{Prints a summary of a Document family class object.}
  }
 }
 
