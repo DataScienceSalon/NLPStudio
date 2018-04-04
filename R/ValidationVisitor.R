@@ -82,6 +82,14 @@ ValidationVisitor <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
+    #                     Validate Metadata Classes                           #
+    #-------------------------------------------------------------------------#
+
+    meta = function(object) {
+      return(private$validate(object))
+    },
+
+    #-------------------------------------------------------------------------#
     #                 Validate Data Processing Classes                        #
     #-------------------------------------------------------------------------#
     tokenFactorySent = function(object) {

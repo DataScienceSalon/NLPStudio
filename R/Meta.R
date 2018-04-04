@@ -93,7 +93,25 @@ Meta <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                         Custom Metadata Methods                         #
     #-------------------------------------------------------------------------#
-    getCustom = function() { private$..custom },
+    getCustom = function(key = NULL) {
+
+      if (is.null(private$..custom)) {
+        event <- paste0("No custom metadata exists for this object.")
+        private$logR$log(cls = class(self)[1], method = 'getCustom',
+                         event = event, level = "Warn")
+      } else if (is.null(key)) {
+        return(private$..custom)
+      } else if (!is.null(private$..custom[[key]])) {
+        return(private$..custom[[key]])
+      } else {
+        event <- paste0("Key, '", key, "', is not a valid custom metadata ",
+                        "variable. See ?", class(self)[1],
+                        " for further assistance.")
+        private$logR$log(cls = class(self)[1], method = 'getCustom',
+                         event = event, level = "Warn")
+      }
+      invisible(self)
+    },
 
     setCustom = function(key, value) {
 
@@ -101,8 +119,13 @@ Meta <- R6::R6Class(
       private$..params$kv$value <- value
       private$..params$kv$equalLen <- TRUE
       v <- private$validator$validate(self)
-      if (v$code == FALSE) stop()
+      if (v$code == FALSE) {
+        private$logR$log(cls = class(self)[1], method = 'setCustom',
+                         event = v$msg, level = 'Error')
+        stop()
+      }
 
+      if (is.null(private$..custom)) private$..custom <- list()
       for (i in 1:length(key)) {
         private$..custom[[key[i]]] <- value[i]
       }
@@ -112,7 +135,25 @@ Meta <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                             Stats Methods                               #
     #-------------------------------------------------------------------------#
-    getStats = function() { private$..stats },
+    getStats = function(key = NULL) {
+
+      if (is.null(private$..stats)) {
+        event <- paste0("No Stats metadata exists for this object.")
+        private$logR$log(cls = class(self)[1], method = 'getStats',
+                         event = event, level = "Warn")
+      } else if (is.null(key)) {
+        return(private$..stats)
+      } else if (!is.null(private$..stats[[key]])) {
+        return(private$..stats[[key]])
+      } else {
+        event <- paste0("Key, '", key, "', is not a valid Stats metadata ",
+                        "variable. See ?", class(self)[1],
+                        " for further assistance.")
+        private$logR$log(cls = class(self)[1], method = 'getStats',
+                         event = event, level = "Warn")
+      }
+      invisible(self)
+    },
 
     setStats = function(key, value) {
 
@@ -122,6 +163,7 @@ Meta <- R6::R6Class(
       v <- private$validator$validate(self)
       if (v$code == FALSE) stop()
 
+      if (is.null(private$..stats)) private$..stats <- list()
       for (i in 1:length(key)) {
         private$..stats[[key[i]]] <- value[i]
       }
@@ -147,12 +189,20 @@ Meta <- R6::R6Class(
     #-------------------------------------------------------------------------#
     summary = function() {
 
+      created <- format(private$..state$created, format="%Y-%m-%d at %H:%M:%S")
       s <- c(private$..identity, private$..custom, private$..stats,
              creator = private$..state$creator,
-             created = private$..state$created)
+             created = created)
       s <- Filter(Negate(is.null), s)
 
       return(s)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                           Visitor Methods                               #
+    #-------------------------------------------------------------------------#
+    accept = function(visitor)  {
+      visitor$meta(self)
     }
   )
 )

@@ -63,9 +63,9 @@ LogR <- R6::R6Class(
       level <- gsub("(^|[[:space:]])([[:alpha:]])", "\\1\\U\\2",
                     level, perl = TRUE)
 
-      note <- paste0(level, " in class '", cls, "'",
+      note <- paste0(level, " in class '", cls, "', ",
                      ifelse(is.null(method)," ",
-                     paste0("method, '", method, "' ")), ifelse(is.null(fieldName), "",
+                     paste0("method, '", method, "', ")), ifelse(is.null(fieldName), "",
                                            paste0("with variable '",
                                           fieldName, "'. ")), event)
       #Write to log
