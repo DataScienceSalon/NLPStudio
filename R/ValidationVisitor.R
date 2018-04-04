@@ -89,6 +89,10 @@ ValidationVisitor <- R6::R6Class(
       return(private$validate(object))
     },
 
+    metaDocument = function(object) {
+      return(private$validate(object))
+    },
+
     #-------------------------------------------------------------------------#
     #                 Validate Data Processing Classes                        #
     #-------------------------------------------------------------------------#

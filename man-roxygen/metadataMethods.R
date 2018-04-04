@@ -10,6 +10,12 @@
 #'   \item{\code{checkIdentity(id = NULL, name = NULL, class = NULL,
 #'   family = NULL, purpose = NULL)}}{A logical check to determine if an
 #'   object matches the query parameters.}
+#'   \item{\code{getStats(key = NULL)}}{Obtains descriptive statistics data
+#'   assigned to the object.}
+#'   \item{\code{setStats(key, value)}}{Sets descriptive statistics data
+#'   for an object.}
+#'   \item{\code{getState()}}{Obtains an objects current state information.}
 #'   \item{\code{modified(event = NULL)}}{Sets state datetime parameters
 #'   when an object is modified.}
+#'   \item{\code{summary()}}{Method for summarizing an objects metadata.}
 #'  }
