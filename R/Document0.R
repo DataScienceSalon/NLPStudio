@@ -17,7 +17,7 @@
 #'
 #' @docType class
 #' @author John James, \email{jjames@@datasciencesalon.org}
-#' @family Document Family
+#' @family Document Classes
 #' @export
 Document0 <- R6::R6Class(
   classname = "Document0",

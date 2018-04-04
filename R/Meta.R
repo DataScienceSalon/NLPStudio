@@ -21,9 +21,10 @@ Meta <- R6::R6Class(
 
   public = list(
 
-    initialize = function() {
+    initialize = function(x, name = NULL, purpose = NULL) {
 
       private$loadDependencies()
+      private$setIdentity(x, name, purpose)
       private$..meta$state$current <- paste0("Instantiated.")
       private$..meta$state$creator <- Sys.info()[['user']]
       private$..meta$state$created <- Sys.time()

@@ -26,7 +26,27 @@ Meta0 <- R6::R6Class(
       custom = NULL,
       stats = NULL,
       state = list()
-    )
+    ),
+
+    setIdentity = function(x, name = NULL, purpose = NULL) {
+
+      # Designate family, class and purpose
+      private$..meta$identity$family <- class(x)[2]
+      private$..meta$identity$class <- class(x)[1]
+
+      # Creates unique identifier
+      settings <- hashids::hashid_settings(salt = 'this is my salt', min_length = 8)
+      private$..meta$identity$id <- hashids::encode(as.integer(Sys.time()) * 1000000 +
+                                                      sample(1:1000, 1, replace = TRUE), settings)
+
+      # Designate/create object name
+      private$..meta$identity$name <- ifelse(is.null(name),
+                                             paste0(private$..meta$identity$class,
+                                                    " (", toupper(private$..meta$identity$id),
+                                                    ")"), name)
+      private$..meta$identity$purpose <- purpose
+      invisible(self)
+    }
   ),
 
   public = list(
@@ -47,26 +67,6 @@ Meta0 <- R6::R6Class(
         private$logR$log(cls = private$..meta$identity$class, method = "getIdentity",
                          level = "Warn")
       }
-      invisible(self)
-    },
-
-    setIdentity = function(x, name = NULL, purpose = NULL) {
-
-      # Designate family, class and purpose
-      private$..meta$identity$family <- class(x)[2]
-      private$..meta$identity$class <- class(x)[1]
-
-      # Creates unique identifier
-      settings <- hashids::hashid_settings(salt = 'this is my salt', min_length = 8)
-      private$..meta$identity$id <- hashids::encode(as.integer(Sys.time()) * 1000000 +
-                                  sample(1:1000, 1, replace = TRUE), settings)
-
-      # Designate/create object name
-      private$..meta$identity$name <- ifelse(is.null(name),
-                                        paste0(private$..meta$identity$class,
-                                               " (", toupper(private$..meta$identity$id),
-                                               ")"), name)
-      private$..meta$identity$purpose <- purpose
       invisible(self)
     },
 
