@@ -2,12 +2,12 @@
 #'
 #' \code{Meta} Base class for metadata objects.
 #'
-#' @template metadataDescription.R
+#' @template metadataDescription
 #'
 #' @section Meta methods:
-#' @template metadataMethods.R
+#' @template metadataMethods
 #'
-#' @template metadataParams.R
+#' @template metadataParams
 #'
 #' @docType class
 #' @author John James, \email{jjames@@datasciencesalon.org}
@@ -21,12 +21,22 @@ Meta <- R6::R6Class(
 
   private = list(
     ..identity = list(),
+    ..custom = NULL,
+    ..stats = NULL,
     ..state = list()
   ),
 
   public = list(
 
-    initialize = function() { stop("This method is not implemented for this base class.") },
+    initialize = function() {
+
+      private$loadDependencies()
+      private$..state$creator <- Sys.info()[['user']]
+      private$..state$current <- paste0("Instantiated.")
+      private$..state$created <- Sys.time()
+      invisible(self)
+
+    },
 
     #-------------------------------------------------------------------------#
     #                            Identity Methods                             #
@@ -68,6 +78,9 @@ Meta <- R6::R6Class(
     checkIdentity = function(family = NULL, cls = NULL, name = NULL, id = NULL,
                              purpose = NULL) {
 
+      params <- c(family, cls, name, id, purpose)
+
+      if (sum(!is.null(params)) == 0) return(FALSE)
       if (!is.null(family) & (sum(private$..identity$family %in% family) == 0)) return(FALSE)
       if (!is.null(cls) & (sum(private$..identity$class %in% cls) == 0)) return(FALSE)
       if (!is.null(name) & (sum(private$..identity$name %in% name) == 0)) return(FALSE)
@@ -75,6 +88,44 @@ Meta <- R6::R6Class(
       if (!is.null(purpose) & (sum(private$..identity$purpose %in% purpose) == 0)) return(FALSE)
       return(TRUE)
 
+    },
+
+    #-------------------------------------------------------------------------#
+    #                         Custom Metadata Methods                         #
+    #-------------------------------------------------------------------------#
+    getCustom = function() { private$..custom },
+
+    setCustom = function(key, value) {
+
+      private$..params$kv$key <- key
+      private$..params$kv$value <- value
+      private$..params$kv$equalLen <- TRUE
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) stop()
+
+      for (i in 1:length(key)) {
+        private$..custom[[key[i]]] <- value[i]
+      }
+      invisible(self)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                             Stats Methods                               #
+    #-------------------------------------------------------------------------#
+    getStats = function() { private$..stats },
+
+    setStats = function(key, value) {
+
+      private$..params$kv$key <- key
+      private$..params$kv$value <- value
+      private$..params$kv$equalLen <- TRUE
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) stop()
+
+      for (i in 1:length(key)) {
+        private$..stats[[key[i]]] <- value[i]
+      }
+      invisible(self)
     },
 
     #-------------------------------------------------------------------------#
@@ -96,8 +147,10 @@ Meta <- R6::R6Class(
     #-------------------------------------------------------------------------#
     summary = function() {
 
-      s <- c(private$..identity, created = private$..state$created,
-             creator = private$..state$creator)
+      s <- c(private$..identity, private$..custom, private$..stats,
+             creator = private$..state$creator,
+             created = private$..state$created)
+      s <- Filter(Negate(is.null), s)
 
       return(s)
     }

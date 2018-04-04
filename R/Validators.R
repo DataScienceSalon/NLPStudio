@@ -173,36 +173,43 @@ validateKeyValue <- function(object) {
   status$msg <- NULL
 
   params <- object$getParams()
+  if (is.null(params$kv$equalLen)) params$kv$equalLen <- FALSE
 
   # Validate key replace
   value <- character()
   key <- character()
-  if (length(params$key) > 0) {
-    if (is.data.frame(params$key)) {
-      if (ncol(params$key) == 2) {
-        key <- as.character(params$key[,1])
-        value <- as.character(params$key[,2])
+  if (length(params$kv$key) > 0) {
+    if (is.data.frame(params$kv$key)) {
+      if (ncol(params$kv$key) == 2) {
+        key <- as.character(params$kv$key[,1])
+        value <- as.character(params$kv$key[,2])
       } else {
-        key <- as.character(params$key[,1])
-        value <- as.character(params$value)
+        key <- as.character(params$kv$key[,1])
+        value <- as.character(params$kv$value)
       }
     } else {
-      key <- as.character(params$key)
-      value <- as.character(params$value)
+      key <- as.character(params$kv$key)
+      value <- as.character(params$kv$value)
     }
   }
 
-  if (length(value) > 0 | length(key) > 0) {
-    if ((length(value) != 1) &
-        (length(value) != length(key))) {
-      status[['code']] <- FALSE
-      status[['msg']] <- paste0("Values must be of length one",
-                                ifelse(length(key) == 1,"",
-                                       paste0(" or of a length equal to that ",
-                                              "of the key vector, ", length(key))),
-                                ". See ?", class(object)[1],
-                                " for further assistance")
-    }
+  # Handle valid request
+  if (length(key) == length(value)) return(status)
+  if (length(key) == 1 & params$kv$equalLen == FALSE) return(status)
+
+  # Handle invalid request
+  status[['code']] <- FALSE
+  if (params$kv$equalLen) {
+    status[['msg']] <- paste0("Key and value vectors must be of equal ",
+                              "length. See ?", class(object)[1],
+                              " for further assistance.")
+  } else {
+    status[['msg']] <- paste0("Values must be of length one",
+                              ifelse(length(key) == 1,"",
+                                     paste0(" or of a length equal to that ",
+                                            "of the key vector, ", length(key))),
+                              ". See ?", class(object)[1],
+                              " for further assistance")
   }
   return(status)
 }

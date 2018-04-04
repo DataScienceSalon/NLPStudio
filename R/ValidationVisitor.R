@@ -35,7 +35,7 @@ ValidationVisitor <- R6::R6Class(
       }
 
       # Validate pattern replace
-      if (!is.null(p$pattern)) {
+      if (!is.null(p$kv)) {
         status <- validateKeyValue(object)
         if (status$code == FALSE) {
           return(status)
