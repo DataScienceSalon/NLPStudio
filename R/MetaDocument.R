@@ -82,9 +82,9 @@ MetaDocument <- R6::R6Class(
 
     setCustom = function(key, value) {
 
-      private$..meta$params$kv$key <- key
-      private$..meta$params$kv$value <- value
-      private$..meta$params$kv$equalLen <- TRUE
+      private$..params$kv$key <- key
+      private$..params$kv$value <- value
+      private$..params$kv$equalLen <- TRUE
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(cls = class(self)[1], method = 'setCustom',

@@ -65,6 +65,12 @@ Document0 <- R6::R6Class(
     initialize = function() {stop("This method is not implemented for this component class ")},
 
     #-------------------------------------------------------------------------#
+    #                         Convenience Getters                             #
+    #-------------------------------------------------------------------------#
+    getId = function() private$meta$getIdentity(key = 'id'),
+    getName = function() private$meta$getIdentity(key = 'name'),
+
+    #-------------------------------------------------------------------------#
     #                            Summary Methods                              #
     #-------------------------------------------------------------------------#
     summary = function() {
