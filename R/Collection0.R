@@ -49,7 +49,7 @@ Collection0 <- R6::R6Class(
 
       if (!is.null(private$..documents)) {
         listCondition <- sapply(private$..documents, function(a) {
-          a$meta$query(key = key, value = value)
+          a$query(key = key, value = value)
         })
       }
 
@@ -98,8 +98,8 @@ Collection0 <- R6::R6Class(
 
       # Get document credentials, add document and update inventory
       credentials <- x$getIdentity()
-      private$attachments[[credentials$id]] <- x
-      credentials <- as.data.frame(credentials)
+      private$..documents[[credentials$id]] <- x
+      credentials <- as.data.frame(credentials, stringsAsFactors = FALSE, row.names = NULL)
       private$..inventory <- rbind(private$..inventory, credentials)
 
       # Update date/time metadata and create log entry
@@ -142,6 +142,7 @@ Collection0 <- R6::R6Class(
     summarizeDocuments = function(verbose = TRUE) {
 
       summaries <- list()
+      familySummary <- data.frame()
 
       families <- unique(private$..inventory$family)
 
@@ -150,14 +151,33 @@ Collection0 <- R6::R6Class(
         cat(paste0("\n\n", families[i], ":\n"))
         for (j in 1:nrow(documents)) {
           id <- documents$id[j]
-          document <- self$getDocument(key = 'id', value = id)
-          summaries[[id]] <- document$summary(abbreviated = TRUE, verbose)
-          colnames(summaries[[id]]) <- sapply(colnames(summaries[[id]]),
-                                              function(x) {proper(x)})
-          print(summaries[[id]], row.names = FALSE)
+          document <- private$..documents[[id]]
+          docSummary <- document$summary(abbreviated = TRUE, verbose= FALSE)[-1]
+          familySummary <- plyr::rbind.fill(familySummary, docSummary)
         }
+        colnames(familySummary) <- sapply(colnames(familySummary),
+                                            function(x) {proper(x)})
+        if (verbose) print(familySummary, row.names = FALSE)
+        summaries <- c(summaries, familySummary)
       }
       return(summaries)
+    },
+
+    summary = function(verbose = TRUE, abbreviated = FALSE) {
+
+      if (abbreviated == FALSE) {
+        sd <- list()
+        sd$id <- self$summarizeId(verbose)
+        sd$stats <- self$summarizeStats(verbose)
+        sd$meta  <- self$summarizeCustomMeta(verbose)
+        if (length(private$..documents) > 0) {
+          sd$documents <- self$summarizeDocuments(verbose)
+        }
+        sd$state <- self$summarizeState(verbose)
+        invisible(sd)
+      } else {
+        invisible(private$meta$summary())
+      }
     }
   )
 )

@@ -65,12 +65,8 @@ TextDocument <- R6::R6Class(
       words <- sum(quanteda::ntoken(x))
       types <- sum(quanteda::ntype(x))
       characters <- sum(nchar(x))
-      avgSentLen <- words / sentences
-      avgWordLen <- characters / words
-      k <- c("sentences", "words", "types", "characters",
-             "average sentence length", "average word length")
-      v <- c(sentences, words, types, characters,
-             avgSentLen, avgWordLen)
+      k <- c("sentences", "words", "types", "characters")
+      v <- c(sentences, words, types, characters)
       private$meta$setStats(key = k, value = v)
       return(TRUE)
     },
@@ -136,11 +132,6 @@ TextDocument <- R6::R6Class(
       }
       invisible(self)
     },
-
-    #-------------------------------------------------------------------------#
-    #                           Metadata Method                               #
-    #-------------------------------------------------------------------------#
-
 
     #-------------------------------------------------------------------------#
     #                           Visitor Methods                               #

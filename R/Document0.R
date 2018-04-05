@@ -29,18 +29,23 @@ Document0 <- R6::R6Class(
     initialize = function() {stop("This method is not implemented for this component class ")},
 
     #-------------------------------------------------------------------------#
-    #                         Convenience Getters                             #
+    #                 Convenience Getters and Query Method                    #
     #-------------------------------------------------------------------------#
     getId = function() private$meta$getIdentity(key = 'id'),
     getName = function() private$meta$getIdentity(key = 'name'),
     getIdentity = function() private$meta$getIdentity(),
+    query = function(key, value) private$meta$query(key, value),
 
     #-------------------------------------------------------------------------#
     #                           Metadata Methods                              #
     #-------------------------------------------------------------------------#
-    metadata = function(key, value) {
-      private$meta$setCustom(key, value)
-      invisible(self)
+    metadata = function(key = NULL, value = NULL) {
+      if (is.null(key)) {
+        return(private$meta$getCustom())
+      } else {
+        private$meta$setCustom(key, value)
+        invisible(self)
+      }
     },
 
     #-------------------------------------------------------------------------#
@@ -61,16 +66,19 @@ Document0 <- R6::R6Class(
     },
 
     summarizeCustomMeta = function(verbose = TRUE) {
+
       meta <- private$meta$getCustom()
-      if (verbose) {
-        if (!is.null(meta)) {
+
+      if (length(meta) > 0) {
+        if (verbose) {
           metaDf <- as.data.frame(meta, stringsAsFactors = FALSE, row.names = NULL)
           colnames(metaDf) <- sapply(colnames(metaDf), function(x) {proper(x)})
           cat("\n\nMetadata:\n")
           print(metaDf, row.names = FALSE)
         }
+        return(meta)
       }
-      return(meta)
+      return(NULL)
     },
 
     summarizeStats = function(verbose = TRUE) {
@@ -93,6 +101,7 @@ Document0 <- R6::R6Class(
         colnames(stateDf) <- sapply(colnames(stateDf), function(x) {proper(x)})
         cat("\nState:\n")
         print(stateDf, row.names = FALSE)
+        cat("\n")
       }
       return(state)
     },
@@ -104,9 +113,6 @@ Document0 <- R6::R6Class(
         sd$id <- self$summarizeId(verbose)
         sd$stats <- self$summarizeStats(verbose)
         sd$meta  <- self$summarizeCustomMeta(verbose)
-        if (length(private$..documents) > 0) {
-          sd$documents <- self$summarizeDocuments(verbose)
-        }
         sd$state <- self$summarizeState(verbose)
         invisible(sd)
       } else {

@@ -23,8 +23,8 @@ Meta0 <- R6::R6Class(
   private = list(
     ..meta = list(
       identity = list(),
-      custom = NULL,
-      stats = NULL,
+      custom = list(),
+      stats = list(),
       state = list()
     ),
 
@@ -75,7 +75,7 @@ Meta0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     getStats = function(key = NULL) {
 
-      if (is.null(private$..meta$stats)) {
+      if (length(private$..meta$stats) == 0) {
         return(NULL)
       } else if (is.null(key)) {
         return(private$..meta$stats)
@@ -103,7 +103,6 @@ Meta0 <- R6::R6Class(
         stop()
       }
 
-      if (is.null(private$..meta$stats)) private$..meta$stats <- list()
       for (i in 1:length(key)) {
         private$..meta$stats[[key[i]]] <- value[i]
       }
@@ -132,10 +131,8 @@ Meta0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     getCustom = function(key = NULL) {
 
-      if (is.null(private$..meta$custom)) {
-        event <- paste0("No custom metadata exists for this object.")
-        private$logR$log( method = 'getCustom',
-                          event = event, level = "Warn")
+      if (length(private$..meta$custom) == 0) {
+        return(NULL)
       } else if (is.null(key)) {
         return(private$..meta$custom)
       } else if (!is.null(private$..meta$custom[[key]])) {
@@ -144,7 +141,7 @@ Meta0 <- R6::R6Class(
         event <- paste0("Key, '", key, "', is not a valid custom metadata ",
                         "variable. See ?", class(self)[1],
                         " for further assistance.")
-        private$logR$log( method = 'getCustom',
+        private$logR$log(method = 'getCustom',
                           event = event, level = "Warn")
         return(FALSE)
       }
@@ -162,7 +159,6 @@ Meta0 <- R6::R6Class(
         stop()
       }
 
-      if (is.null(private$..meta$custom)) private$..meta$custom <- list()
       for (i in 1:length(key)) {
         private$..meta$custom[[key[i]]] <- value[i]
       }
@@ -189,7 +185,7 @@ Meta0 <- R6::R6Class(
       }
 
       for (i in 1:length(key)) {
-        for (j in 1:length(private)) {
+        for (j in 1:length(private$..meta)) {
           if (!is.null(private$..meta[[j]][[key[i]]])) {
             if (private$..meta[[j]][[key[i]]] %in% value[i])
               return(TRUE)
