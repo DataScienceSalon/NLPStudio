@@ -75,18 +75,23 @@ TextDocument <- R6::R6Class(
       return(TRUE)
     },
 
+    validateContent = function(x, method) {
+      private$..params <- list()
+      private$..params$classes$name <- list('content')
+      private$..params$classes$objects <- list(x)
+      private$..params$classes$valid <- list('character')
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log( method = method,
+                          event = v$msg, level = "Error")
+      }
+      return(v$code)
+    },
+
     processContent = function(x, note = NULL) {
 
       # Validate class of object.
-      private$..params <- list()
-      private$..params$classes$objects <- x
-      private$..params$classes$valid <- 'character'
-      v <- private$validator$validate(self)
-      if (v$code == FALSE) {
-        private$logR$log( method = 'content',
-                         event = v$msg, level = "Error")
-        stop()
-      }
+      if (private$validateContent(x, method = 'processContent') == FALSE) stop()
 
       # Update content, compute statistics and update state information
       private$..content <- private$compress(x)
@@ -108,19 +113,11 @@ TextDocument <- R6::R6Class(
       private$meta <- Meta$new(x = self, name = name, purpose = purpose)
 
       # Validate content
-      private$..params <- list()
-      private$..params$classes$objects <- x
-      private$..params$classes$name <- "x"
-      private$..params$classes$valid <- 'character'
-      v <- private$validator$validate(self)
-      if (v$code == FALSE) {
-        private$logR$log( method = 'initialize',
-                         event = v$msg, level = 'Error')
-        stop()
-      }
+      if (private$validateContent(x, method = 'initialize') == FALSE) stop()
 
+      # Process content and log
       private$processContent(x, note = "Initialized content.")
-      private$logR$log( method = 'initialize',
+      private$logR$log(method = 'initialize',
                        event = "Initialization complete.")
 
       invisible(self)
@@ -139,6 +136,11 @@ TextDocument <- R6::R6Class(
       }
       invisible(self)
     },
+
+    #-------------------------------------------------------------------------#
+    #                           Metadata Method                               #
+    #-------------------------------------------------------------------------#
+
 
     #-------------------------------------------------------------------------#
     #                           Visitor Methods                               #

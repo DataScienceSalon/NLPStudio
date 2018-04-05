@@ -33,12 +33,14 @@ Document0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     getId = function() private$meta$getIdentity(key = 'id'),
     getName = function() private$meta$getIdentity(key = 'name'),
+    getIdentity = function() private$meta$getIdentity(),
 
     #-------------------------------------------------------------------------#
-    #                            Receive Method                               #
+    #                           Metadata Methods                              #
     #-------------------------------------------------------------------------#
-    receive = function(x, notice) {
-      private$logR$log(x = x, event = notice, level = "Info")
+    metadata = function(key, value) {
+      private$meta$setCustom(key, value)
+      invisible(self)
     },
 
     #-------------------------------------------------------------------------#
@@ -56,6 +58,19 @@ Document0 <- R6::R6Class(
       }
       return(identity)
 
+    },
+
+    summarizeCustomMeta = function(verbose = TRUE) {
+      meta <- private$meta$getCustom()
+      if (verbose) {
+        if (!is.null(meta)) {
+          metaDf <- as.data.frame(meta, stringsAsFactors = FALSE, row.names = NULL)
+          colnames(metaDf) <- sapply(colnames(metaDf), function(x) {proper(x)})
+          cat("\n\nMetadata:\n")
+          print(metaDf, row.names = FALSE)
+        }
+      }
+      return(meta)
     },
 
     summarizeStats = function(verbose = TRUE) {
@@ -88,11 +103,22 @@ Document0 <- R6::R6Class(
         sd <- list()
         sd$id <- self$summarizeId(verbose)
         sd$stats <- self$summarizeStats(verbose)
+        sd$meta  <- self$summarizeCustomMeta(verbose)
+        if (length(private$..documents) > 0) {
+          sd$documents <- self$summarizeDocuments(verbose)
+        }
         sd$state <- self$summarizeState(verbose)
         invisible(sd)
       } else {
         invisible(private$meta$summary(verbose))
       }
+    },
+
+    #-------------------------------------------------------------------------#
+    #                            Receive Method                               #
+    #-------------------------------------------------------------------------#
+    receive = function(x, notice) {
+      private$logR$log(x = x, event = notice, level = "Info")
     },
 
     #-------------------------------------------------------------------------#

@@ -128,6 +128,49 @@ Meta0 <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
+    #                         Custom Metadata Methods                         #
+    #-------------------------------------------------------------------------#
+    getCustom = function(key = NULL) {
+
+      if (is.null(private$..meta$custom)) {
+        event <- paste0("No custom metadata exists for this object.")
+        private$logR$log( method = 'getCustom',
+                          event = event, level = "Warn")
+      } else if (is.null(key)) {
+        return(private$..meta$custom)
+      } else if (!is.null(private$..meta$custom[[key]])) {
+        return(private$..meta$custom[[key]])
+      } else {
+        event <- paste0("Key, '", key, "', is not a valid custom metadata ",
+                        "variable. See ?", class(self)[1],
+                        " for further assistance.")
+        private$logR$log( method = 'getCustom',
+                          event = event, level = "Warn")
+        return(FALSE)
+      }
+    },
+
+    setCustom = function(key, value) {
+
+      private$..params$kv$key <- key
+      private$..params$kv$value <- value
+      private$..params$kv$equalLen <- TRUE
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log( method = 'setCustom',
+                          event = v$msg, level = 'Error')
+        stop()
+      }
+
+      if (is.null(private$..meta$custom)) private$..meta$custom <- list()
+      for (i in 1:length(key)) {
+        private$..meta$custom[[key[i]]] <- value[i]
+      }
+      invisible(self)
+    },
+
+
+    #-------------------------------------------------------------------------#
     #                             Query Methods                               #
     #-------------------------------------------------------------------------#
     query = function(key, value) {
@@ -162,8 +205,8 @@ Meta0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     summary = function() {
 
-      created <- format(private$..meta$state$created, format="%Y-%m-%d at %H:%M:%S")
-      s <- c(private$..meta$identity, private$..meta$stats,
+      created <- format(private$..meta$state$created, format="%Y-%m-%d %H:%M:%S")
+      s <- c(private$..meta$identity, private$..meta$custom, private$..meta$stats,
              creator = private$..meta$state$creator,
              created = created)
       s <- Filter(Negate(is.null), s)

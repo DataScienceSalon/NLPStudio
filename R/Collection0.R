@@ -86,11 +86,12 @@ Collection0 <- R6::R6Class(
 
       # Validate class of object.
       private$..params <- list()
-      private$..params$classes$objects <- x
-      private$..params$classes$valid <- 'Document0'
+      private$..params$classes$name <- list('x')
+      private$..params$classes$objects <- list(x)
+      private$..params$classes$valid <- list('Document0')
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
-        private$logR$log( method = 'addDocument',
+        private$logR$log(method = 'addDocument',
                          event = v$msg, level = "Error")
         stop()
       }
@@ -157,20 +158,6 @@ Collection0 <- R6::R6Class(
         }
       }
       return(summaries)
-    },
-
-    summary = function(verbose = TRUE) {
-
-      sd <- list()
-      sd$id <- self$summarizeId(verbose)
-      sd$stats <- self$summarizeStats(verbose)
-      sd$state <- self$summarizeState(verbose)
-
-      if (length(private$..documents) > 0) {
-        sd$documents <- self$summarizeDocuments(verbose)
-      }
-
-      invisible(sd)
     }
   )
 )

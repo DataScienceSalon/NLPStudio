@@ -32,6 +32,10 @@ object.
   assigned to the object.}
   \item{\code{setStats(key, value)}}{Sets descriptive statistics data
   for an object.}
+  \item{\code{getCustom(key = NULL)}}{Obtains custom metadata which has been
+  assigned to the object.}
+  \item{\code{setCustom(key, value)}}{Sets custom metadata using key value
+  pairs.}
   \item{\code{getState()}}{Obtains an objects current state information.}
   \item{\code{modified(event = NULL)}}{Sets state datetime parameters
   when an object is modified.}
@@ -49,8 +53,7 @@ object.
 }
 
 \seealso{
-Other Metadata Classes: \code{\link{Meta0}},
-  \code{\link{MetaDocument}}
+Other Metadata Classes: \code{\link{Meta0}}
 }
 \author{
 John James, \email{jjames@datasciencesalon.org}
