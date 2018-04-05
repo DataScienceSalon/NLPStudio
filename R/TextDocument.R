@@ -60,19 +60,17 @@ TextDocument <- R6::R6Class(
       strsplit(memDecompress(x, "g", asChar = TRUE), "\n")[[1]]
     },
 
-    getStats = function() {
-      sentences <- sum(quanteda::nsentence(private$..content))
-      words <- sum(quanteda::ntokens(private$..content))
-      types <- sum(quanteda::ntype(private$..content))
-      characters <- sum(nchar(private$..content))
+    getStats = function(x) {
+      sentences <- sum(quanteda::nsentence(x))
+      words <- sum(quanteda::ntoken(x))
+      types <- sum(quanteda::ntype(x))
+      characters <- sum(nchar(x))
       avgSentLen <- words / sentences
       avgWordLen <- characters / words
-      datetime <- Sys.time()
       k <- c("sentences", "words", "types", "characters",
-             "average sentence length", "average word length",
-             "datetime")
+             "average sentence length", "average word length")
       v <- c(sentences, words, types, characters,
-             avgSentLen, avgWordLen,  datetime)
+             avgSentLen, avgWordLen)
       private$meta$setStats(key = k, value = v)
       return(TRUE)
     },
@@ -85,14 +83,14 @@ TextDocument <- R6::R6Class(
       private$..params$classes$valid <- 'character'
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
-        private$logR$log(cls = class(x)[1], method = 'content',
+        private$logR$log( method = 'content',
                          event = v$msg, level = "Error")
         stop()
       }
 
       # Update content, compute statistics and update state information
       private$..content <- private$compress(x)
-      private$getStats()
+      private$getStats(x)
       private$meta$modified(event = note)
       return(TRUE)
     }
@@ -107,20 +105,22 @@ TextDocument <- R6::R6Class(
     initialize = function(x, name = NULL, purpose = NULL) {
 
       private$loadDependencies()
-      private$meta <- Meta$new(name, purpose)
+      private$meta <- Meta$new(x = self, name = name, purpose = purpose)
 
       # Validate content
       private$..params <- list()
       private$..params$classes$objects <- x
+      private$..params$classes$name <- "x"
       private$..params$classes$valid <- 'character'
+      v <- private$validator$validate(self)
       if (v$code == FALSE) {
-        private$logR$log(cls = class(self)[1], method = 'initialize',
+        private$logR$log( method = 'initialize',
                          event = v$msg, level = 'Error')
         stop()
       }
 
       private$processContent(x, note = "Initialized content.")
-      private$logR$log(cls = class(self)[1], method = 'initialize',
+      private$logR$log( method = 'initialize',
                        event = "Initialization complete.")
 
       invisible(self)

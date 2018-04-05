@@ -31,21 +31,20 @@ validateClass <- function(object) {
 
   params <- object$getParams()
 
-  if (length(params$classes$objects) > 0) {
-    for (i in 1:length(params$classes$objects)) {
-      if (sum(class(params$classes$objects[[i]]) %in% params$classes$valid[[i]]) == 0) {
+  if (length(params$classes$name) > 0) {
+    for (i in 1:length(params$classes$name)) {
+      if (sum(class(params$classes$objects[i]) %in% params$classes$valid[i]) == 0) {
         status[['code']] <- FALSE
-        status[['msg']] <- paste0("Object, ", params$classes$names[i],
-                                  ", of the ", class(params$classes$objects[i])[1],
-                                  " is of an invalid class. ",
-                                  class(object)[1], " class operates on ",
+        status[['msg']] <- paste0("Class ", class(params$classes$objects[i])[1],
+                                  " is invalid for the '",
+                                  params$classes$name[i], "' parameter. ",
+                                  "Valid classes include ",
                                   paste0("c(",gsub(",$", "",
-                                                   paste0("'", params$classes$valid[[i]],
+                                                   paste0("'", params$classes$valid[i],
                                                           "',", collapse = "")),
-                                         ") "),
-                                  " classes only. ",
+                                         "). "),
                                   "See ?", class(object)[1],
-                                  " for further assistance")
+                                  " for further assistance.")
         return(status)
       }
     }

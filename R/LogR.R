@@ -25,6 +25,7 @@ LogR <- R6::R6Class(
   lock_class = TRUE,
 
   private = list(
+    ..owner = character(),
     ..log = data.frame(),
     ..logPath = './NLPStudio/logs',
     notifyInfo  = function(note) futile.logger::flog.info(note, name = "green"),
@@ -33,16 +34,10 @@ LogR <- R6::R6Class(
   ),
 
   public = list(
-    entry = list(
-      className = character(),
-      methodName = character(),
-      level = character(),
-      msg = character(),
-      fieldName = character(),
-      created = character()
-    ),
 
-    initialize = function(logPath = NULL) {
+    initialize = function(owner, logPath = NULL) {
+
+      private$..owner <- owner
 
       if (is.null(logPath)) {
         logPath <- private$..logPath
@@ -57,13 +52,13 @@ LogR <- R6::R6Class(
       invisible(self)
     },
 
-    log  = function(cls, event, level = "Info",
+    log  = function(x = NULL, event, level = "Info",
                     fieldName = NULL, method = NULL) {
 
       level <- gsub("(^|[[:space:]])([[:alpha:]])", "\\1\\U\\2",
                     level, perl = TRUE)
 
-      note <- paste0(level, " in class '", cls, "', ",
+      note <- paste0(level, " in class '", class(private$..owner)[1], "', ",
                      ifelse(is.null(method)," ",
                      paste0("method, '", method, "', ")), ifelse(is.null(fieldName), "",
                                            paste0("with variable '",
@@ -77,14 +72,35 @@ LogR <- R6::R6Class(
 
       # Append information log to log for object.
       if (level == "Info") {
-        log <- data.frame(user = Sys.info()[['user']],
-                          date = Sys.time(),
-                          class = cls,
-                          event = event)
+        log <- data.frame(class = ifelse(is.null(x),
+                                         class(private$..owner)[1],
+                                         class(x)[1]),
+                          event = event,
+                          user = Sys.info()[['user']],
+                          datetime = Sys.time(),
+                          stringsAsFactors = FALSE,
+                          row.names = NULL)
         private$..log <- rbind(private$..log, log)
       }
     },
 
-    getLog = function() { private$..log }
+    printLog = function() {
+
+      cat("\n\nObject Log:")
+      private$..owner$summarizeId()
+
+      log <- private$..log
+
+      if (nrow(log) > 0) {
+        colnames(log) <- sapply(colnames(log), function(x) {proper(x)})
+        cat("\n")
+        print(log, row.names = FALSE)
+        cat("\n")
+        return(log)
+      } else {
+        cat("\n\nThere are no logged events for this object.\n\n")
+        return(FALSE)
+      }
+    }
   )
 )

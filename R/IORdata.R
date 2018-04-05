@@ -43,11 +43,11 @@ IORdata <- R6::R6Class(
         content <- load(path, envir = env)
         content <- env[[content]]
         event <- paste0("Successfully read ", fileName, ".")
-        private$logR$log(cls = class(self)[1], event = event)
+        private$logR$log( event = event)
       } else {
         event <- paste0('Unable to read ', fileName, '. ',
                                   'File does not exist.')
-        private$logR$log(cls = class(self)[1], event = event, level = "Error")
+        private$logR$log( event = event, level = "Error")
         stop()
       }
       return(content)
@@ -66,7 +66,7 @@ IORdata <- R6::R6Class(
       save(object = content, file = path, compression_level = 9)
 
       event <- paste0("Successfully wrote ", fileName, ".")
-      private$logR$log(cls = class(self)[1], event = event)
+      private$logR$log( event = event)
 
       invisible(self)
     }

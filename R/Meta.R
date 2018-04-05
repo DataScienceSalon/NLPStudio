@@ -28,6 +28,8 @@ Meta <- R6::R6Class(
       private$..meta$state$current <- paste0("Instantiated.")
       private$..meta$state$creator <- Sys.info()[['user']]
       private$..meta$state$created <- Sys.time()
+      private$..meta$state$modifier <- Sys.info()[['user']]
+      private$..meta$state$modified <- Sys.time()
       invisible(self)
 
     },

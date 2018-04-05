@@ -65,7 +65,7 @@ MetaDocument <- R6::R6Class(
 
       if (is.null(private$..meta$custom)) {
         event <- paste0("No custom metadata exists for this object.")
-        private$logR$log(cls = class(self)[1], method = 'getCustom',
+        private$logR$log( method = 'getCustom',
                          event = event, level = "Warn")
       } else if (is.null(key)) {
         return(private$..meta$custom)
@@ -75,7 +75,7 @@ MetaDocument <- R6::R6Class(
         event <- paste0("Key, '", key, "', is not a valid custom metadata ",
                         "variable. See ?", class(self)[1],
                         " for further assistance.")
-        private$logR$log(cls = class(self)[1], method = 'getCustom',
+        private$logR$log( method = 'getCustom',
                          event = event, level = "Warn")
       }
       invisible(self)
@@ -88,7 +88,7 @@ MetaDocument <- R6::R6Class(
       private$..params$kv$equalLen <- TRUE
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
-        private$logR$log(cls = class(self)[1], method = 'setCustom',
+        private$logR$log( method = 'setCustom',
                          event = v$msg, level = 'Error')
         stop()
       }

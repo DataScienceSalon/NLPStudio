@@ -54,26 +54,6 @@ Collection0 <- R6::R6Class(
       }
 
       return(listCondition)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                     Summarize Documents Method                          #
-    #-------------------------------------------------------------------------#
-    summarizeDocuments = function() {
-
-      families <- unique(private$..inventory$family)
-
-      for (i in 1:length(families)) {
-        documents <- subset(private$..inventory, family == families[i])
-        cat(paste0("\n\n", families[i], "\n"))
-        for (j in 1:nrow(documents)) {
-          document <- self$getDocument(key = 'id', value = documents$id[j])
-          summary <- as.data.frame(document$meta$summary(),
-                                   stringsAsFactors = FALSE, row.names = NULL)
-          colnames(summary) <- sapply(colnames(summary), function(x) {proper(x)})
-          print(summary, row.names = FALSE)
-        }
-      }
     }
   ),
 
@@ -90,7 +70,7 @@ Collection0 <- R6::R6Class(
       private$..params$kv$value <- value
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
-        private$logR$log(cls = class(self)[1], method = 'getDocument',
+        private$logR$log( method = 'getDocument',
                          event = v$msg, level = "Error")
         stop()
       }
@@ -110,7 +90,7 @@ Collection0 <- R6::R6Class(
       private$..params$classes$valid <- 'Document0'
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
-        private$logR$log(cls = class(self)[1], method = 'addDocument',
+        private$logR$log( method = 'addDocument',
                          event = v$msg, level = "Error")
         stop()
       }
@@ -122,10 +102,10 @@ Collection0 <- R6::R6Class(
       private$..inventory <- rbind(private$..inventory, credentials)
 
       # Update date/time metadata and create log entry
-      private$meta$modified()
       event <- paste0("Attached ", x$getName(), " object to ", self$getName(), ".")
-      private$logR$log(cls = class(self)[1], method = 'addDocument',
-                       event = event, level = "info")
+      private$meta$modified(event = event)
+      private$logR$log( method = 'addDocument',
+                       event = event)
 
       return(self)
 
@@ -140,16 +120,17 @@ Collection0 <- R6::R6Class(
       if (!is.null(private$..documents[[id]])) {
         private$..documents[[id]] <- NULL
         private$..inventory <- subset(private$..inventory, id != id)
-        private$meta$modified()
         event <- paste0("Removed ", x$getName(), " from ",
                                   self$getName(), ".")
-        private$logR$log(cls = class(self)[1], method = 'removeDocument',
-                         event = event, level = "info")
+        private$meta$modified(event = event)
+        private$logR$log( method = 'removeDocument',
+                         event = event)
       } else {
         self$access()
         event <- paste0("Object is not attached to ",
-                                  self$getName(), ". Returning NULL")
-        private$logIt("Warn")
+                        self$getName(), ". ")
+        private$logR$log( method = 'removeDocument',
+                         event = event, level = "Warn")
       }
       invisible(self)
     },
@@ -157,14 +138,39 @@ Collection0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                            Summary Methods                              #
     #-------------------------------------------------------------------------#
-    summary = function() {
+    summarizeDocuments = function(verbose = TRUE) {
 
-      private$summarizeId()
-      private$summarizeStats()
-      private$summarizeState()
-      private$summarizeDocuments()
+      summaries <- list()
 
-      invisible(self)
+      families <- unique(private$..inventory$family)
+
+      for (i in 1:length(families)) {
+        documents <- subset(private$..inventory, family == families[i])
+        cat(paste0("\n\n", families[i], ":\n"))
+        for (j in 1:nrow(documents)) {
+          id <- documents$id[j]
+          document <- self$getDocument(key = 'id', value = id)
+          summaries[[id]] <- document$summary(abbreviated = TRUE, verbose)
+          colnames(summaries[[id]]) <- sapply(colnames(summaries[[id]]),
+                                              function(x) {proper(x)})
+          print(summaries[[id]], row.names = FALSE)
+        }
+      }
+      return(summaries)
+    },
+
+    summary = function(verbose = TRUE) {
+
+      sd <- list()
+      sd$id <- self$summarizeId(verbose)
+      sd$stats <- self$summarizeStats(verbose)
+      sd$state <- self$summarizeState(verbose)
+
+      if (length(private$..documents) > 0) {
+        sd$documents <- self$summarizeDocuments(verbose)
+      }
+
+      invisible(sd)
     }
   )
 )

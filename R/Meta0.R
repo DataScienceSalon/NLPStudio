@@ -85,7 +85,7 @@ Meta0 <- R6::R6Class(
         event <- paste0("Key, '", key, "', is not a valid Stats metadata ",
                         "variable. See ?", class(self)[1],
                         " for further assistance.")
-        private$logR$log(cls = class(self)[1], method = 'getStats',
+        private$logR$log( method = 'getStats',
                          event = event, level = "Warn")
         invisible(self)
       }
@@ -98,7 +98,7 @@ Meta0 <- R6::R6Class(
       private$..params$kv$equalLen <- TRUE
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
-        private$logR$log(cls = class(self)[1], method = 'setStats',
+        private$logR$log( method = 'setStats',
                          event = v$msg, level = "Error")
         stop()
       }
@@ -113,7 +113,10 @@ Meta0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                             State Methods                               #
     #-------------------------------------------------------------------------#
-    getState = function() { return(private$..meta$state) },
+    getState = function() {
+      return(private$..meta$state[c("current", "creator", "created",
+                                    "modifier", "modified")])
+      },
 
     modified = function(event = NULL) {
 
@@ -134,7 +137,7 @@ Meta0 <- R6::R6Class(
       private$..params$kv$equalLen <- FALSE
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
-        private$logR$log(cls = class(self)[1], method = 'query',
+        private$logR$log( method = 'query',
                          event = v$msg, level = "Warn")
       }
 
@@ -164,6 +167,7 @@ Meta0 <- R6::R6Class(
              creator = private$..meta$state$creator,
              created = created)
       s <- Filter(Negate(is.null), s)
+      s <- as.data.frame(s, stringsAsFactors = FALSE, row.names = NULL)
 
       return(s)
     }
