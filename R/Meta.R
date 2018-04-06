@@ -21,15 +21,13 @@ Meta <- R6::R6Class(
 
   public = list(
 
-    initialize = function(owner, name = NULL, purpose = NULL) {
+    initialize = function(owner, name = NULL, purpose = NULL, fileName = NULL,
+                          fileSource = NULL) {
 
       private$loadDependencies()
       private$setIdentity(owner, name, purpose)
-      private$..meta$state$current <- paste0("Instantiated.")
-      private$..meta$state$creator <- Sys.info()[['user']]
-      private$..meta$state$created <- Sys.time()
-      private$..meta$state$modifier <- Sys.info()[['user']]
-      private$..meta$state$modified <- Sys.time()
+      private$setAdmin()
+      private$setTechnical(owner, fileName, fileSource)
       invisible(self)
 
     },

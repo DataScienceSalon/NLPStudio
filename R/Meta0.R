@@ -23,10 +23,15 @@ Meta0 <- R6::R6Class(
   private = list(
     ..meta = list(
       identity = list(),
-      custom = list(),
-      stats = list(),
-      state = list()
+      descriptive = list(),
+      quant = list(),
+      admin = list(),
+      tech = list()
     ),
+
+    #-------------------------------------------------------------------------#
+    #                           Identity Metadata                             #
+    #-------------------------------------------------------------------------#
 
     setIdentity = function(owner, name = NULL, purpose = NULL) {
 
@@ -46,6 +51,63 @@ Meta0 <- R6::R6Class(
                                                     ")"), name)
       private$..meta$identity$purpose <- purpose
       invisible(self)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                             Quant Methods                               #
+    #-------------------------------------------------------------------------#
+    setQuant = function(key, value) {
+
+      private$..params$kv$key <- key
+      private$..params$kv$value <- value
+      private$..params$kv$equalLen <- TRUE
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log( method = 'setQuant',
+                          event = v$msg, level = "Error")
+        stop()
+      }
+
+      for (i in 1:length(key)) {
+        private$..meta$quant[[key[i]]] <- value[i]
+      }
+      invisible(self)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                       Administrative Metadata                           #
+    #-------------------------------------------------------------------------#
+    setAdmin = function() {
+
+      private$..meta$admin$created <- Sys.time()
+      private$..meta$admin$createdBy <- Sys.info()[["user"]]
+      private$..meta$admin$modified <- Sys.time()
+      private$..meta$admin$modifiedBy <- Sys.info()[["user"]]
+      private$..meta$admin$nModified <- 0
+      private$..meta$admin$accessed <- Sys.time()
+      private$..meta$admin$accessedBy <- Sys.info()[["user"]]
+      private$..meta$admin$nAccessed <- 0
+      private$..meta$admin$lastState <- "Instantiated."
+
+      return(TRUE)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                          Technical Metadata                             #
+    #-------------------------------------------------------------------------#
+
+    setTechnical = function(owner, fileName = NULL, fileSource = NULL) {
+
+      private$..meta$tech$hardware <- Sys.info()["machine"]
+      private$..meta$tech$os <- Sys.info()["sysname"]
+      private$..meta$tech$release <- Sys.info()["release"]
+      private$..meta$tech$version <- Sys.info()["version"]
+      private$..meta$tech$size <- object.size(owner)
+      private$..meta$tech$fileName <- fileName
+      private$..meta$tech$fileSource <- fileSource
+      private$..meta$tech$fileSize <- file.size(file.path(fileSource, fileName))
+
+      return(TRUE)
     }
   ),
 
@@ -57,115 +119,83 @@ Meta0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                            Identity Methods                             #
     #-------------------------------------------------------------------------#
-    getIdentity = function(key = NULL) {
-      if (is.null(key)) {
-        return(private$..meta$identity)
-      } else if (!is.null(private$..meta$identity[[key]])) {
-        return(private$..meta$identity[[key]])
-      } else {
-        event <- paste0("Variable, ", key, " is not a valid identity metadata ",
-                        "variable.")
-        private$logR$log(cls = private$..meta$identity$class, method = "getIdentity",
-                         level = "Warn")
-      }
-      invisible(self)
-    },
+    getIdentity = function() { return(private$..meta$identity) },
 
     #-------------------------------------------------------------------------#
-    #                             Stats Methods                               #
+    #                         Descriptive Metadata Methods                    #
     #-------------------------------------------------------------------------#
-    getStats = function(key = NULL) {
+    getDescriptive = function(key = NULL) {
 
-      if (length(private$..meta$stats) == 0) {
+      if (length(private$..meta$descriptive) == 0) {
         return(NULL)
       } else if (is.null(key)) {
-        return(private$..meta$stats)
-      } else if (!is.null(private$..meta$stats[[key]])) {
-        return(private$..meta$stats[[key]])
+        return(private$..meta$descriptive)
+      } else if (!is.null(private$..meta$descriptive[[key]])) {
+        return(private$..meta$descriptive[[key]])
       } else {
-        event <- paste0("Key, '", key, "', is not a valid Stats metadata ",
+        event <- paste0("Key, '", key, "', is not a valid descriptive metadata ",
                         "variable. See ?", class(self)[1],
                         " for further assistance.")
-        private$logR$log( method = 'getStats',
+        private$logR$log(method = 'getDescriptive',
                          event = event, level = "Warn")
-        invisible(self)
-      }
-    },
-
-    setStats = function(key, value) {
-
-      private$..params$kv$key <- key
-      private$..params$kv$value <- value
-      private$..params$kv$equalLen <- TRUE
-      v <- private$validator$validate(self)
-      if (v$code == FALSE) {
-        private$logR$log( method = 'setStats',
-                         event = v$msg, level = "Error")
-        stop()
-      }
-
-      for (i in 1:length(key)) {
-        private$..meta$stats[[key[i]]] <- value[i]
-      }
-      invisible(self)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                             State Methods                               #
-    #-------------------------------------------------------------------------#
-    getState = function() {
-      return(private$..meta$state[c("current", "creator", "created",
-                                    "modifier", "modified")])
-      },
-
-    modified = function(event = NULL) {
-
-      private$..meta$state$current <- ifelse(is.null(event), "Modified.", event)
-      private$..meta$state$modifier <- Sys.info()[["user"]]
-      private$..meta$state$modified <- Sys.time()
-
-      invisible(self)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                         Custom Metadata Methods                         #
-    #-------------------------------------------------------------------------#
-    getCustom = function(key = NULL) {
-
-      if (length(private$..meta$custom) == 0) {
-        return(NULL)
-      } else if (is.null(key)) {
-        return(private$..meta$custom)
-      } else if (!is.null(private$..meta$custom[[key]])) {
-        return(private$..meta$custom[[key]])
-      } else {
-        event <- paste0("Key, '", key, "', is not a valid custom metadata ",
-                        "variable. See ?", class(self)[1],
-                        " for further assistance.")
-        private$logR$log(method = 'getCustom',
-                          event = event, level = "Warn")
         return(FALSE)
       }
     },
 
-    setCustom = function(key, value) {
+    setDescriptive = function(key, value) {
 
       private$..params$kv$key <- key
       private$..params$kv$value <- value
       private$..params$kv$equalLen <- TRUE
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
-        private$logR$log( method = 'setCustom',
+        private$logR$log( method = 'setDescriptive',
                           event = v$msg, level = 'Error')
         stop()
       }
 
       for (i in 1:length(key)) {
-        private$..meta$custom[[key[i]]] <- value[i]
+        private$..meta$descriptive[[key[i]]] <- value[i]
       }
       invisible(self)
     },
 
+    #-------------------------------------------------------------------------#
+    #                             Quant Methods                               #
+    #-------------------------------------------------------------------------#
+    getQuant = function() { return(private$..meta$quant) },
+
+    #-------------------------------------------------------------------------#
+    #                             Admin Methods                               #
+    #-------------------------------------------------------------------------#
+    getAdmin = function() { return(private$..meta$admin) },
+
+    modified = function(event = NULL) {
+
+      private$..meta$admin$modified <- Sys.time()
+      private$..meta$admin$modifiedBy <- Sys.info()[["user"]]
+      private$..meta$admin$nModified <- private$..meta$admin$nModified + 1
+      private$..meta$admin$accessed <- Sys.time()
+      private$..meta$admin$accessedBy <- Sys.info()[["user"]]
+      private$..meta$admin$nAccessed <- private$..meta$admin$nAccessed + 1
+      private$..meta$admin$lastState <- ifelse(is.null(event), "Modified.", event)
+
+      invisible(self)
+    },
+
+    accessed = function(event = NULL) {
+
+      private$..meta$admin$accessed <- Sys.time()
+      private$..meta$admin$accessedBy <- Sys.info()[["user"]]
+      private$..meta$admin$nAccessed <- private$..meta$admin$nAccessed + 1
+
+      invisible(self)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                          Technical Metadata                             #
+    #-------------------------------------------------------------------------#
+    getTechnical = function() { private$..meta$tech },
 
     #-------------------------------------------------------------------------#
     #                             Query Methods                               #
@@ -202,9 +232,9 @@ Meta0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     summary = function() {
 
-      created <- format(private$..meta$state$created, format="%Y-%m-%d %H:%M:%S")
-      s <- c(private$..meta$identity, private$..meta$custom, private$..meta$stats,
-             creator = private$..meta$state$creator,
+      created <- format(private$..meta$admin$created, format="%Y-%m-%d %H:%M:%S")
+      s <- c(private$..meta$identity, private$..meta$descriptive, private$..meta$quant,
+             createdBy = private$..meta$admin$createdBy,
              created = created)
       s <- Filter(Negate(is.null), s)
       s <- as.data.frame(s, stringsAsFactors = FALSE, row.names = NULL)

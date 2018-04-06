@@ -87,8 +87,8 @@ LogR <- R6::R6Class(
     printLog = function() {
 
       cat("\n\nObject Log:")
-      private$..owner$summary(id = TRUE, stats = FALSE, custom = FALSE,
-                              documents = FALSE, state = FALSE, verbose = TRUE)
+      private$..owner$summary(id = TRUE, quant = FALSE, descriptive = FALSE,
+                              documents = FALSE, admin = FALSE, verbose = TRUE)
       log <- private$..log
 
       if (nrow(log) > 0) {

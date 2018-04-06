@@ -37,7 +37,7 @@
 #' avalance$content <- report
 #' key <- c('genre', 'author', 'year')
 #' value <- c('weather', 'chris jones', 2018)
-#' avalanche$meta$setCustom(key = key value = value)
+#' avalanche$meta$setDescriptive(key = key value = value)
 #'
 #' @docType class
 #' @author John James, \email{jjames@@datasciencesalon.org}
@@ -60,14 +60,14 @@ TextDocument <- R6::R6Class(
       strsplit(memDecompress(x, "g", asChar = TRUE), "\n")[[1]]
     },
 
-    getStats = function(x) {
+    getQuant = function(x) {
       sentences <- sum(quanteda::nsentence(x))
       words <- sum(quanteda::ntoken(x))
       types <- sum(quanteda::ntype(x))
       characters <- sum(nchar(x))
       k <- c("sentences", "words", "types", "characters")
       v <- c(sentences, words, types, characters)
-      private$meta$setStats(key = k, value = v)
+      private$meta$setQuant(key = k, value = v)
       return(TRUE)
     },
 
@@ -89,9 +89,9 @@ TextDocument <- R6::R6Class(
       # Validate class of object.
       if (private$validateContent(x, method = 'processContent') == FALSE) stop()
 
-      # Update content, compute statistics and update state information
+      # Update content, compute statistics and update admin information
       private$..content <- private$compress(x)
-      private$getStats(x)
+      private$getQuant(x)
       private$meta$modified(event = note)
       return(TRUE)
     }

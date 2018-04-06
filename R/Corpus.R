@@ -37,7 +37,7 @@
 #' avalance$content <- report
 #' key <- c('genre', 'author', 'year')
 #' value <- c('weather', 'chris jones', 2018)
-#' avalanche$meta$setCustom(key = key value = value)
+#' avalanche$meta$setDescriptive(key = key value = value)
 #'
 #' @docType class
 #' @author John James, \email{jjames@@datasciencesalon.org}
@@ -51,39 +51,39 @@ Corpus <- R6::R6Class(
 
   private = list(
 
-    getStats = function() {
+    getQuant = function() {
 
-      stats <- rbindlist(lapply(private$..documents, function(d) {
+      quant <- rbindlist(lapply(private$..documents, function(d) {
         meta <- d$metadata()
-        meta$stats
+        meta$quant
       }))
 
-      documents <- nrow(stats)
-      sentences <- sum(stats$sentences)
-      types <- sum(stats$types)
-      words <- sum(stats$words)
-      characters <- sum(stats$characters)
+      documents <- nrow(quant)
+      sentences <- sum(quant$sentences)
+      types <- sum(quant$types)
+      words <- sum(quant$words)
+      characters <- sum(quant$characters)
 
       k <- c("documents", "sentences", "words", "types", "characters")
       v <- c(documents, sentences, words, types, characters)
-      private$meta$setStats(key = k, value = v)
+      private$meta$setQuant(key = k, value = v)
       return(TRUE)
     },
 
     #-------------------------------------------------------------------------#
     #                           Summary Methods                               #
     #-------------------------------------------------------------------------#
-    summarizeStats = function(verbose = TRUE) {
-      private$getStats()
-      stats <- private$meta$getStats()
+    summarizeQuant = function(verbose = TRUE) {
+      private$getQuant()
+      quant <- private$meta$getQuant()
       if (verbose) {
-        if (!is.null(stats)) {
-          statsDf <- as.data.frame(stats, stringsAsFactors = FALSE, row.names = NULL)
+        if (!is.null(quant)) {
+          quantDf <- as.data.frame(quant, stringsAsFactors = FALSE, row.names = NULL)
           cat("\n\nStatistics:\n")
-          print(statsDf, row.names = FALSE)
+          print(quantDf, row.names = FALSE)
         }
       }
-      return(stats)
+      return(quant)
     }
   ),
 

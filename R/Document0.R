@@ -43,9 +43,9 @@ Document0 <- R6::R6Class(
 
     },
 
-    summarizeCustomMeta = function(verbose = TRUE) {
+    summarizeDescriptiveMeta = function(verbose = TRUE) {
 
-      meta <- private$meta$getCustom()
+      meta <- private$meta$getDescriptive()
 
       if (length(meta) > 0) {
         if (verbose) {
@@ -58,27 +58,27 @@ Document0 <- R6::R6Class(
       return(NULL)
     },
 
-    summarizeStats = function(verbose = TRUE) {
-      stats <- private$meta$getStats()
+    summarizeQuant = function(verbose = TRUE) {
+      quant <- private$meta$getQuant()
       if (verbose) {
-        if (!is.null(stats)) {
-          statsDf <- as.data.frame(stats, stringsAsFactors = FALSE, row.names = NULL)
+        if (!is.null(quant)) {
+          quantDf <- as.data.frame(quant, stringsAsFactors = FALSE, row.names = NULL)
           cat("\n\nStatistics:\n")
-          print(statsDf, row.names = FALSE)
+          print(quantDf, row.names = FALSE)
         }
       }
-      return(stats)
+      return(quant)
     },
 
-    summarizeState = function(verbose = TRUE) {
-      state <- private$meta$getState()
+    summarizeAdmin = function(verbose = TRUE) {
+      admin <- private$meta$getAdmin()
       if (verbose) {
-        stateDf <- as.data.frame(state, stringsAsFactors = FALSE, row.names = NULL)
-        cat("\nState:\n")
-        print(stateDf, row.names = FALSE)
+        adminDf <- as.data.frame(admin, stringsAsFactors = FALSE, row.names = NULL)
+        cat("\nAdmin:\n")
+        print(adminDf, row.names = FALSE)
         cat("\n")
       }
-      return(state)
+      return(admin)
     },
 
     summarizeDocuments = function(verbose = TRUE) {
@@ -104,26 +104,26 @@ Document0 <- R6::R6Class(
           m$identity
         }))
 
-        # Extract stats
-        stats <- rbindlist(lapply(meta, function(m) {
-          m$stats
+        # Extract quant
+        quant <- rbindlist(lapply(meta, function(m) {
+          m$quant
         }))
 
-        # Extract custom metadata
-        custom <- rbindlist(lapply(meta, function(m) {
-          m$custom
+        # Extract descriptive metadata
+        descriptive <- rbindlist(lapply(meta, function(m) {
+          m$descriptive
         }), fill = TRUE, use.names = TRUE)
 
-        # # Extract state information
-        # state <- rbindlist(lapply(meta, function(m) {
-        #   m$state
+        # # Extract admin information
+        # admin <- rbindlist(lapply(meta, function(m) {
+        #   m$admin
         # }))
 
         # Combine and format columns
-        if (nrow(custom) > 0) {
-          familySummary <- cbind(identity, custom, stats)
+        if (nrow(descriptive) > 0) {
+          familySummary <- cbind(identity, descriptive, quant)
         } else {
-          familySummary <- cbind(identity, stats)
+          familySummary <- cbind(identity, quant)
         }
 
         familySummary[is.na(familySummary)] <- " "
@@ -160,7 +160,7 @@ Document0 <- R6::R6Class(
       if (is.null(key)) {
         return(private$meta$getMeta())
       } else {
-        private$meta$setCustom(key, value)
+        private$meta$setDescriptive(key, value)
         invisible(self)
       }
     },
@@ -168,21 +168,21 @@ Document0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Summary Methods                               #
     #-------------------------------------------------------------------------#
-    summary = function(id = TRUE, stats = TRUE, custom = TRUE,
-                       documents = TRUE, state = TRUE, verbose = TRUE,
+    summary = function(id = TRUE, quant = TRUE, descriptive = TRUE,
+                       documents = TRUE, admin = TRUE, verbose = TRUE,
                        abbreviated = FALSE) {
 
       if (abbreviated == FALSE) {
         sd <- list()
         if (id) sd$id <- private$summarizeId(verbose)
-        if (stats) sd$stats <- private$summarizeStats(verbose)
-        if (custom) sd$meta  <- private$summarizeCustomMeta(verbose)
+        if (quant) sd$quant <- private$summarizeQuant(verbose)
+        if (descriptive) sd$meta  <- private$summarizeDescriptiveMeta(verbose)
         if (documents) {
           if (length(private$..documents) > 0) {
             sd$documents <- private$summarizeDocuments(verbose)
           }
         }
-        if (state) sd$state <- private$summarizeState(verbose)
+        if (admin) sd$admin <- private$summarizeAdmin(verbose)
         invisible(sd)
       } else {
         invisible(private$meta$summary())

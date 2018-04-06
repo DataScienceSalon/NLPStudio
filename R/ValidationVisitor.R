@@ -8,7 +8,7 @@
 #'   \item{\code{nlpStudio(object)}}{Method for validating the instantiation of the NLPStudio object}
 #' }
 #'
-#' @param object The object in its current state
+#' @param object The object in its current admin
 #'
 #' @docType class
 #' @author John James, \email{jjames@@DataScienceSalon.org}
