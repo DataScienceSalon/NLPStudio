@@ -54,27 +54,6 @@ Meta0 <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                             Quant Methods                               #
-    #-------------------------------------------------------------------------#
-    setQuant = function(key, value) {
-
-      private$..params$kv$key <- key
-      private$..params$kv$value <- value
-      private$..params$kv$equalLen <- TRUE
-      v <- private$validator$validate(self)
-      if (v$code == FALSE) {
-        private$logR$log( method = 'setQuant',
-                          event = v$msg, level = "Error")
-        stop()
-      }
-
-      for (i in 1:length(key)) {
-        private$..meta$quant[[key[i]]] <- value[i]
-      }
-      invisible(self)
-    },
-
-    #-------------------------------------------------------------------------#
     #                       Administrative Metadata                           #
     #-------------------------------------------------------------------------#
     setAdmin = function() {
@@ -96,16 +75,19 @@ Meta0 <- R6::R6Class(
     #                          Technical Metadata                             #
     #-------------------------------------------------------------------------#
 
-    setTechnical = function(owner, fileName = NULL, fileSource = NULL) {
+    setTech = function(owner, fileName = NULL, fileSource = NULL) {
 
       private$..meta$tech$hardware <- Sys.info()["machine"]
       private$..meta$tech$os <- Sys.info()["sysname"]
       private$..meta$tech$release <- Sys.info()["release"]
       private$..meta$tech$version <- Sys.info()["version"]
-      private$..meta$tech$size <- object.size(owner)
+      private$..meta$tech$size <- as.character(format(object.size(owner),
+                                                      units = "auto"))
       private$..meta$tech$fileName <- fileName
       private$..meta$tech$fileSource <- fileSource
-      private$..meta$tech$fileSize <- file.size(file.path(fileSource, fileName))
+      if (!is.null(fileName) & !is.null(fileSource)) {
+        private$..meta$tech$fileSize <- file.size(file.path(fileSource, fileName))
+      }
 
       return(TRUE)
     }
@@ -119,7 +101,15 @@ Meta0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                            Identity Methods                             #
     #-------------------------------------------------------------------------#
-    getIdentity = function() { return(private$..meta$identity) },
+    getIdentity = function(key = NULL) {
+
+      if (!is.null(key)) {
+        if (key == 'id') { return(private$..meta$identity$id) }
+        if (key == 'name') { return(private$..meta$identity$name) }
+      }
+      return(private$..meta$identity)
+
+    },
 
     #-------------------------------------------------------------------------#
     #                         Descriptive Metadata Methods                    #
@@ -165,6 +155,24 @@ Meta0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     getQuant = function() { return(private$..meta$quant) },
 
+    setQuant = function(key, value) {
+
+      private$..params$kv$key <- key
+      private$..params$kv$value <- value
+      private$..params$kv$equalLen <- TRUE
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log( method = 'setQuant',
+                          event = v$msg, level = "Error")
+        stop()
+      }
+
+      for (i in 1:length(key)) {
+        private$..meta$quant[[key[i]]] <- value[i]
+      }
+      invisible(self)
+    },
+
     #-------------------------------------------------------------------------#
     #                             Admin Methods                               #
     #-------------------------------------------------------------------------#
@@ -195,7 +203,7 @@ Meta0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                          Technical Metadata                             #
     #-------------------------------------------------------------------------#
-    getTechnical = function() { private$..meta$tech },
+    getTech = function() { private$..meta$tech },
 
     #-------------------------------------------------------------------------#
     #                             Query Methods                               #

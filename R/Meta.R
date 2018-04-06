@@ -27,7 +27,7 @@ Meta <- R6::R6Class(
       private$loadDependencies()
       private$setIdentity(owner, name, purpose)
       private$setAdmin()
-      private$setTechnical(owner, fileName, fileSource)
+      private$setTech(owner, fileName, fileSource)
       invisible(self)
 
     },

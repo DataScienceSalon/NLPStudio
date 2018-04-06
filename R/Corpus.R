@@ -79,7 +79,7 @@ Corpus <- R6::R6Class(
       if (verbose) {
         if (!is.null(quant)) {
           quantDf <- as.data.frame(quant, stringsAsFactors = FALSE, row.names = NULL)
-          cat("\n\nStatistics:\n")
+          cat("\n\nQuantitative:\n")
           print(quantDf, row.names = FALSE)
         }
       }
@@ -92,10 +92,12 @@ Corpus <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Core Methods                                  #
     #-------------------------------------------------------------------------#
-    initialize = function(x, name = NULL, purpose = NULL) {
+    initialize = function(x, name = NULL, purpose = NULL, fileName = NULL,
+                          fileSource = NULL) {
 
       private$loadDependencies()
-      private$meta <- Meta$new(owner = self, name = name, purpose = purpose)
+      private$meta <- Meta$new(owner = self, name = name, purpose = purpose,
+                               fileName, fileSource)
       private$logR$log(method = 'initialize',
                        event = "Initialization complete.")
       invisible(self)

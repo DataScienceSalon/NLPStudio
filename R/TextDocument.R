@@ -103,10 +103,12 @@ TextDocument <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Core Methods                                  #
     #-------------------------------------------------------------------------#
-    initialize = function(x, name = NULL, purpose = NULL) {
+    initialize = function(x, name = NULL, purpose = NULL,
+                          fileName = NULL, fileSource = NULL) {
 
       private$loadDependencies()
-      private$meta <- Meta$new(owner = self, name = name, purpose = purpose)
+      private$meta <- Meta$new(owner = self, name = name, purpose = purpose,
+                               fileName, fileSource)
 
       # Validate content
       if (private$validateContent(x, method = 'initialize') == FALSE) stop()

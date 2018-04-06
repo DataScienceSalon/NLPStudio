@@ -13,7 +13,7 @@ Meta
 
 Contains object metadata and the methods for creating, managing, and reporting
 metadata. The core metadata includes metadata used to identify an object
-as well as metadata regarding the current and historical state of an
+as well as metadata regarding the current and historical admin of an
 object.
 
 \itemize{
@@ -28,16 +28,16 @@ object.
   \item{\code{checkIdentity(id = NULL, name = NULL, class = NULL,
   family = NULL, purpose = NULL)}}{A logical check to determine if an
   object matches the query parameters.}
-  \item{\code{getStats(key = NULL)}}{Obtains descriptive statistics data
+  \item{\code{getQuant(key = NULL)}}{Obtains descriptive statistics data
   assigned to the object.}
-  \item{\code{setStats(key, value)}}{Sets descriptive statistics data
+  \item{\code{setQuant(key, value)}}{Sets descriptive statistics data
   for an object.}
-  \item{\code{getCustom(key = NULL)}}{Obtains custom metadata which has been
+  \item{\code{getDescriptive(key = NULL)}}{Obtains descriptive metadata which has been
   assigned to the object.}
-  \item{\code{setCustom(key, value)}}{Sets custom metadata using key value
+  \item{\code{setDescriptive(key, value)}}{Sets descriptive metadata using key value
   pairs.}
-  \item{\code{getState()}}{Obtains an objects current state information.}
-  \item{\code{modified(event = NULL)}}{Sets state datetime parameters
+  \item{\code{getAdmin()}}{Obtains an objects current admin information.}
+  \item{\code{modified(event = NULL)}}{Sets admin datetime parameters
   when an object is modified.}
   \item{\code{summary()}}{Method for summarizing an objects metadata.}
  }

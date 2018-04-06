@@ -28,6 +28,7 @@ Imports:
     NLP,
     openNLP,
     parsedate,
+    pryr,
     qdap,
     quanteda,
     R6,

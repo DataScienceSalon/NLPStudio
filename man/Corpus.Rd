@@ -55,7 +55,7 @@ avalanche <- Corpus$new(name = 'avalanche', purpose = 'raw')
 avalance$content <- report
 key <- c('genre', 'author', 'year')
 value <- c('weather', 'chris jones', 2018)
-avalanche$meta$setCustom(key = key value = value)
+avalanche$meta$setDescriptive(key = key value = value)
 
 }
 \seealso{

@@ -50,7 +50,7 @@ Document0 <- R6::R6Class(
       if (length(meta) > 0) {
         if (verbose) {
           metaDf <- as.data.frame(meta, stringsAsFactors = FALSE, row.names = NULL)
-          cat("\n\nMetadata:\n")
+          cat("\n\nDescriptive:\n")
           print(metaDf, row.names = FALSE)
         }
         return(meta)
@@ -63,7 +63,7 @@ Document0 <- R6::R6Class(
       if (verbose) {
         if (!is.null(quant)) {
           quantDf <- as.data.frame(quant, stringsAsFactors = FALSE, row.names = NULL)
-          cat("\n\nStatistics:\n")
+          cat("\n\nQuantitative:\n")
           print(quantDf, row.names = FALSE)
         }
       }
@@ -74,11 +74,22 @@ Document0 <- R6::R6Class(
       admin <- private$meta$getAdmin()
       if (verbose) {
         adminDf <- as.data.frame(admin, stringsAsFactors = FALSE, row.names = NULL)
-        cat("\nAdmin:\n")
+        cat("\nAdministrative:\n")
         print(adminDf, row.names = FALSE)
         cat("\n")
       }
       return(admin)
+    },
+
+    summarizeTech = function(verbose = TRUE) {
+      tech <- private$meta$getTech()
+      if (verbose) {
+        techDf <- as.data.frame(tech, stringsAsFactors = FALSE, row.names = NULL)
+        cat("\nTechnical:\n")
+        print(techDf, row.names = FALSE)
+        cat("\n")
+      }
+      return(tech)
     },
 
     summarizeDocuments = function(verbose = TRUE) {
@@ -104,20 +115,15 @@ Document0 <- R6::R6Class(
           m$identity
         }))
 
-        # Extract quant
-        quant <- rbindlist(lapply(meta, function(m) {
-          m$quant
-        }))
-
         # Extract descriptive metadata
         descriptive <- rbindlist(lapply(meta, function(m) {
           m$descriptive
         }), fill = TRUE, use.names = TRUE)
 
-        # # Extract admin information
-        # admin <- rbindlist(lapply(meta, function(m) {
-        #   m$admin
-        # }))
+        # Extract quant
+        quant <- rbindlist(lapply(meta, function(m) {
+          m$quant
+        }))
 
         # Combine and format columns
         if (nrow(descriptive) > 0) {
@@ -168,9 +174,9 @@ Document0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Summary Methods                               #
     #-------------------------------------------------------------------------#
-    summary = function(id = TRUE, quant = TRUE, descriptive = TRUE,
-                       documents = TRUE, admin = TRUE, verbose = TRUE,
-                       abbreviated = FALSE) {
+    summary = function(id = TRUE, descriptive = TRUE, quant = TRUE,
+                       documents = TRUE, admin = TRUE, tech = TRUE,
+                       verbose = TRUE, abbreviated = FALSE) {
 
       if (abbreviated == FALSE) {
         sd <- list()
@@ -183,6 +189,7 @@ Document0 <- R6::R6Class(
           }
         }
         if (admin) sd$admin <- private$summarizeAdmin(verbose)
+        if (tech) sd$tech <- private$summarizeTech(verbose)
         invisible(sd)
       } else {
         invisible(private$meta$summary())
@@ -193,6 +200,7 @@ Document0 <- R6::R6Class(
     #                            Receive Method                               #
     #-------------------------------------------------------------------------#
     receive = function(x, notice) {
+      private$meta$modified(event = notice)
       private$logR$log(x = x, event = notice, level = "Info")
     },
 

@@ -9,7 +9,7 @@
 ValidationVisitor
 }
 \arguments{
-\item{object}{The object in its current state}
+\item{object}{The object in its current admin}
 }
 \description{
 \code{ValidationVisitor} Visitor class responsible for validation
