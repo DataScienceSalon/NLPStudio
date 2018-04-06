@@ -35,8 +35,8 @@ TextDocument collection / composite objects.
 }
 
 \seealso{
-Other Document Classes: \code{\link{Document0}},
-  \code{\link{TextDocument}}
+Other Document Classes: \code{\link{Corpus}},
+  \code{\link{Document0}}, \code{\link{TextDocument}}
 }
 \author{
 John James, \email{jjames@datasciencesalon.org}

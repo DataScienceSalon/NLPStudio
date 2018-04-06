@@ -52,16 +52,7 @@ Meta0 <- R6::R6Class(
   public = list(
 
     initialize = function() { stop("This method is not implemented for this base class.") },
-    getMeta = function() {
-
-      md <- private$..meta
-      # md <- list()
-      # md$identity <- as.data.frame(private$..meta$identity, stringsAsFactors = FALSE, row.names = NULL)
-      # md$custom <- as.data.frame(private$..meta$custom, stringsAsFactors = FALSE, row.names = NULL)
-      # md$stats <- as.data.frame(private$..meta$stats, stringsAsFactors = FALSE, row.names = NULL)
-      # md$state <- as.data.frame(private$..meta$state, stringsAsFactors = FALSE, row.names = NULL)
-      return(md)
-    },
+    getMeta = function() { return(private$..meta) },
 
     #-------------------------------------------------------------------------#
     #                            Identity Methods                             #
