@@ -25,29 +25,7 @@ Document0 <- R6::R6Class(
   lock_class = FALSE,
   inherit = Super,
 
-  public = list(
-    initialize = function() {stop("This method is not implemented for this component class ")},
-
-    #-------------------------------------------------------------------------#
-    #                 Convenience Getters and Query Method                    #
-    #-------------------------------------------------------------------------#
-    getId = function() private$meta$getIdentity(key = 'id'),
-    getName = function() private$meta$getIdentity(key = 'name'),
-    getIdentity = function() private$meta$getIdentity(),
-    query = function(key, value) private$meta$query(key, value),
-
-    #-------------------------------------------------------------------------#
-    #                           Metadata Methods                              #
-    #-------------------------------------------------------------------------#
-    metadata = function(key = NULL, value = NULL) {
-      if (is.null(key)) {
-        return(private$meta$getCustom())
-      } else {
-        private$meta$setCustom(key, value)
-        invisible(self)
-      }
-    },
-
+  private = list(
     #-------------------------------------------------------------------------#
     #                           Summary Methods                               #
     #-------------------------------------------------------------------------#
@@ -72,7 +50,6 @@ Document0 <- R6::R6Class(
       if (length(meta) > 0) {
         if (verbose) {
           metaDf <- as.data.frame(meta, stringsAsFactors = FALSE, row.names = NULL)
-          colnames(metaDf) <- sapply(colnames(metaDf), function(x) {proper(x)})
           cat("\n\nMetadata:\n")
           print(metaDf, row.names = FALSE)
         }
@@ -86,7 +63,6 @@ Document0 <- R6::R6Class(
       if (verbose) {
         if (!is.null(stats)) {
           statsDf <- as.data.frame(stats, stringsAsFactors = FALSE, row.names = NULL)
-          colnames(statsDf) <- sapply(colnames(statsDf), function(x) {proper(x)})
           cat("\n\nStatistics:\n")
           print(statsDf, row.names = FALSE)
         }
@@ -98,7 +74,6 @@ Document0 <- R6::R6Class(
       state <- private$meta$getState()
       if (verbose) {
         stateDf <- as.data.frame(state, stringsAsFactors = FALSE, row.names = NULL)
-        colnames(stateDf) <- sapply(colnames(stateDf), function(x) {proper(x)})
         cat("\nState:\n")
         print(stateDf, row.names = FALSE)
         cat("\n")
@@ -106,17 +81,111 @@ Document0 <- R6::R6Class(
       return(state)
     },
 
-    summary = function(verbose = TRUE, abbreviated = FALSE) {
+    summarizeDocuments = function(verbose = TRUE) {
+
+      summaries <- list()
+      meta <- list()
+      familySummary <- data.frame()
+
+      families <- unique(private$..inventory$family)
+
+      for (i in 1:length(families)) {
+        documents <- subset(private$..inventory, family == families[i])
+
+        # Get metadata for each document
+        for (j in 1:nrow(documents)) {
+          id <- documents$id[j]
+          document <- private$..documents[[id]]
+          meta[[id]] <- document$metadata()
+        }
+
+        # Extract identity information
+        identity <- rbindlist(lapply(meta, function(m) {
+          m$identity
+        }))
+
+        # Extract stats
+        stats <- rbindlist(lapply(meta, function(m) {
+          m$stats
+        }))
+
+        # Extract custom metadata
+        custom <- rbindlist(lapply(meta, function(m) {
+          m$custom
+        }), fill = TRUE, use.names = TRUE)
+
+        # # Extract state information
+        # state <- rbindlist(lapply(meta, function(m) {
+        #   m$state
+        # }))
+
+        # Combine and format columns
+        if (nrow(custom) > 0) {
+          familySummary <- cbind(identity, custom, stats)
+        } else {
+          familySummary <- cbind(identity, stats)
+        }
+
+        familySummary[is.na(familySummary)] <- " "
+
+        # Print Results if verbose
+        if (verbose) {
+          cat(paste0("\n\n", families[i], ":\n"))
+          print(familySummary[,-1], row.names = FALSE)
+        }
+
+        summaries <- c(summaries, familySummary)
+      }
+      return(summaries)
+    }
+  ),
+
+
+
+  public = list(
+    initialize = function() {stop("This method is not implemented for this component class ")},
+
+    #-------------------------------------------------------------------------#
+    #                 Convenience Getters and Query Method                    #
+    #-------------------------------------------------------------------------#
+    getId = function() private$meta$getIdentity(key = 'id'),
+    getName = function() private$meta$getIdentity(key = 'name'),
+    getIdentity = function() private$meta$getIdentity(),
+    query = function(key, value) private$meta$query(key, value),
+
+    #-------------------------------------------------------------------------#
+    #                           Metadata Methods                              #
+    #-------------------------------------------------------------------------#
+    metadata = function(key = NULL, value = NULL) {
+      if (is.null(key)) {
+        return(private$meta$getMeta())
+      } else {
+        private$meta$setCustom(key, value)
+        invisible(self)
+      }
+    },
+
+    #-------------------------------------------------------------------------#
+    #                           Summary Methods                               #
+    #-------------------------------------------------------------------------#
+    summary = function(id = TRUE, stats = TRUE, custom = TRUE,
+                       documents = TRUE, state = TRUE, verbose = TRUE,
+                       abbreviated = FALSE) {
 
       if (abbreviated == FALSE) {
         sd <- list()
-        sd$id <- self$summarizeId(verbose)
-        sd$stats <- self$summarizeStats(verbose)
-        sd$meta  <- self$summarizeCustomMeta(verbose)
-        sd$state <- self$summarizeState(verbose)
+        if (id) sd$id <- private$summarizeId(verbose)
+        if (stats) sd$stats <- private$summarizeStats(verbose)
+        if (custom) sd$meta  <- private$summarizeCustomMeta(verbose)
+        if (documents) {
+          if (length(private$..documents) > 0) {
+            sd$documents <- private$summarizeDocuments(verbose)
+          }
+        }
+        if (state) sd$state <- private$summarizeState(verbose)
         invisible(sd)
       } else {
-        invisible(private$meta$summary(verbose))
+        invisible(private$meta$summary())
       }
     },
 

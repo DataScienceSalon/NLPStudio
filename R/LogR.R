@@ -87,12 +87,11 @@ LogR <- R6::R6Class(
     printLog = function() {
 
       cat("\n\nObject Log:")
-      private$..owner$summarizeId()
-
+      private$..owner$summary(id = TRUE, stats = FALSE, custom = FALSE,
+                              documents = FALSE, state = FALSE, verbose = TRUE)
       log <- private$..log
 
       if (nrow(log) > 0) {
-        colnames(log) <- sapply(colnames(log), function(x) {proper(x)})
         cat("\n")
         print(log, row.names = FALSE)
         cat("\n")

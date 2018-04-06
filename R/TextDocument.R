@@ -106,7 +106,7 @@ TextDocument <- R6::R6Class(
     initialize = function(x, name = NULL, purpose = NULL) {
 
       private$loadDependencies()
-      private$meta <- Meta$new(x = self, name = name, purpose = purpose)
+      private$meta <- Meta$new(owner = self, name = name, purpose = purpose)
 
       # Validate content
       if (private$validateContent(x, method = 'initialize') == FALSE) stop()

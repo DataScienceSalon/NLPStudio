@@ -64,6 +64,8 @@ Collection0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     getDocument = function(key, value) {
 
+      if (is.null(key)) return(private$..documents)
+
       # Validate key/value pair
       private$..params <- list()
       private$..params$kv$key <- key
@@ -75,8 +77,12 @@ Collection0 <- R6::R6Class(
         stop()
       }
 
+      # Search for documents that match the metadata and return
       listCondition <- private$search(key, value)
-      return(private$..documents[[listCondition]])
+      result <- private$..documents[listCondition]
+      if (length(result) == 1) result <- result[[1]]
+
+      return(result)
     },
 
     #-------------------------------------------------------------------------#
@@ -105,10 +111,10 @@ Collection0 <- R6::R6Class(
       # Update date/time metadata and create log entry
       event <- paste0("Attached ", x$getName(), " object to ", self$getName(), ".")
       private$meta$modified(event = event)
-      private$logR$log( method = 'addDocument',
+      private$logR$log(method = 'addDocument',
                        event = event)
 
-      return(self)
+      invisible(self)
 
     },
     #-------------------------------------------------------------------------#
@@ -116,68 +122,24 @@ Collection0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     removeDocument = function(x) {
 
-      id <- x$getId()
+      identifier <- x$getId()
 
-      if (!is.null(private$..documents[[id]])) {
-        private$..documents[[id]] <- NULL
-        private$..inventory <- subset(private$..inventory, id != id)
+      if (!is.null(private$..documents[[identifier]])) {
+        private$..documents[[identifier]] <- NULL
+        private$..inventory <- private$..inventory %>%
+          dplyr::filter(id != identifier)
         event <- paste0("Removed ", x$getName(), " from ",
                                   self$getName(), ".")
         private$meta$modified(event = event)
         private$logR$log( method = 'removeDocument',
                          event = event)
       } else {
-        self$access()
         event <- paste0("Object is not attached to ",
                         self$getName(), ". ")
         private$logR$log( method = 'removeDocument',
                          event = event, level = "Warn")
       }
       invisible(self)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                            Summary Methods                              #
-    #-------------------------------------------------------------------------#
-    summarizeDocuments = function(verbose = TRUE) {
-
-      summaries <- list()
-      familySummary <- data.frame()
-
-      families <- unique(private$..inventory$family)
-
-      for (i in 1:length(families)) {
-        documents <- subset(private$..inventory, family == families[i])
-        cat(paste0("\n\n", families[i], ":\n"))
-        for (j in 1:nrow(documents)) {
-          id <- documents$id[j]
-          document <- private$..documents[[id]]
-          docSummary <- document$summary(abbreviated = TRUE, verbose= FALSE)[-1]
-          familySummary <- plyr::rbind.fill(familySummary, docSummary)
-        }
-        colnames(familySummary) <- sapply(colnames(familySummary),
-                                            function(x) {proper(x)})
-        if (verbose) print(familySummary, row.names = FALSE)
-        summaries <- c(summaries, familySummary)
-      }
-      return(summaries)
-    },
-
-    summary = function(verbose = TRUE, abbreviated = FALSE) {
-
-      if (abbreviated == FALSE) {
-        sd <- list()
-        sd$id <- self$summarizeId(verbose)
-        sd$stats <- self$summarizeStats(verbose)
-        sd$meta  <- self$summarizeCustomMeta(verbose)
-        if (length(private$..documents) > 0) {
-          sd$documents <- self$summarizeDocuments(verbose)
-        }
-        sd$state <- self$summarizeState(verbose)
-        invisible(sd)
-      } else {
-        invisible(private$meta$summary())
-      }
     }
   )
 )

@@ -28,11 +28,11 @@ Meta0 <- R6::R6Class(
       state = list()
     ),
 
-    setIdentity = function(x, name = NULL, purpose = NULL) {
+    setIdentity = function(owner, name = NULL, purpose = NULL) {
 
       # Designate family, class and purpose
-      private$..meta$identity$family <- class(x)[2]
-      private$..meta$identity$class <- class(x)[1]
+      private$..meta$identity$family <- class(owner)[2]
+      private$..meta$identity$class <- class(owner)[1]
 
       # Creates unique identifier
       settings <- hashids::hashid_settings(salt = 'this is my salt', min_length = 8)
@@ -52,6 +52,16 @@ Meta0 <- R6::R6Class(
   public = list(
 
     initialize = function() { stop("This method is not implemented for this base class.") },
+    getMeta = function() {
+
+      md <- private$..meta
+      # md <- list()
+      # md$identity <- as.data.frame(private$..meta$identity, stringsAsFactors = FALSE, row.names = NULL)
+      # md$custom <- as.data.frame(private$..meta$custom, stringsAsFactors = FALSE, row.names = NULL)
+      # md$stats <- as.data.frame(private$..meta$stats, stringsAsFactors = FALSE, row.names = NULL)
+      # md$state <- as.data.frame(private$..meta$state, stringsAsFactors = FALSE, row.names = NULL)
+      return(md)
+    },
 
     #-------------------------------------------------------------------------#
     #                            Identity Methods                             #
