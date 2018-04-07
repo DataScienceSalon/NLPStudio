@@ -32,11 +32,9 @@ Document0 <- R6::R6Class(
     summarizeIdMeta = function() {
 
       identity <- private$meta$getIdentity()
-      cat(paste0("\n\nObject Family: ", identity$family))
       cat(paste0("\nObject Class : ", identity$class))
       cat(paste0("\nObject Id    : ", identity$id))
       cat(paste0("\nObject Name  : ", identity$name))
-      cat(paste0("\nPurpose      : ", identity$purpose))
       return(identity)
 
     },

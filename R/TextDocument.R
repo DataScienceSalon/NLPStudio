@@ -79,7 +79,7 @@ TextDocument <- R6::R6Class(
       private$..params$classes$valid <- list('character')
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
-        private$logR$log( method = method,
+        private$logR$log(method = method,
                           event = v$msg, level = "Error")
       }
       return(v$code)
@@ -96,7 +96,6 @@ TextDocument <- R6::R6Class(
       private$meta$modified(event = note)
       return(TRUE)
     }
-
   ),
 
   public = list(
@@ -104,12 +103,10 @@ TextDocument <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Core Methods                                  #
     #-------------------------------------------------------------------------#
-    initialize = function(x, name = NULL, purpose = NULL,
-                          fileName = NULL, fileSource = NULL) {
+    initialize = function(x, name = NULL) {
 
       private$loadDependencies()
-      private$meta <- Meta$new(x = self, name = name, purpose = purpose,
-                               fileName, fileSource)
+      private$meta <- Meta$new(x = self, name = name)
 
       # Validate content
       if (private$validateContent(x, method = 'initialize') == FALSE) stop()
@@ -137,20 +134,47 @@ TextDocument <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                           Overview Method                               #
+    #                           Summary Method                                #
     #-------------------------------------------------------------------------#
-    overview = function() {
+    summary = function(select = NULL) {
 
-      admin <- self$getAdminMeta()
+      private$..params <- list()
+      private$..params$discrete$variables <- 'select'
+      private$..params$discrete$values <- select
+      private$..params$discrete$valid <- list(c('id', 'descriptive', 'functional',
+                                           'quant', 'documents', 'admin',
+                                           'tech'))
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = 'summary',  event = v$msg, level = "Error")
+        stop()
+      }
 
-      created <- format(admin$created, format="%Y-%m-%d %H:%M:%S")
-      s <- c(self$getIdentity(), self$getDescriptiveMeta(), self$getQuantMeta(),
-             self$getFunctionalMeta(), createdBy = admin$createdBy,
-             created = created)
-      s <- Filter(Negate(is.null), s)
-      s <- as.data.frame(s, stringsAsFactors = FALSE, row.names = NULL)
+      print("**********************************")
+      print(private$summarizeFunctionalMeta())
+      sd <- list()
 
-      return(s)
+      if (is.null(select)) {
+        sd$id <- private$summarizeIdMeta()
+        sd$descriptive <- private$summarizeDescriptiveMeta()
+        sd$quant <- private$summarizeQuantMeta()
+        sd$functional  <- private$summarizeFunctionalMeta()
+        sd$documents <- private$summarizeDocumentMeta()
+        sd$admin <- private$summarizeAdminMeta()
+        sd$tech <- private$summarizeTechMeta()
+        invisible(sd)
+      } else {
+        sd <- switch(select,
+               id = private$summarizeIdMeta(),
+               descriptive = private$summarizeDescriptiveMeta(),
+               functional = private$summarizeFunctionalMeta(),
+               quant = private$summarizeQuantMeta(),
+               admin = private$summarizeAdminMeta(),
+               tech = private$summarizeTechMeta()
+                )
+      }
+
+      invisible(sd)
     },
 
     #-------------------------------------------------------------------------#

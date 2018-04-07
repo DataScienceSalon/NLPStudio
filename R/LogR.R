@@ -87,7 +87,7 @@ LogR <- R6::R6Class(
     printLog = function() {
 
       cat("\n\nObject Log:")
-      private$..x$summary(select = 'id', verbose = TRUE)
+      private$..x$summary(select = 'id')
       log <- private$..log
 
       if (nrow(log) > 0) {

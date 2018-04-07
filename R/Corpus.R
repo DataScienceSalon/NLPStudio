@@ -92,12 +92,10 @@ Corpus <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Core Methods                                  #
     #-------------------------------------------------------------------------#
-    initialize = function(x, name = NULL, purpose = NULL, fileName = NULL,
-                          fileSource = NULL) {
+    initialize = function(x, name = NULL) {
 
       private$loadDependencies()
-      private$meta <- Meta$new(x = self, name = name, purpose = purpose,
-                               fileName, fileSource)
+      private$meta <- Meta$new(x = self, name = name)
       private$logR$log(method = 'initialize',
                        event = "Initialization complete.")
       invisible(self)

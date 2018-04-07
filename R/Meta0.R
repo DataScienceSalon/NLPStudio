@@ -36,9 +36,8 @@ Meta0 <- R6::R6Class(
 
     setIdentity = function(x, name = NULL) {
 
-      # Designate family, class and purpose
-      private$..meta$identity$family <- class(x)[2]
-      private$..meta$identity$class <- class(x)[1]
+      # Designate class
+      private$..meta$identity$classname <- class(x)[1]
 
       # Creates unique identifier
       settings <- hashids::hashid_settings(salt = 'this is my salt', min_length = 8)

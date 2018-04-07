@@ -59,7 +59,7 @@ Collection0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Document Metadata                             #
     #-------------------------------------------------------------------------#
-    getDocumentMeta = function(family = NULL) {
+    getDocumentMeta = function(classname = NULL) {
 
       # Obtains document metadata by family and type of metadata. The first
       # level is a list containing metadata for each family of class. Each
@@ -69,13 +69,13 @@ Collection0 <- R6::R6Class(
 
       if (nrow(private$..inventory) == 0) return(NULL)
 
-      families <- unique(private$..inventory$family)
+      classes <- unique(private$..inventory$classname)
 
-      if (!is.null(family)) {
-        if (family %in% families) {
-          families <- family
+      if (!is.null(classname)) {
+        if (classname %in% classes) {
+          classes <- classname
         } else {
-          event <- paste0("No documents of the ", family, " class family are ",
+          event <- paste0("No documents of the ", classname, " class are ",
                           "attached to this object.")
           private$logR$log(x = self, event = event, method = "getDocumentMeta",
                            level = "Error")
@@ -85,8 +85,8 @@ Collection0 <- R6::R6Class(
 
       documentMeta <- list()
 
-      for (i in 1:length(families)) {
-        documents <- subset(private$..inventory, family == families[i])
+      for (i in 1:length(classes)) {
+        documents <- subset(private$..inventory, classname == classes[i])
 
         # Get metadata for each document
         meta <- list()
@@ -129,8 +129,48 @@ Collection0 <- R6::R6Class(
           m$tech
         }))
 
-        documentMeta[[families[i]]] <- type
+        documentMeta[[classes[i]]] <- type
       }
+      return(documentMeta)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                     Summary Documents Method                            #
+    #-------------------------------------------------------------------------#
+    summarizeDocumentMeta = function(classname = NULL) {
+
+      if (length(private$..documents) == 0) return(NULL)
+
+      documentMeta <- private$getDocumentMeta(classname)
+      classes <- names(documentMeta)
+      lapply(seq_along(documentMeta), function(x) {
+
+        # Combine relevant metadata types
+        sections <- list(documentMeta[[x]]$identity,
+                         documentMeta[[x]]$descriptive,
+                         documentMeta[[x]]$quant,
+                         documentMeta[[x]]$functional,
+                         documentMeta[[x]]$admin,
+                         documentMeta[[x]]$tech)
+
+        # Combine data into a single data frame
+        docSummary <- sections[[1]]
+        for (i in 2:length(sections)) {
+          if (nrow(sections[[i]]) > 0)  docSummary <- cbind(docSummary, sections[[i]])
+        }
+
+        # Remove non-essential data
+        docSummary <- docSummary %>% select(-classname, -modified, -modifiedBy,
+                                            -nModified, -accessed, -accessedBy,
+                                            -nAccessed, -lastState, -hardware,
+                                            -os, -release, -version)
+
+        # Print summary
+        cat("\n\n")
+        print(classes[x], row.names = FALSE)
+        print(docSummary, row.names = FALSE)
+      })
+
       return(documentMeta)
     }
   ),
