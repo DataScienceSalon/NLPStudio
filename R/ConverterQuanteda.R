@@ -23,19 +23,18 @@ ConverterQuanteda <- R6::R6Class(
 
     to = function(x) {
 
-      # Extract metadata
-      meta <- x$metadata()
-      dMeta <- x$docMeta()
-
       # Create named corpus vectors, one document per vector
-      docs <- x$getDocuments(cls = "TextDocument")
+      docSummary <- td$summary(id = FALSE, descriptive = FALSE, quant = FALSE,
+                               admin = FALSE, tech = FALSE, verbose = FALSE)
+      docs <- x$getDocument(key = 'class', value = 'TextDocument')
+      docNames <- unlist(lapply(docs, function(d) { d$getName() }))
       content <- unlist(lapply(docs, function(d) {
-        paste(d$content, collapse = "")
+        paste(d$content(), collapse = "")
       }))
-      names(content) <- dMeta$name
+      names(content) <- docNames
 
       # Create quanteda corpus object
-      qCorpus <- quanteda::corpus(content, docnames = dMeta$name,
+      qCorpus <- quanteda::corpus(content, docnames = docNames,
                                  docvars = dMeta, metacorpus = cMeta)
       return(qCorpus)
     },
@@ -50,7 +49,7 @@ ConverterQuanteda <- R6::R6Class(
       corpus <- Corpus$new()
       keys <- names(cMeta)
       values <- cMeta
-      corpus <- corpus$metadata(key = keys, value = values)
+      corpus <- corpus$getMeta(key = keys, value = values)
 
       # Add documents
       lapply(seq_along(x$documents$texts), function(t) {

@@ -15,7 +15,8 @@
 #'   is updated with the contents of the character vector 'x'. Sentence, word, token, type,
 #'   sentence and word length statistics are also computed and the metadata is updated
 #'   accordingly.}
-#'   \item{\code{summary()}}{Summarizes the TextDocument object.}
+#'   \item{\code{overview()}}{Provides a subset of the metadata in a one-row data.frame format.
+#'   This is used by the parent class's summary method.  }
 #'  }
 #'
 #' @param name Character string containing the name for the TextDocument object.
@@ -107,7 +108,7 @@ TextDocument <- R6::R6Class(
                           fileName = NULL, fileSource = NULL) {
 
       private$loadDependencies()
-      private$meta <- Meta$new(owner = self, name = name, purpose = purpose,
+      private$meta <- Meta$new(x = self, name = name, purpose = purpose,
                                fileName, fileSource)
 
       # Validate content
@@ -133,6 +134,23 @@ TextDocument <- R6::R6Class(
         private$processContent(x, note = note)
       }
       invisible(self)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                           Overview Method                               #
+    #-------------------------------------------------------------------------#
+    overview = function() {
+
+      admin <- self$getAdminMeta()
+
+      created <- format(admin$created, format="%Y-%m-%d %H:%M:%S")
+      s <- c(self$getIdentity(), self$getDescriptiveMeta(), self$getQuantMeta(),
+             self$getFunctionalMeta(), createdBy = admin$createdBy,
+             created = created)
+      s <- Filter(Negate(is.null), s)
+      s <- as.data.frame(s, stringsAsFactors = FALSE, row.names = NULL)
+
+      return(s)
     },
 
     #-------------------------------------------------------------------------#

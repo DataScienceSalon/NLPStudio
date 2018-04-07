@@ -25,6 +25,7 @@ Meta0 <- R6::R6Class(
       identity = list(),
       descriptive = list(),
       quant = list(),
+      functional = list(),
       admin = list(),
       tech = list()
     ),
@@ -33,11 +34,11 @@ Meta0 <- R6::R6Class(
     #                           Identity Metadata                             #
     #-------------------------------------------------------------------------#
 
-    setIdentity = function(owner, name = NULL, purpose = NULL) {
+    setIdentity = function(x, name = NULL) {
 
       # Designate family, class and purpose
-      private$..meta$identity$family <- class(owner)[2]
-      private$..meta$identity$class <- class(owner)[1]
+      private$..meta$identity$family <- class(x)[2]
+      private$..meta$identity$class <- class(x)[1]
 
       # Creates unique identifier
       settings <- hashids::hashid_settings(salt = 'this is my salt', min_length = 8)
@@ -49,7 +50,6 @@ Meta0 <- R6::R6Class(
                                              paste0(private$..meta$identity$class,
                                                     " (", toupper(private$..meta$identity$id),
                                                     ")"), name)
-      private$..meta$identity$purpose <- purpose
       invisible(self)
     },
 
@@ -67,27 +67,6 @@ Meta0 <- R6::R6Class(
       private$..meta$admin$accessedBy <- Sys.info()[["user"]]
       private$..meta$admin$nAccessed <- 0
       private$..meta$admin$lastState <- "Instantiated."
-
-      return(TRUE)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                          Technical Metadata                             #
-    #-------------------------------------------------------------------------#
-
-    setTech = function(owner, fileName = NULL, fileSource = NULL) {
-
-      private$..meta$tech$hardware <- Sys.info()["machine"]
-      private$..meta$tech$os <- Sys.info()["sysname"]
-      private$..meta$tech$release <- Sys.info()["release"]
-      private$..meta$tech$version <- Sys.info()["version"]
-      private$..meta$tech$size <- as.character(format(object.size(owner),
-                                                      units = "auto"))
-      private$..meta$tech$fileName <- fileName
-      private$..meta$tech$fileSource <- fileSource
-      if (!is.null(fileName) & !is.null(fileSource)) {
-        private$..meta$tech$fileSize <- file.size(file.path(fileSource, fileName))
-      }
 
       return(TRUE)
     }
@@ -174,6 +153,29 @@ Meta0 <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
+    #                           Functional  Methods                           #
+    #-------------------------------------------------------------------------#
+    getFunctional = function() { return(private$..meta$functional) },
+
+    setFunctional = function(key, value) {
+
+      private$..params$kv$key <- key
+      private$..params$kv$value <- value
+      private$..params$kv$equalLen <- TRUE
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log( method = 'setFunctional',
+                          event = v$msg, level = "Error")
+        stop()
+      }
+
+      for (i in 1:length(key)) {
+        private$..meta$functional[[key[i]]] <- value[i]
+      }
+      invisible(self)
+    },
+
+    #-------------------------------------------------------------------------#
     #                             Admin Methods                               #
     #-------------------------------------------------------------------------#
     getAdmin = function() { return(private$..meta$admin) },
@@ -205,6 +207,25 @@ Meta0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     getTech = function() { private$..meta$tech },
 
+    setTech = function(x, fileName = NULL, directory = NULL, url = NULL) {
+
+      private$..meta$tech$hardware <- Sys.info()["machine"]
+      private$..meta$tech$os <- Sys.info()["sysname"]
+      private$..meta$tech$release <- Sys.info()["release"]
+      private$..meta$tech$version <- Sys.info()["version"]
+      private$..meta$tech$size <- as.character(format(object.size(x),
+                                                      units = "auto"))
+      private$..meta$tech$fileName <- fileName
+      private$..meta$tech$directory <- directory
+      if (!is.null(fileName) & !is.null(fileSource)) {
+        private$..meta$tech$fileSize <- file.size(file.path(fileSource, fileName))
+      }
+      private$..meta$tech$url <- url
+
+      return(TRUE)
+    },
+
+
     #-------------------------------------------------------------------------#
     #                             Query Methods                               #
     #-------------------------------------------------------------------------#
@@ -233,21 +254,6 @@ Meta0 <- R6::R6Class(
       }
 
       return(FALSE)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                           Summary Method                                #
-    #-------------------------------------------------------------------------#
-    summary = function() {
-
-      created <- format(private$..meta$admin$created, format="%Y-%m-%d %H:%M:%S")
-      s <- c(private$..meta$identity, private$..meta$descriptive, private$..meta$quant,
-             createdBy = private$..meta$admin$createdBy,
-             created = created)
-      s <- Filter(Negate(is.null), s)
-      s <- as.data.frame(s, stringsAsFactors = FALSE, row.names = NULL)
-
-      return(s)
     }
   )
 )

@@ -31,7 +31,7 @@ Super <- R6::R6Class(
     validator = character(),
 
     loadDependencies = function() {
-      private$logR <- LogR$new(owner = self)
+      private$logR <- LogR$new(x = self)
       private$validator <- Validator$new()
       return(TRUE)
     }

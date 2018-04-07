@@ -30,7 +30,7 @@ ConverterTM <- R6::R6Class(
     to = function(x) {
 
       # Extract metadata
-      cMeta <- as.list(x$metadata()$core)
+      cMeta <- as.list(x$getMeta()$core)
       cMetaNames <- names(cMeta)
       dMeta <- as.data.frame(x$docMeta())
       dMetaNames <- colnames(dMeta)
@@ -79,7 +79,7 @@ ConverterTM <- R6::R6Class(
       corpus <- Corpus$new()
       keys <- names(cMeta)
       values <- cMeta
-      corpus$metadata(key = keys, value = values)
+      corpus$getMeta(key = keys, value = values)
 
       # Add documents
       for (i in 1:length(docs)) {

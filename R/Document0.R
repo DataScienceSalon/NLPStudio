@@ -29,120 +29,77 @@ Document0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Summary Methods                               #
     #-------------------------------------------------------------------------#
-    summarizeId = function(verbose = TRUE) {
+    summarizeIdMeta = function() {
 
       identity <- private$meta$getIdentity()
-      if (verbose) {
-        cat(paste0("\n\nObject Family: ", identity$family))
-        cat(paste0("\nObject Class : ", identity$class))
-        cat(paste0("\nObject Id    : ", identity$id))
-        cat(paste0("\nObject Name  : ", identity$name))
-        cat(paste0("\nPurpose      : ", identity$purpose))
-      }
+      cat(paste0("\n\nObject Family: ", identity$family))
+      cat(paste0("\nObject Class : ", identity$class))
+      cat(paste0("\nObject Id    : ", identity$id))
+      cat(paste0("\nObject Name  : ", identity$name))
+      cat(paste0("\nPurpose      : ", identity$purpose))
       return(identity)
 
     },
 
-    summarizeDescriptiveMeta = function(verbose = TRUE) {
+    summarizeDescriptiveMeta = function() {
 
-      meta <- private$meta$getDescriptive()
-
-      if (length(meta) > 0) {
-        if (verbose) {
-          metaDf <- as.data.frame(meta, stringsAsFactors = FALSE, row.names = NULL)
-          cat("\n\nDescriptive:\n")
-          print(metaDf, row.names = FALSE)
-        }
-        return(meta)
+      descriptive <- private$meta$getDescriptive()
+      if (length(descriptive) > 0) {
+        metaDf <- as.data.frame(descriptive, stringsAsFactors = FALSE,
+                                row.names = NULL)
+        cat("\n\nDescriptive:\n")
+        print(metaDf, row.names = FALSE)
+        return(descriptive)
       }
       return(NULL)
     },
 
-    summarizeQuant = function(verbose = TRUE) {
+    summarizeQuantMeta = function() {
+
       quant <- private$meta$getQuant()
-      if (verbose) {
-        if (!is.null(quant)) {
-          quantDf <- as.data.frame(quant, stringsAsFactors = FALSE, row.names = NULL)
-          cat("\n\nQuantitative:\n")
-          print(quantDf, row.names = FALSE)
-        }
+      if (length(quant > 0)) {
+        quantDf <- as.data.frame(quant, stringsAsFactors = FALSE,
+                                 row.names = NULL)
+        cat("\n\nQuantitative:\n")
+        print(quantDf, row.names = FALSE)
+        return(quant)
       }
-      return(quant)
+      return(NULL)
     },
 
-    summarizeAdmin = function(verbose = TRUE) {
-      admin <- private$meta$getAdmin()
-      if (verbose) {
-        adminDf <- as.data.frame(admin, stringsAsFactors = FALSE, row.names = NULL)
-        cat("\nAdministrative:\n")
-        print(adminDf, row.names = FALSE)
-        cat("\n")
+    summarizeFunctionalMeta = function() {
+
+      functional <- private$meta$getFunctional()
+      if (length(functional) > 0) {
+        metaDf <- as.data.frame(functional, stringsAsFactors = FALSE,
+                                row.names = NULL)
+        cat("\n\nFunctional:\n")
+        print(metaDf, row.names = FALSE)
+        return(functional)
       }
+      return(NULL)
+    },
+
+
+    summarizeAdminMeta = function() {
+
+      admin <- private$meta$getAdmin()
+      adminDf <- as.data.frame(admin, stringsAsFactors = FALSE, row.names = NULL)
+      cat("\nAdministrative:\n")
+      print(adminDf, row.names = FALSE)
+      cat("\n")
       return(admin)
     },
 
-    summarizeTech = function(verbose = TRUE) {
+    summarizeTechMeta = function() {
+
       tech <- private$meta$getTech()
-      if (verbose) {
-        techDf <- as.data.frame(tech, stringsAsFactors = FALSE, row.names = NULL)
-        cat("\nTechnical:\n")
-        print(techDf, row.names = FALSE)
-        cat("\n")
-      }
+
+      techDf <- as.data.frame(tech, stringsAsFactors = FALSE, row.names = NULL)
+      cat("\nTechnical:\n")
+      print(techDf, row.names = FALSE)
+      cat("\n")
       return(tech)
-    },
-
-    summarizeDocuments = function(verbose = TRUE) {
-
-      summaries <- list()
-      meta <- list()
-      familySummary <- data.frame()
-
-      families <- unique(private$..inventory$family)
-
-      for (i in 1:length(families)) {
-        documents <- subset(private$..inventory, family == families[i])
-
-        # Get metadata for each document
-        for (j in 1:nrow(documents)) {
-          id <- documents$id[j]
-          document <- private$..documents[[id]]
-          meta[[id]] <- document$metadata()
-        }
-
-        # Extract identity information
-        identity <- rbindlist(lapply(meta, function(m) {
-          m$identity
-        }))
-
-        # Extract descriptive metadata
-        descriptive <- rbindlist(lapply(meta, function(m) {
-          m$descriptive
-        }), fill = TRUE, use.names = TRUE)
-
-        # Extract quant
-        quant <- rbindlist(lapply(meta, function(m) {
-          m$quant
-        }))
-
-        # Combine and format columns
-        if (nrow(descriptive) > 0) {
-          familySummary <- cbind(identity, descriptive, quant)
-        } else {
-          familySummary <- cbind(identity, quant)
-        }
-
-        familySummary[is.na(familySummary)] <- " "
-
-        # Print Results if verbose
-        if (verbose) {
-          cat(paste0("\n\n", families[i], ":\n"))
-          print(familySummary[,-1], row.names = FALSE)
-        }
-
-        summaries <- c(summaries, familySummary)
-      }
-      return(summaries)
     }
   ),
 
@@ -152,48 +109,27 @@ Document0 <- R6::R6Class(
     initialize = function() {stop("This method is not implemented for this component class ")},
 
     #-------------------------------------------------------------------------#
-    #                 Convenience Getters and Query Method                    #
+    #                             Metadata Methods                            #
     #-------------------------------------------------------------------------#
-    getId = function() private$meta$getIdentity(key = 'id'),
-    getName = function() private$meta$getIdentity(key = 'name'),
-    getIdentity = function() private$meta$getIdentity(),
-    query = function(key, value) private$meta$query(key, value),
+    getId = function() { return(private$meta$getIdentity(key = 'id')) },
+    getName = function() { return(private$meta$getIdentity(key = 'name')) },
+    getIdentity = function() { return(private$meta$getIdentity()) },
+    getMeta = function() { return(private$meta$getMeta()) },
+    getDescriptiveMeta = function(key = NULL) { return(private$meta$getDescriptive(key)) },
+    getQuantMeta = function() { return(private$meta$getQuant()) },
+    getFunctionalMeta = function() { return(private$meta$getFunctional()) },
+    getAdminMeta = function() { return(private$meta$getAdmin()) },
+    getTechMeta = function() { return(private$meta$getTech()) },
+    query = function(key, value) { return(private$meta$query(key, value)) },
 
-    #-------------------------------------------------------------------------#
-    #                           Metadata Methods                              #
-    #-------------------------------------------------------------------------#
-    metadata = function(key = NULL, value = NULL) {
-      if (is.null(key)) {
-        return(private$meta$getMeta())
-      } else {
-        private$meta$setDescriptive(key, value)
-        invisible(self)
-      }
+    setDescriptiveMeta = function(key, value) {
+      private$meta$setDescriptive(key, value)
+      invisible(self)
     },
 
-    #-------------------------------------------------------------------------#
-    #                           Summary Methods                               #
-    #-------------------------------------------------------------------------#
-    summary = function(id = TRUE, descriptive = TRUE, quant = TRUE,
-                       documents = TRUE, admin = TRUE, tech = TRUE,
-                       verbose = TRUE, abbreviated = FALSE) {
-
-      if (abbreviated == FALSE) {
-        sd <- list()
-        if (id) sd$id <- private$summarizeId(verbose)
-        if (quant) sd$quant <- private$summarizeQuant(verbose)
-        if (descriptive) sd$meta  <- private$summarizeDescriptiveMeta(verbose)
-        if (documents) {
-          if (length(private$..documents) > 0) {
-            sd$documents <- private$summarizeDocuments(verbose)
-          }
-        }
-        if (admin) sd$admin <- private$summarizeAdmin(verbose)
-        if (tech) sd$tech <- private$summarizeTech(verbose)
-        invisible(sd)
-      } else {
-        invisible(private$meta$summary())
-      }
+    setFunctionalMeta = function(key, value) {
+      private$meta$setFunctional(key, value)
+      invisible(self)
     },
 
     #-------------------------------------------------------------------------#

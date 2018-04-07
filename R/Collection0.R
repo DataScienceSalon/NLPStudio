@@ -54,6 +54,84 @@ Collection0 <- R6::R6Class(
       }
 
       return(listCondition)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                           Document Metadata                             #
+    #-------------------------------------------------------------------------#
+    getDocumentMeta = function(family = NULL) {
+
+      # Obtains document metadata by family and type of metadata. The first
+      # level is a list containing metadata for each family of class. Each
+      # family list contains lists of metadata by type. Each type list
+      # contains a data frame containing the appropriate metadata for
+      # each document.
+
+      if (nrow(private$..inventory) == 0) return(NULL)
+
+      families <- unique(private$..inventory$family)
+
+      if (!is.null(family)) {
+        if (family %in% families) {
+          families <- family
+        } else {
+          event <- paste0("No documents of the ", family, " class family are ",
+                          "attached to this object.")
+          private$logR$log(x = self, event = event, method = "getDocumentMeta",
+                           level = "Error")
+          stop()
+        }
+      }
+
+      documentMeta <- list()
+
+      for (i in 1:length(families)) {
+        documents <- subset(private$..inventory, family == families[i])
+
+        # Get metadata for each document
+        meta <- list()
+        for (j in 1:nrow(documents)) {
+          id <- documents$id[j]
+          document <- private$..documents[[id]]
+          meta[[id]] <- document$getMeta()
+        }
+
+        # Create separate dataframes containing document meta for each type
+        type <- list()
+
+        # Extract identity information
+        type$identity <- rbindlist(lapply(meta, function(m) {
+          m$identity
+        }))
+
+        # Extract descriptive metadata
+        type$descriptive <- rbindlist(lapply(meta, function(m) {
+          m$descriptive
+        }), fill = TRUE, use.names = TRUE)
+
+        # Extract functional metadata
+        type$functional <- rbindlist(lapply(meta, function(m) {
+          m$functional
+        }), fill = TRUE, use.names = TRUE)
+
+        # Extract quant metadata
+        type$quant <- rbindlist(lapply(meta, function(m) {
+          m$quant
+        }))
+
+        # Extract admin metadata
+        type$admin <- rbindlist(lapply(meta, function(m) {
+          m$admin
+        }))
+
+        # Extract technical metadata
+        type$tech <- rbindlist(lapply(meta, function(m) {
+          m$tech
+        }))
+
+        documentMeta[[families[i]]] <- type
+      }
+      return(documentMeta)
     }
   ),
 
@@ -62,7 +140,7 @@ Collection0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                             getDocument                                 #
     #-------------------------------------------------------------------------#
-    getDocument = function(key, value) {
+    getDocument = function(key = NULL, value = NULL) {
 
       if (is.null(key)) return(private$..documents)
 

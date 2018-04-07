@@ -21,13 +21,12 @@ Meta <- R6::R6Class(
 
   public = list(
 
-    initialize = function(owner, name = NULL, purpose = NULL, fileName = NULL,
-                          fileSource = NULL) {
+    initialize = function(x, name = NULL) {
 
       private$loadDependencies()
-      private$setIdentity(owner, name, purpose)
+      private$setIdentity(x, name)
       private$setAdmin()
-      private$setTech(owner, fileName, fileSource)
+      self$setTech(x)
       invisible(self)
 
     },

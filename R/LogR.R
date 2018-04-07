@@ -25,7 +25,7 @@ LogR <- R6::R6Class(
   lock_class = TRUE,
 
   private = list(
-    ..owner = character(),
+    ..x = character(),
     ..log = data.frame(),
     ..logPath = './NLPStudio/logs',
     notifyInfo  = function(note) futile.logger::flog.info(note, name = "green"),
@@ -35,9 +35,9 @@ LogR <- R6::R6Class(
 
   public = list(
 
-    initialize = function(owner, logPath = NULL) {
+    initialize = function(x, logPath = NULL) {
 
-      private$..owner <- owner
+      private$..x <- x
 
       if (is.null(logPath)) {
         logPath <- private$..logPath
@@ -58,7 +58,7 @@ LogR <- R6::R6Class(
       level <- gsub("(^|[[:space:]])([[:alpha:]])", "\\1\\U\\2",
                     level, perl = TRUE)
 
-      note <- paste0(level, " in class '", class(private$..owner)[1], "', ",
+      note <- paste0(level, " in class '", class(private$..x)[1], "', ",
                      ifelse(is.null(method)," ",
                      paste0("method, '", method, "', ")), ifelse(is.null(fieldName), "",
                                            paste0("with variable '",
@@ -73,7 +73,7 @@ LogR <- R6::R6Class(
       # Append information log to log for object.
       if (level == "Info") {
         log <- data.frame(class = ifelse(is.null(x),
-                                         class(private$..owner)[1],
+                                         class(private$..x)[1],
                                          class(x)[1]),
                           event = event,
                           user = Sys.info()[['user']],
@@ -87,8 +87,7 @@ LogR <- R6::R6Class(
     printLog = function() {
 
       cat("\n\nObject Log:")
-      private$..owner$summary(id = TRUE, quant = FALSE, descriptive = FALSE,
-                              documents = FALSE, admin = FALSE, verbose = TRUE)
+      private$..x$summary(select = 'id', verbose = TRUE)
       log <- private$..log
 
       if (nrow(log) > 0) {

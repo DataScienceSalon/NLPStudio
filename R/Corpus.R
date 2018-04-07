@@ -54,7 +54,7 @@ Corpus <- R6::R6Class(
     getQuant = function() {
 
       quant <- rbindlist(lapply(private$..documents, function(d) {
-        meta <- d$metadata()
+        meta <- d$getMeta()
         meta$quant
       }))
 
@@ -96,7 +96,7 @@ Corpus <- R6::R6Class(
                           fileSource = NULL) {
 
       private$loadDependencies()
-      private$meta <- Meta$new(owner = self, name = name, purpose = purpose,
+      private$meta <- Meta$new(x = self, name = name, purpose = purpose,
                                fileName, fileSource)
       private$logR$log(method = 'initialize',
                        event = "Initialization complete.")
