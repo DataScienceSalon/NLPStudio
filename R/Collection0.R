@@ -59,13 +59,13 @@ Collection0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                     Summary Documents Method                            #
     #-------------------------------------------------------------------------#
-    summarizeDocumentMeta = function(classname = NULL) {
+    summarizeDocMeta = function(classname = NULL) {
 
       if (length(private$..documents) == 0) return(NULL)
 
       heading <- paste0("\n\nDocuments attached to ", self$getId(), ":")
       cat(heading)
-      documentMeta <- self$getDocumentMeta(classname)
+      documentMeta <- self$getDocMeta(classname)
       classes <- names(documentMeta)
       lapply(seq_along(documentMeta), function(x) {
 
@@ -84,10 +84,9 @@ Collection0 <- R6::R6Class(
         }
 
         # Remove non-essential data, replace NAs with spaces and print
-        docSummary <- docSummary %>% select(-modified, -modifiedBy,
-                                            -nModified, -accessed, -accessedBy,
-                                            -nAccessed, -lastState, -hardware,
-                                            -os, -release, -version)
+        docSummary <- docSummary %>% select(-modified, -modifiedBy, -nModified,
+                                            -lastState, -hardware, -os,
+                                            -release, -version)
         docSummary[is.na(docSummary)] <- " "
         cat("\n")
         print(docSummary, row.names = FALSE)
@@ -185,13 +184,7 @@ Collection0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Document Metadata                             #
     #-------------------------------------------------------------------------#
-    getDocumentMeta = function(classname = NULL) {
-
-      # Obtains document metadata by family and type of metadata. The first
-      # level is a list containing metadata for each family of class. Each
-      # family list contains lists of metadata by type. Each type list
-      # contains a data frame containing the appropriate metadata for
-      # each document.
+    getDocMeta = function(classname = NULL) {
 
       if (nrow(private$..inventory) == 0) return(NULL)
 
@@ -203,7 +196,7 @@ Collection0 <- R6::R6Class(
         } else {
           event <- paste0("No documents of the ", classname, " class are ",
                           "attached to this object.")
-          private$logR$log(x = self, event = event, method = "getDocumentMeta",
+          private$logR$log(x = self, event = event, method = "getDocMeta",
                            level = "Error")
           stop()
         }
@@ -231,16 +224,17 @@ Collection0 <- R6::R6Class(
         }))
 
         # Extract descriptive metadata
-        type$descriptive <- rbindlist(lapply(meta, function(m) {
+        type$descriptive <- as.data.frame(rbindlist(lapply(meta, function(m) {
           m$descriptive
-        }), fill = TRUE, use.names = TRUE)
+        }), fill = TRUE, use.names = TRUE))
         type$descriptive[is.na(type$descriptive)] <- " "
 
         # Extract functional metadata
-        type$functional <- rbindlist(lapply(meta, function(m) {
+        type$functional <- as.data.frame(rbindlist(lapply(meta, function(m) {
           m$functional
-        }), fill = TRUE, use.names = TRUE)
+        }), fill = TRUE, use.names = TRUE))
         type$functional[is.na(type$functional)] <- " "
+
         # Extract quant metadata
         type$quant <- rbindlist(lapply(meta, function(m) {
           m$quant
@@ -259,6 +253,33 @@ Collection0 <- R6::R6Class(
         documentMeta[[classes[i]]] <- type
       }
       return(documentMeta)
+    },
+    #-------------------------------------------------------------------------#
+    setDocMeta = function(key, value, classname = "TextDocument",
+                          descriptive = TRUE) {
+
+      docs <- self$getDocument(key = 'classname', value = classname)
+
+      if ((length(key) != 1) & (length(value) != length(docs))) {
+        event <- paste0("Key vector must have a length equal to one ",
+                        "and the value vector must have a length equal to ",
+                        length(docs), ", the number of ", classname, " objects ",
+                        "in the collection. See ?", class(self)[1],
+                        " for further assistance.")
+        private$logR$log(method = "setDocMeta", event = event, level = "Error")
+        stop()
+      }
+
+      if (descriptive) {
+        for (i in 1:length(docs)) {
+          docs[[i]]$setDescriptiveMeta(key = key, value = value[i])
+        }
+      } else {
+        for (i in 1:length(docs)) {
+          docs[[i]]$setFunctionalMeta(key = key, value = value[i])
+        }
+      }
+      invisible(self)
     },
 
     #-------------------------------------------------------------------------#
@@ -285,7 +306,7 @@ Collection0 <- R6::R6Class(
         sd$descriptive <- private$summarizeDescriptiveMeta()
         sd$quant <- private$summarizeQuantMeta()
         sd$functional  <- private$summarizeFunctionalMeta()
-        sd$documents <- private$summarizeDocumentMeta()
+        sd$documents <- private$summarizeDocMeta()
         sd$admin <- private$summarizeAdminMeta()
         sd$tech <- private$summarizeTechMeta()
         invisible(sd)
@@ -294,7 +315,7 @@ Collection0 <- R6::R6Class(
                      id = private$summarizeIdMeta(),
                      descriptive = private$summarizeDescriptiveMeta(),
                      functional = private$summarizeFunctionalMeta(),
-                     documents <- private$summarizeDocumentMeta(),
+                     documents <- private$summarizeDocMeta(),
                      quant = private$summarizeQuantMeta(),
                      admin = private$summarizeAdminMeta(),
                      tech = private$summarizeTechMeta()

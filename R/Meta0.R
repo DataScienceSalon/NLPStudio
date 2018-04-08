@@ -68,9 +68,6 @@ Meta0 <- R6::R6Class(
       private$..meta$admin$modified <- Sys.time()
       private$..meta$admin$modifiedBy <- Sys.info()[["user"]]
       private$..meta$admin$nModified <- 0
-      private$..meta$admin$accessed <- Sys.time()
-      private$..meta$admin$accessedBy <- Sys.info()[["user"]]
-      private$..meta$admin$nAccessed <- 0
       private$..meta$admin$lastState <- "Instantiated."
 
       return(TRUE)
@@ -142,6 +139,49 @@ Meta0 <- R6::R6Class(
             newVar <- paste0(key[i], "_", j)
           }
           private$..meta$descriptive[[newVar]] <- value[i]
+          event <- paste0("Duplicate metadata variable names are not ",
+                          "permitted. Variable named ", key[i],
+                          " was changed to ", newVar, ".")
+          private$logR$log(method = "setDescriptive", event = event,
+                           level = "Warn")
+        }
+      }
+      invisible(self)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                           Functional  Methods                           #
+    #-------------------------------------------------------------------------#
+    getFunctional = function() { return(private$..meta$functional) },
+
+    setFunctional = function(key, value) {
+
+      private$..params$kv$key <- key
+      private$..params$kv$value <- value
+      private$..params$kv$equalLen <- TRUE
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log( method = 'setFunctional',
+                          event = v$msg, level = "Error")
+        stop()
+      }
+
+      for (i in 1:length(key)) {
+        if (private$checkNames(key[i], type = 'functional'))  {
+          private$..meta$functional[[key[i]]] <- value[i]
+        } else {
+          j <- 1
+          newVar <- paste0(key[i], "_", j)
+          while(private$checkNames(newVar, type = 'functional') == FALSE) {
+            j <- j + 1
+            newVar <- paste0(key[i], "_", j)
+          }
+          private$..meta$functional[[newVar]] <- value[i]
+          event <- paste0("Duplicate metadata variable names are not ",
+                          "permitted. Variable named ", key[i],
+                          " was changed to ", newVar, ".")
+          private$logR$log(method = "setFunctional", event = event,
+                           level = "Warn")
         }
       }
       invisible(self)
@@ -171,38 +211,6 @@ Meta0 <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                           Functional  Methods                           #
-    #-------------------------------------------------------------------------#
-    getFunctional = function() { return(private$..meta$functional) },
-
-    setFunctional = function(key, value) {
-
-      private$..params$kv$key <- key
-      private$..params$kv$value <- value
-      private$..params$kv$equalLen <- TRUE
-      v <- private$validator$validate(self)
-      if (v$code == FALSE) {
-        private$logR$log( method = 'setFunctional',
-                          event = v$msg, level = "Error")
-        stop()
-      }
-
-      for (i in 1:length(key)) {
-        if (private$checkNames(key[i], type = 'functional'))  {
-          private$..meta$functional[[key[i]]] <- value[i]
-        } else {
-          event <- paste0("Variable named ", key[i], " is a duplicate of an ",
-                          "existing metadata variable name. Duplicate ",
-                          "metadata variable names are not permitted.")
-          private$logR$log(method = "setFunctional", event = event,
-                           level = "Error")
-          stop()
-        }
-      }
-      invisible(self)
-    },
-
-    #-------------------------------------------------------------------------#
     #                             Admin Methods                               #
     #-------------------------------------------------------------------------#
     getAdmin = function() { return(private$..meta$admin) },
@@ -212,19 +220,7 @@ Meta0 <- R6::R6Class(
       private$..meta$admin$modified <- Sys.time()
       private$..meta$admin$modifiedBy <- Sys.info()[["user"]]
       private$..meta$admin$nModified <- private$..meta$admin$nModified + 1
-      private$..meta$admin$accessed <- Sys.time()
-      private$..meta$admin$accessedBy <- Sys.info()[["user"]]
-      private$..meta$admin$nAccessed <- private$..meta$admin$nAccessed + 1
       private$..meta$admin$lastState <- ifelse(is.null(event), "Modified.", event)
-
-      invisible(self)
-    },
-
-    accessed = function(event = NULL) {
-
-      private$..meta$admin$accessed <- Sys.time()
-      private$..meta$admin$accessedBy <- Sys.info()[["user"]]
-      private$..meta$admin$nAccessed <- private$..meta$admin$nAccessed + 1
 
       invisible(self)
     },

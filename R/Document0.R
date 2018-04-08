@@ -109,7 +109,11 @@ Document0 <- R6::R6Class(
     #                             Metadata Methods                            #
     #-------------------------------------------------------------------------#
     getId = function() { return(private$meta$getIdentity(key = 'id')) },
-    getName = function() { return(private$meta$getIdentity(key = 'name')) },
+    getName = function() {
+      name <- private$meta$getDescriptive(key = 'name')
+      if (is.null(name)) name <- private$meta$getIdentity(key = 'id')
+      return(name)
+    },
     getIdentity = function() { return(private$meta$getIdentity()) },
     getMeta = function() { return(private$meta$getMeta()) },
     getDescriptiveMeta = function(key = NULL) { return(private$meta$getDescriptive(key)) },

@@ -88,7 +88,6 @@ IO <- R6::R6Class(
 
       # Update log
       event <- paste0("Saved content to ", path, ". ")
-      private$meta$accessed
       private$logR$log( event = event)
 
       invisible(self)

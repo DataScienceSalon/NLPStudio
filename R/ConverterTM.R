@@ -36,7 +36,7 @@ ConverterTM <- R6::R6Class(
       dMetaNames <- colnames(dMeta)
 
       # Create named corpus vectors, one document per vector
-      docs <- x$getDocuments(cls = "TextDocument")
+      docs <- x$getDocuments(classname = "TextDocument")
       content <- unlist(lapply(docs, function(d) {
         paste(d$content, collapse = "")
       }))
@@ -101,7 +101,7 @@ ConverterTM <- R6::R6Class(
       private$logR <- LogR$new()
 
       event <- paste0("Initiated ", private$..classname)
-      private$logR$log(cls = class(self)[1], event = event)
+      private$logR$log(classname = class(self)[1], event = event)
 
       invisible(self)
 
@@ -123,7 +123,7 @@ ConverterTM <- R6::R6Class(
                                   "'Corpus', 'VCorpus', 'PCorpus', and ",
                                   "'SimpleCorpus' objects only.  See ?",
                                   class(self)[1], " for further assistance.")
-        private$logR$log(cls = class(self)[1], event = event, level = "Error")
+        private$logR$log(classname = class(self)[1], event = event, level = "Error")
         stop()
       }
     },

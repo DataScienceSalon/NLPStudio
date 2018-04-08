@@ -25,7 +25,7 @@ ConverterQuanteda <- R6::R6Class(
 
       # Obtain corpus and document metadata
       corpusMeta <- corpus$getMeta()
-      docMeta <- corpus$getDocumentMeta(classname = 'TextDocument')
+      docMeta <- corpus$getDocMeta(classname = 'TextDocument')
 
       # Obtain corpus text and text names
       docs <- x$getDocument(key = 'classname', value = 'TextDocument')
@@ -86,7 +86,7 @@ ConverterQuanteda <- R6::R6Class(
       descriptiveValues <- docvars(x)
       descriptiveVars <- names(descriptiveValues)
       for (i in 1:length(descriptiveVars)) {
-        corpus$setTextDocMeta(key = descriptiveVars[i],
+        corpus$setDocMeta(key = descriptiveVars[i],
                               value = descriptiveValues[,i])
       }
 
@@ -94,7 +94,7 @@ ConverterQuanteda <- R6::R6Class(
       functionalValues <- metadoc(x)
       functionalVars <- gsub("_", "", names(functionalValues))
       for (i in 1:length(functionalVars)) {
-        corpus$setTextDocMeta(key = functionalVars[i],
+        corpus$setDocMeta(key = functionalVars[i],
                               value = functionalValues[,i],
                               descriptive = FALSE)
       }
@@ -112,7 +112,7 @@ ConverterQuanteda <- R6::R6Class(
       private$loadDependencies()
 
       event <- paste0("Initiated ", private$..classname)
-      private$logR$log(cls = class(self)[1], event = event)
+      private$logR$log(method = 'initialize', event = event)
 
       invisible(self)
 
@@ -132,7 +132,7 @@ ConverterQuanteda <- R6::R6Class(
       } else {
         event <- paste0("This class operates on Corpus and quanteda ",
                                   "corpus objects only.")
-        private$logR$log(cls = class(self)[1], event = event, level = "Error")
+        private$logR$log(method = 'convert', event = event, level = "Error")
         stop()
       }
     },

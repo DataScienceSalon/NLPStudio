@@ -44,7 +44,7 @@ vectors.
 \section{Core Methods}{
 
  \itemize{
-  \item{\code{new(name = NULL, purpose = NULL)}}{Initializes an object of the Corpus class.}
+  \item{\code{new(name = NULL)}}{Initializes an object of the Corpus class.}
   \item{\code{content(x, note = NULL)}}{Method for obtaining/adding/updating content. If no
   parameters are presented, the current content is returned.  Otherwise, the content
   is updated with the contents of the character vector 'x'. Sentence, word, token, type,

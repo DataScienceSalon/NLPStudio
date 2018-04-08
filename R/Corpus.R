@@ -9,7 +9,7 @@
 #'
 #' @section Core Methods:
 #'  \itemize{
-#'   \item{\code{new(name = NULL, purpose = NULL)}}{Initializes an object of the Corpus class.}
+#'   \item{\code{new(name = NULL)}}{Initializes an object of the Corpus class.}
 #'   \item{\code{content(x, note = NULL)}}{Method for obtaining/adding/updating content. If no
 #'   parameters are presented, the current content is returned.  Otherwise, the content
 #'   is updated with the contents of the character vector 'x'. Sentence, word, token, type,
@@ -132,35 +132,6 @@ Corpus <- R6::R6Class(
 
       invisible(self)
 
-    },
-
-    #-------------------------------------------------------------------------#
-    #                            setTextDocMeta                               #
-    #-------------------------------------------------------------------------#
-    setTextDocMeta = function(key, value, descriptive = TRUE) {
-
-      docs <- self$getDocument(key = 'classname', value = 'TextDocument')
-
-      if ((length(key) != 1) & (length(value) != length(docs))) {
-        event <- paste0("Key vector must have a length equal to one ",
-                        "and the value vector must have a length equal to ",
-                        length(docs), ", the number of TextDocument objects ",
-                        "in the Corpus object. See ?", class(self)[1],
-                        " for further assistance.")
-        private$logR$log(method = "setTextDocMeta", event = event, level = "Error")
-        stop()
-      }
-
-      if (descriptive) {
-        for (i in 1:length(docs)) {
-          docs[[i]]$setDescriptiveMeta(key = key, value = value[i])
-        }
-      } else {
-        for (i in 1:length(docs)) {
-          docs[[i]]$setFunctionalMeta(key = key, value = value[i])
-        }
-      }
-      invisible(self)
     },
 
     #-------------------------------------------------------------------------#
