@@ -2,7 +2,7 @@
 #'
 #' \code{Corpus} Entity class for text documents.
 #'
-#' Entity class for text documents with methods for adding content from character
+#' Entity class for text documents with methods for adding text from character
 #' vectors.
 #'
 #' @usage skiReport <- Corpus$new(name = "skiReport", purpose = 'Train')
@@ -10,9 +10,9 @@
 #' @section Core Methods:
 #'  \itemize{
 #'   \item{\code{new(name = NULL)}}{Initializes an object of the Corpus class.}
-#'   \item{\code{content(x, note = NULL)}}{Method for obtaining/adding/updating content. If no
-#'   parameters are presented, the current content is returned.  Otherwise, the content
-#'   is updated with the contents of the character vector 'x'. Sentence, word, token, type,
+#'   \item{\code{text(x, note = NULL)}}{Method for obtaining/adding/updating text. If no
+#'   parameters are presented, the current text is returned.  Otherwise, the text
+#'   is updated with the texts of the character vector 'x'. Sentence, word, token, type,
 #'   sentence and word length statistics are also computed and the metadata is updated
 #'   accordingly.}
 #'   \item{\code{summary()}}{Summarizes the Corpus object.}
@@ -21,11 +21,11 @@
 #' @param name Character string containing the name for the Corpus object.
 #' @param purpose Character string used to indicate how the document will be used, e.g. 'train', 'test'.
 #' @param note Character string containing a comment associated with a call to the
-#' content method. The contents of the note variable are written to the Corpuss
-#' log. This is used to track changes to the content, perhaps made during preprocessing.
+#' text method. The texts of the note variable are written to the Corpuss
+#' log. This is used to track changes to the text, perhaps made during preprocessing.
 #' @template metadataParams
 #'
-#' @return Corpus object, containing the Corpus content, the metadata and
+#' @return Corpus object, containing the Corpus text, the metadata and
 #' the methods to manage both.
 #'
 #'
@@ -34,7 +34,7 @@
 #'           "she heard someone scream 'Avalanche!'",
 #'           "Then John, 39, saw 'a cloud of snow coming down.'")
 #' avalanche <- Corpus$new(name = 'avalanche', purpose = 'raw')
-#' avalance$content <- report
+#' avalance$text <- report
 #' key <- c('genre', 'author', 'year')
 #' value <- c('weather', 'chris jones', 2018)
 #' avalanche$meta$setDescriptive(key = key value = value)
@@ -110,28 +110,42 @@ Corpus <- R6::R6Class(
       private$..params <- list()
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list('TextDocument')
+      private$..params$classes$valid <- list('Document')
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'addDocument',
                          event = v$msg, level = "Error")
         stop()
       }
-
-      # Get document credentials, add document and update inventory
-      credentials <- x$getIdentity()
-      private$..documents[[credentials$id]] <- x
-      credentials <- as.data.frame(credentials, stringsAsFactors = FALSE, row.names = NULL)
-      private$..inventory <- rbind(private$..inventory, credentials)
-
-      # Update date/time metadata and create log entry
-      event <- paste0("Attached ", x$getName(), " object to ", self$getName(), ".")
-      private$meta$modified(event = event)
-      private$logR$log(method = 'addDocument',
-                       event = event)
+      private$attach(x)
 
       invisible(self)
 
+    },
+
+    #-------------------------------------------------------------------------#
+    #                            Content Method                               #
+    #-------------------------------------------------------------------------#
+    text = function(x = NULL, note = NULL) {
+      docs <- self$getDocument(key = "classname", value = "Document" )
+      if (is.null(x)) {
+        return(lapply(docs, function(d) { d$text() }))
+      } else {
+        if (!is.list(x)) x <- as.list(x)
+        if (length(docs) == length(x)) {
+          if (length(note) == 1) note <- rep(note, length(docs))
+          for (i in 1:length(docs)) {
+            docs[[i]]$text(x = x[[i]], note = note[i])
+          }
+        } else {
+          event <- paste0("The 'x' parameter must be a list of texts with ",
+                          "length equal to the number of Text documents ",
+                          "in the Corpus. See?", class(self)[1],
+                          " for further assistance.")
+          private$logR$log(method = 'text', event = event, level = "Error")
+          stop()
+        }
+      }
     },
 
     #-------------------------------------------------------------------------#

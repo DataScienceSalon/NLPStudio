@@ -25,17 +25,17 @@ ConverterQuanteda <- R6::R6Class(
 
       # Obtain corpus and document metadata
       corpusMeta <- corpus$getMeta()
-      docMeta <- corpus$getDocMeta(classname = 'TextDocument')
+      docMeta <- corpus$getDocMeta(classname = 'Document')
 
       # Obtain corpus text and text names
-      docs <- x$getDocument(key = 'classname', value = 'TextDocument')
-      content <- unlist(lapply(docs, function(d) {
-        paste(d$content(), collapse = "")
+      docs <- x$getDocument(key = 'classname', value = 'Document')
+      text <- unlist(lapply(docs, function(d) {
+        paste(d$text(), collapse = "")
       }))
       docNames <- unlist(lapply(docs, function(d) {d$getName()}))
 
       # Create quanteda corpus object
-      qCorpus <- quanteda::corpus(content, docnames = docNames)
+      qCorpus <- quanteda::corpus(text, docnames = docNames)
 
       # Assign corpus level metadata from descriptive metadata
       corpusMeta <- corpusMeta$descriptive
@@ -45,14 +45,14 @@ ConverterQuanteda <- R6::R6Class(
       }
 
       # Assign docvars
-      docVars <- as.data.frame(docMeta$TextDocument$descriptive)
+      docVars <- as.data.frame(docMeta$Document$descriptive)
       vars <- names(docVars)
       for (i in 1:length(vars)) {
         docvars(x = qCorpus, field = vars[i]) <- docVars[,i]
       }
 
       # Assign metadoc variables
-      metaDoc <- as.data.frame(docMeta$TextDocument$functional)
+      metaDoc <- as.data.frame(docMeta$Document$functional)
       vars <- names(metaDoc)
       for (i in 1:length(vars)) {
         metadoc(x = qCorpus, field = vars[i]) <- metaDoc[,i]
@@ -75,10 +75,10 @@ ConverterQuanteda <- R6::R6Class(
       }
       corpus$setTechMeta(key = 'source', value = metacorpus(x)['source'][1])
 
-      # Create TextDocument Objects from quanteda corpus text and add to corpus
+      # Create Document Objects from quanteda corpus text and add to corpus
       docNames <- docnames(x)
       for (i in 1:length(x$documents$texts)) {
-        doc <- TextDocument$new(x = x$documents$texts[i], name = docNames[i])
+        doc <- Document$new(x = x$documents$texts[i], name = docNames[i])
         corpus$addDocument(doc)
       }
 

@@ -1,32 +1,32 @@
-#' TextDocument
+#' Document
 #'
-#' \code{TextDocument} Entity class for text documents.
+#' \code{Document} Entity class for text documents.
 #'
-#' Entity class for text documents with methods for adding content from character
+#' Entity class for text documents with methods for adding text from character
 #' vectors.
 #'
-#' @usage skiReport <- TextDocument$new(name = "skiReport", purpose = 'Train')
+#' @usage skiReport <- Document$new(name = "skiReport", purpose = 'Train')
 #'
 #' @section Core Methods:
 #'  \itemize{
-#'   \item{\code{new(name = NULL, purpose = NULL)}}{Initializes an object of the TextDocument class.}
-#'   \item{\code{content(x, note = NULL)}}{Method for obtaining/adding/updating content. If no
-#'   parameters are presented, the current content is returned.  Otherwise, the content
-#'   is updated with the contents of the character vector 'x'. Sentence, word, token, type,
+#'   \item{\code{new(name = NULL, purpose = NULL)}}{Initializes an object of the Document class.}
+#'   \item{\code{text(x, note = NULL)}}{Method for obtaining/adding/updating text. If no
+#'   parameters are presented, the current text is returned.  Otherwise, the text
+#'   is updated with the texts of the character vector 'x'. Sentence, word, token, type,
 #'   sentence and word length statistics are also computed and the metadata is updated
 #'   accordingly.}
 #'   \item{\code{overview()}}{Provides a subset of the metadata in a one-row data.frame format.
 #'   This is used by the parent class's summary method.  }
 #'  }
 #'
-#' @param name Character string containing the name for the TextDocument object.
+#' @param name Character string containing the name for the Document object.
 #' @param purpose Character string used to indicate how the document will be used, e.g. 'train', 'test'.
 #' @param note Character string containing a comment associated with a call to the
-#' content method. The contents of the note variable are written to the TextDocuments
-#' log. This is used to track changes to the content, perhaps made during preprocessing.
+#' text method. The texts of the note variable are written to the Documents
+#' log. This is used to track changes to the text, perhaps made during preprocessing.
 #' @template metadataParams
 #'
-#' @return TextDocument object, containing the TextDocument content, the metadata and
+#' @return Document object, containing the Document text, the metadata and
 #' the methods to manage both.
 #'
 #'
@@ -34,8 +34,8 @@
 #' report <- c("SAN FRANCISCO  — She was snowboarding with her boyfriend when ",
 #'           "she heard someone scream 'Avalanche!'",
 #'           "Then John, 39, saw 'a cloud of snow coming down.'")
-#' avalanche <- TextDocument$new(name = 'avalanche', purpose = 'raw')
-#' avalance$content <- report
+#' avalanche <- Document$new(name = 'avalanche', purpose = 'raw')
+#' avalance$text <- report
 #' key <- c('genre', 'author', 'year')
 #' value <- c('weather', 'chris jones', 2018)
 #' avalanche$meta$setDescriptive(key = key value = value)
@@ -44,14 +44,14 @@
 #' @author John James, \email{jjames@@datasciencesalon.org}
 #' @family Document Classes
 #' @export
-TextDocument <- R6::R6Class(
-  classname = "TextDocument",
+Document <- R6::R6Class(
+  classname = "Document",
   lock_objects = FALSE,
   lock_class = FALSE,
   inherit = Collection0,
 
   private = list(
-    ..content = character(),
+    ..text = character(),
 
     compress = function(x) {
       memCompress(x, "g")
@@ -72,28 +72,26 @@ TextDocument <- R6::R6Class(
       return(TRUE)
     },
 
-    validateContent = function(x, method) {
-      private$..params <- list()
-      private$..params$classes$name <- list('content')
-      private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list('character')
-      v <- private$validator$validate(self)
-      if (v$code == FALSE) {
-        private$logR$log(method = method,
-                          event = v$msg, level = "Error")
-      }
-      return(v$code)
-    },
-
     processContent = function(x, note = NULL) {
 
-      # Validate class of object.
-      if (private$validateContent(x, method = 'processContent') == FALSE) stop()
+      # Validate text
+      if (!is.null(x)) {
+        private$..params <- list()
+        private$..params$classes$name <- list('x')
+        private$..params$classes$objects <- list(x)
+        private$..params$classes$valid <- list('character')
+        v <- private$validator$validate(self)
+        if (v$code == FALSE) {
+          private$logR$log(method = 'processContent',
+                           event = v$msg, level = "Error")
+          stop()
+        }
 
-      # Update content, compute statistics and update admin information
-      private$..content <- private$compress(x)
-      private$getQuant(x)
-      private$meta$modified(event = note)
+        # Update text, compute statistics and update admin information
+        private$..text <- private$compress(x)
+        private$getQuant(x)
+        private$meta$modified(event = note)
+      }
       return(TRUE)
     }
   ),
@@ -103,16 +101,26 @@ TextDocument <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Core Methods                                  #
     #-------------------------------------------------------------------------#
-    initialize = function(x, name = NULL) {
+    initialize = function(x = NULL, name = NULL) {
 
       private$loadDependencies()
       private$meta <- Meta$new(x = self, name = name)
 
-      # Validate content
-      if (private$validateContent(x, method = 'initialize') == FALSE) stop()
+      # Validate text
+      if (!is.null(x)) {
+        private$..params <- list()
+        private$..params$classes$name <- list('x')
+        private$..params$classes$objects <- list(x)
+        private$..params$classes$valid <- list('character')
+        v <- private$validator$validate(self)
+        if (v$code == FALSE) {
+          private$logR$log(method = method,
+                           event = v$msg, level = "Error")
+          stop()
+        }
+        private$processContent(x, note = "Initialized text.")
+      }
 
-      # Process content and log
-      private$processContent(x, note = "Initialized content.")
       private$logR$log(method = 'initialize',
                        event = "Initialization complete.")
 
@@ -122,10 +130,10 @@ TextDocument <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Content Method                                #
     #-------------------------------------------------------------------------#
-    content = function(x, note = NULL) {
+    text = function(x = NULL, note = NULL) {
 
       if (missing(x)) {
-        return(private$decompress(private$..content))
+        return(private$decompress(private$..text))
 
       } else {
         private$processContent(x, note = note)

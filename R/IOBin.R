@@ -37,7 +37,7 @@ IOBin <- R6::R6Class(
       fileName <- basename(path)
 
       if (file.exists(path)) {
-        content <- readBin(path, raw(), file.info(path)$size)
+        text <- readBin(path, raw(), file.info(path)$size)
         event <- paste0("Successfully read ", fileName, ".")
         private$logR$log( event = event)
       } else {
@@ -47,10 +47,10 @@ IOBin <- R6::R6Class(
         stop()
       }
 
-      return(content)
+      return(text)
     },
 
-    write = function(path, content) {
+    write = function(path, text) {
 
       private$logR <- LogR$new()
 
@@ -60,7 +60,7 @@ IOBin <- R6::R6Class(
       # Create directory if necessary
       dir.create(dirName, showWarnings = FALSE, recursive = TRUE)
 
-      writeBin(content, path)
+      writeBin(text, path)
 
       event <- paste0("Successfully wrote ", fileName, ".")
       private$logR$log( event = event)

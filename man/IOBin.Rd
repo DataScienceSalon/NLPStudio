@@ -11,7 +11,7 @@ IOBin
 \arguments{
 \item{path}{Character string designated the relative path to a file.}
 
-\item{content}{Content to be written to the designated file path.}
+\item{text}{Content to be written to the designated file path.}
 }
 \value{
 Character vector if read method is called. For the write method, a logical value
@@ -23,8 +23,8 @@ of TRUE is returned if the write was successful, FALSE otherwise.
 \section{IO Methods}{
 
  \itemize{
-  \item{\code{read(path)}}{Reads content from a specified file path.}
-  \item{\code{write(path, content)}}{Writes the content to the designated
+  \item{\code{read(path)}}{Reads text from a specified file path.}
+  \item{\code{write(path, text)}}{Writes the text to the designated
   file path.}
  }
 }

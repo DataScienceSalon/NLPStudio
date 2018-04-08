@@ -10,11 +10,11 @@
 #' @section Methods:
 #'  \describe{
 #'   \item{\code{read(path)}}{Read method.}
-#'   \item{\code{write(path, content)}}{Write method.}
+#'   \item{\code{write(path, text)}}{Write method.}
 #' }
 #'
 #' @param path Character string containing the relative file path
-#' @param content Character vector to be written to file
+#' @param text Character vector to be written to file
 #'
 #' @return Character string if read method is called. The write method
 #' returns TRUE if the write was sucessful, FALSE otherwise.
@@ -46,7 +46,7 @@ IOText <- R6::R6Class(
       if (file.exists(path)) {
         con <- file(path)
         on.exit(close(con))
-        content <- readLines(con)
+        text <- readLines(con)
         event <- paste0("Successfully read ", fileName, ".")
         private$logR$log( event = event)
       } else {
@@ -55,10 +55,10 @@ IOText <- R6::R6Class(
         private$logR$log( event = event, level = "Error")
         stop()
       }
-      return(content)
+      return(text)
     },
 
-    write = function(path, content) {
+    write = function(path, text) {
 
       private$logR <- LogR$new()
 
@@ -70,7 +70,7 @@ IOText <- R6::R6Class(
 
       con <- file(path)
       on.exit(close(con))
-      writeLines(content, con)
+      writeLines(text, con)
 
       event <- paste0("Successfully wrote ", fileName, ".")
       private$logR$log( event = event)

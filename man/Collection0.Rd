@@ -13,7 +13,7 @@ Collection0
 }
 \details{
 This abstract class defines members and methods common to the Corpus and
-TextDocument collection / composite objects.
+Document collection / composite objects.
 }
 \section{Collection0 methods}{
 
@@ -36,7 +36,7 @@ TextDocument collection / composite objects.
 
 \seealso{
 Other Document Classes: \code{\link{Corpus}},
-  \code{\link{Document0}}, \code{\link{TextDocument}}
+  \code{\link{Document0}}, \code{\link{Document}}
 }
 \author{
 John James, \email{jjames@datasciencesalon.org}

@@ -12,11 +12,11 @@
 #'  \itemize{
 #'   \item{\code{read(path)}}{Reads text. If the file is a ".txt" file, the repair
 #'   process replaces select ASCII control characters with spaces.}
-#'   \item{\code{write(path, content)}}{Write text to designated file location.}
+#'   \item{\code{write(path, text)}}{Write text to designated file location.}
 #'  }
 #'
 #' @param path Character string containing the file path
-#' @param content Character vectors containing the content to be written
+#' @param text Character vectors containing the text to be written
 #'
 #' @return Read method returns character vectors containing text. The write method
 #' returns an instance of the class.
@@ -63,31 +63,31 @@ IO <- R6::R6Class(
       }
 
       if (repair & tools::file_ext(path) == "txt") {
-        content <- RepairFile$new(path)$execute()
+        text <- RepairFile$new(path)$execute()
       } else {
         io <- IOFactory$new(path)$getIOStrategy()
-        content <- io$read(path = path)
+        text <- io$read(path = path)
       }
 
       # Update log and system metadata
       event <- paste0("Read file from ", path, ". ")
       private$logR$log( event = event)
 
-      return(content)
+      return(text)
     },
 
     #-------------------------------------------------------------------------#
     #                            Write Method                                 #
     #-------------------------------------------------------------------------#
-    write = function(path, content) {
+    write = function(path, text) {
 
       private$..methodName <- 'write'
 
       io <- IOFactory$new(path)$getIOStrategy()
-      io$write(path = path, content = content)
+      io$write(path = path, text = text)
 
       # Update log
-      event <- paste0("Saved content to ", path, ". ")
+      event <- paste0("Saved text to ", path, ". ")
       private$logR$log( event = event)
 
       invisible(self)

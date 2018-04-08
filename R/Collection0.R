@@ -6,7 +6,7 @@
 #' \code{Collection0} Abstract class for all Collection classes
 #'
 #' This abstract class defines members and methods common to the Corpus and
-#' TextDocument collection / composite objects.
+#' Document collection / composite objects.
 #'
 #' @section Collection0 methods:
 #'  \itemize{
@@ -54,6 +54,22 @@ Collection0 <- R6::R6Class(
       }
 
       return(listCondition)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                             attach Document                             #
+    #-------------------------------------------------------------------------#
+    attach = function(x) {
+    # Get document credentials, add document and update inventory
+      credentials <- x$getIdentity()
+      private$..documents[[credentials$id]] <- x
+      credentials <- as.data.frame(credentials, stringsAsFactors = FALSE, row.names = NULL)
+      private$..inventory <- rbind(private$..inventory, credentials)
+
+      # Update date/time metadata and create log entry
+      event <- paste0("Added ", x$getName(), " object to ", self$getName(), ".")
+      private$meta$modified(event = event)
+      private$logR$log(method = 'addDocument', event = event)
     },
 
     #-------------------------------------------------------------------------#
@@ -141,17 +157,7 @@ Collection0 <- R6::R6Class(
         stop()
       }
 
-      # Get document credentials, add document and update inventory
-      credentials <- x$getIdentity()
-      private$..documents[[credentials$id]] <- x
-      credentials <- as.data.frame(credentials, stringsAsFactors = FALSE, row.names = NULL)
-      private$..inventory <- rbind(private$..inventory, credentials)
-
-      # Update date/time metadata and create log entry
-      event <- paste0("Added ", x$getName(), " object to ", self$getName(), ".")
-      private$meta$modified(event = event)
-      private$logR$log(method = 'addDocument',
-                       event = event)
+      private$attach(x)
 
       invisible(self)
 
@@ -255,7 +261,7 @@ Collection0 <- R6::R6Class(
       return(documentMeta)
     },
     #-------------------------------------------------------------------------#
-    setDocMeta = function(key, value, classname = "TextDocument",
+    setDocMeta = function(key, value, classname = "Document",
                           descriptive = TRUE) {
 
       docs <- self$getDocument(key = 'classname', value = classname)
@@ -269,6 +275,7 @@ Collection0 <- R6::R6Class(
         private$logR$log(method = "setDocMeta", event = event, level = "Error")
         stop()
       }
+
 
       if (descriptive) {
         for (i in 1:length(docs)) {

@@ -29,21 +29,19 @@ ConverterTM <- R6::R6Class(
 
     to = function(x) {
 
-      # Extract metadata
-      cMeta <- as.list(x$getMeta()$core)
-      cMetaNames <- names(cMeta)
-      dMeta <- as.data.frame(x$docMeta())
-      dMetaNames <- colnames(dMeta)
+      # Obtain corpus and document metadata
+      corpusMeta <- corpus$getMeta()
+      docMeta <- corpus$getDocMeta(classname = 'Document')
 
-      # Create named corpus vectors, one document per vector
-      docs <- x$getDocuments(classname = "TextDocument")
-      content <- unlist(lapply(docs, function(d) {
-        paste(d$content, collapse = "")
+      # Obtain corpus text and text names
+      docs <- x$getDocument(key = 'classname', value = 'Document')
+      text <- unlist(lapply(docs, function(d) {
+        paste(d$text(), collapse = "")
       }))
-      names(content) <- dMeta$id
+      docNames <- unlist(lapply(docs, function(d) {d$getName()}))
 
       # Create tm corpus object
-      tmSource <- tm::VectorSource(content)
+      tmSource <- tm::VectorSource(text)
       tmCorpus <- tm::Corpus(tmSource)
 
       # Create corpus level meta data
@@ -65,7 +63,7 @@ ConverterTM <- R6::R6Class(
       })
 
       # Create Documents and Metadata
-      docs <- lapply(x, function(d) { TextDocument$new(d[[1]]) })
+      docs <- lapply(x, function(d) { Document$new(d[[1]]) })
       for (i in 1:length(dMeta)) {
         varnames <- names(dMeta[[i]])
         for (j in 1:length(varnames)) {

@@ -11,7 +11,7 @@ myText <- IO$new(name = "skiReport", x = avalanche)
 \arguments{
 \item{path}{Character string containing the file path}
 
-\item{content}{Character vectors containing the content to be written}
+\item{text}{Character vectors containing the text to be written}
 }
 \value{
 Read method returns character vectors containing text. The write method
@@ -30,7 +30,7 @@ that converts select ASCII control characters to spaces by default.
  \itemize{
   \item{\code{read(path)}}{Reads text. If the file is a ".txt" file, the repair
   process replaces select ASCII control characters with spaces.}
-  \item{\code{write(path, content)}}{Write text to designated file location.}
+  \item{\code{write(path, text)}}{Write text to designated file location.}
  }
 }
 

@@ -11,7 +11,7 @@ IOText$new()$read(path = path)
 \arguments{
 \item{path}{Character string containing the relative file path}
 
-\item{content}{Character vector to be written to file}
+\item{text}{Character vector to be written to file}
 }
 \value{
 Character string if read method is called. The write method
@@ -24,7 +24,7 @@ returns TRUE if the write was sucessful, FALSE otherwise.
 
  \describe{
   \item{\code{read(path)}}{Read method.}
-  \item{\code{write(path, content)}}{Write method.}
+  \item{\code{write(path, text)}}{Write method.}
 }
 }
 

@@ -40,8 +40,8 @@ IORdata <- R6::R6Class(
 
       if (file.exists(path)) {
         env <- new.env()
-        content <- load(path, envir = env)
-        content <- env[[content]]
+        text <- load(path, envir = env)
+        text <- env[[text]]
         event <- paste0("Successfully read ", fileName, ".")
         private$logR$log( event = event)
       } else {
@@ -50,10 +50,10 @@ IORdata <- R6::R6Class(
         private$logR$log( event = event, level = "Error")
         stop()
       }
-      return(content)
+      return(text)
     },
 
-    write = function(path, content) {
+    write = function(path, text) {
 
       private$logR <- LogR$new()
 
@@ -63,7 +63,7 @@ IORdata <- R6::R6Class(
       # Create directory if necessary
       dir.create(dirName, showWarnings = FALSE, recursive = TRUE)
 
-      save(object = content, file = path, compression_level = 9)
+      save(object = text, file = path, compression_level = 9)
 
       event <- paste0("Successfully wrote ", fileName, ".")
       private$logR$log( event = event)

@@ -38,7 +38,7 @@ IOCSV <- R6::R6Class(
       fileName <- basename(path)
 
       if (file.exists(path)) {
-        content <- read.csv(file = path, header = header,
+        text <- read.csv(file = path, header = header,
                             stringsAsFactors = FALSE,
                             sep = ",", quote = "\"'")
         event <- paste0("Successfully read ", fileName, ".")
@@ -49,10 +49,10 @@ IOCSV <- R6::R6Class(
         private$logR$log( event = event, level = "Error")
         stop()
       }
-      return(content)
+      return(text)
     },
 
-    write = function(path, content) {
+    write = function(path, text) {
 
       private$logR <- LogR$new()
 
@@ -62,7 +62,7 @@ IOCSV <- R6::R6Class(
       # Create directory if necessary
       dir.create(dirName, showWarnings = FALSE, recursive = TRUE)
 
-      write.csv(content, file = path, row.names = FALSE)
+      write.csv(text, file = path, row.names = FALSE)
 
       event <- paste0("Successfully wrote ", fileName, ".")
       private$logR$log( event = event)

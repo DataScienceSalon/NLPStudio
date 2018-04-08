@@ -14,7 +14,7 @@ Document0
 \details{
 This composite pattern component class defines members and methods common
 across all the document related classes, including without limitation,
-Corpus, TextDocument, TermFreq, POS, NGram, and Tokens objects.
+Corpus, Document, TermFreq, POS, NGram, and Tokens objects.
 }
 \section{Document0 methods}{
 
@@ -26,7 +26,7 @@ Corpus, TextDocument, TermFreq, POS, NGram, and Tokens objects.
 
 \seealso{
 Other Document Classes: \code{\link{Collection0}},
-  \code{\link{Corpus}}, \code{\link{TextDocument}}
+  \code{\link{Corpus}}, \code{\link{Document}}
 }
 \author{
 John James, \email{jjames@datasciencesalon.org}

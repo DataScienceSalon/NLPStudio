@@ -7,7 +7,7 @@
 #'
 #' This composite pattern component class defines members and methods common
 #' across all the document related classes, including without limitation,
-#' Corpus, TextDocument, TermFreq, POS, NGram, and Tokens objects.
+#' Corpus, Document, TermFreq, POS, NGram, and Tokens objects.
 #'
 #' @section Document0 methods:
 #'  \itemize{
