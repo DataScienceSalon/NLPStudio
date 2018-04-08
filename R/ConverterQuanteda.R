@@ -23,45 +23,80 @@ ConverterQuanteda <- R6::R6Class(
 
     to = function(x) {
 
-      # Create named corpus vectors, one document per vector
-      docSummary <- td$summary(id = FALSE, descriptive = FALSE, quant = FALSE,
-                               admin = FALSE, tech = FALSE, verbose = FALSE)
-      docs <- x$getDocument(key = 'class', value = 'TextDocument')
-      docNames <- unlist(lapply(docs, function(d) { d$getName() }))
+      # Obtain corpus and document metadata
+      corpusMeta <- corpus$getMeta()
+      docMeta <- corpus$getDocumentMeta(classname = 'TextDocument')
+
+      # Obtain corpus text and text names
+      docs <- x$getDocument(key = 'classname', value = 'TextDocument')
       content <- unlist(lapply(docs, function(d) {
         paste(d$content(), collapse = "")
       }))
-      names(content) <- docNames
+      docNames <- unlist(lapply(docs, function(d) {d$getName()}))
 
       # Create quanteda corpus object
-      qCorpus <- quanteda::corpus(content, docnames = docNames,
-                                 docvars = dMeta, metacorpus = cMeta)
+      qCorpus <- quanteda::corpus(content, docnames = docNames)
+
+      # Assign corpus level metadata from descriptive metadata
+      corpusMeta <- corpusMeta$descriptive
+      vars <- names(corpusMeta)
+      for (i in 1:length(vars)) {
+          metacorpus(qCorpus, vars[i]) <- corpusMeta[[i]]
+      }
+
+      # Assign docvars
+      docVars <- as.data.frame(docMeta$TextDocument$descriptive)
+      vars <- names(docVars)
+      for (i in 1:length(vars)) {
+        docvars(x = qCorpus, field = vars[i]) <- docVars[,i]
+      }
+
+      # Assign metadoc variables
+      metaDoc <- as.data.frame(docMeta$TextDocument$functional)
+      vars <- names(metaDoc)
+      for (i in 1:length(vars)) {
+        metadoc(x = qCorpus, field = vars[i]) <- metaDoc[,i]
+      }
+
       return(qCorpus)
+
     },
 
     from = function(x) {
 
-      # Obtain metadata
-      cMeta <- quanteda::metacorpus(x)
-      dMeta <- as.data.frame(quanteda::docvars(x))
-
-      # Create corpus object and meta data
+      # Create NLPStudio Corpus
       corpus <- Corpus$new()
-      keys <- names(cMeta)
-      values <- cMeta
-      corpus <- corpus$getMeta(key = keys, value = values)
 
-      # Add documents
-      lapply(seq_along(x$documents$texts), function(t) {
-        d <- TextDocument$new(name = as.character(x$documents$name[t]),
-                          x = as.character(x$documents$texts[t]))
-        corpus$addDocument(d)
-      })
+      # Obtain and transfer corpus metadata
+      descriptive <- metacorpus(x)[!names(metacorpus(x)) %in% c('source', 'created')]
+      vars <- names(descriptive)
+      for (i in 1:length(descriptive)) {
+        corpus$setDescriptiveMeta(key = vars[i], value = descriptive[[i]])
+      }
+      corpus$setTechMeta(key = 'source', value = metacorpus(x)['source'][1])
 
-      # Add document metadata
-      keys <- names(dMeta)
-      for (i in 1:ncol(dMeta)) {
-        corpus$docMeta(key = keys[i], value = dMeta[,i])
+      # Create TextDocument Objects from quanteda corpus text and add to corpus
+      docNames <- docnames(x)
+      for (i in 1:length(x$documents$texts)) {
+        doc <- TextDocument$new(x = x$documents$texts[i], name = docNames[i])
+        corpus$addDocument(doc)
+      }
+
+      # Add document descriptive metadata
+      descriptiveValues <- docvars(x)
+      descriptiveVars <- names(descriptiveValues)
+      for (i in 1:length(descriptiveVars)) {
+        corpus$setTextDocMeta(key = descriptiveVars[i],
+                              value = descriptiveValues[,i])
+      }
+
+      # Add document functional metadata
+      functionalValues <- metadoc(x)
+      functionalVars <- gsub("_", "", names(functionalValues))
+      for (i in 1:length(functionalVars)) {
+        corpus$setTextDocMeta(key = functionalVars[i],
+                              value = functionalValues[,i],
+                              descriptive = FALSE)
       }
       return(corpus)
     }

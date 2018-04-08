@@ -45,7 +45,7 @@ Meta0 <- R6::R6Class(
     #                           Identity Metadata                             #
     #-------------------------------------------------------------------------#
 
-    setIdentity = function(x, objectName = NULL) {
+    setIdentity = function(x, name = NULL) {
 
       # Designate class
       private$..meta$identity$classname <- class(x)[1]
@@ -55,10 +55,6 @@ Meta0 <- R6::R6Class(
       private$..meta$identity$id <- toupper(hashids::encode(as.integer(Sys.time()) * 1000000 +
                                                       sample(1:1000, 1, replace = TRUE), settings))
 
-      # Designate/create object name
-      private$..meta$identity$objectName <- ifelse(is.null(objectName),
-                                                   private$..meta$identity$id,
-                                                   objectName)
       invisible(self)
     },
 
@@ -94,8 +90,8 @@ Meta0 <- R6::R6Class(
       if (!is.null(key)) {
         if (key == 'id') {
           return(private$..meta$identity$id)
-        } else if (key == 'objectName') {
-          return(private$..meta$identity$objectName)
+        } else if (key == 'name') {
+          return(private$..meta$identity$name)
         }
       } else {
         return(private$..meta$identity)
@@ -139,12 +135,13 @@ Meta0 <- R6::R6Class(
         if (private$checkNames(key[i], type = 'descriptive'))  {
           private$..meta$descriptive[[key[i]]] <- value[i]
         } else {
-          event <- paste0("Variable named ", key[i], " is a duplicate of an ",
-                          "existing metadata variable name. Duplicate ",
-                          "metadata variable names are not permitted.")
-          private$logR$log(method = "setDescriptive", event = event,
-                           level = "Error")
-          stop()
+          j <- 1
+          newVar <- paste0(key[i], "_", j)
+          while(private$checkNames(newVar, type = 'descriptive') == FALSE) {
+            j <- j + 1
+            newVar <- paste0(key[i], "_", j)
+          }
+          private$..meta$descriptive[[newVar]] <- value[i]
         }
       }
       invisible(self)
@@ -237,7 +234,8 @@ Meta0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     getTech = function() { private$..meta$tech },
 
-    setTech = function(x, fileName = NULL, directory = NULL, url = NULL) {
+    setTech = function(x, fileName = NULL, directory = NULL, url = NULL,
+                       source = NULL) {
 
       private$..meta$tech$hardware <- Sys.info()["machine"]
       private$..meta$tech$os <- Sys.info()["sysname"]
@@ -251,6 +249,7 @@ Meta0 <- R6::R6Class(
         private$..meta$tech$fileSize <- file.size(file.path(directory, fileName))
       }
       private$..meta$tech$url <- url
+      private$..meta$tech$source <- source
 
       return(TRUE)
     },

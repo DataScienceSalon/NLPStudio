@@ -34,7 +34,6 @@ Document0 <- R6::R6Class(
       identity <- private$meta$getIdentity()
       cat(paste0("\nObject Class : ", identity$classname))
       cat(paste0("\nObject Id    : ", identity$id))
-      cat(paste0("\nObject Name  : ", identity$objectName))
       return(identity)
 
     },
@@ -110,7 +109,7 @@ Document0 <- R6::R6Class(
     #                             Metadata Methods                            #
     #-------------------------------------------------------------------------#
     getId = function() { return(private$meta$getIdentity(key = 'id')) },
-    getName = function() { return(private$meta$getIdentity(key = 'objectName')) },
+    getName = function() { return(private$meta$getIdentity(key = 'name')) },
     getIdentity = function() { return(private$meta$getIdentity()) },
     getMeta = function() { return(private$meta$getMeta()) },
     getDescriptiveMeta = function(key = NULL) { return(private$meta$getDescriptive(key)) },
@@ -127,6 +126,11 @@ Document0 <- R6::R6Class(
 
     setFunctionalMeta = function(key, value) {
       private$meta$setFunctional(key, value)
+      invisible(self)
+    },
+
+    setTechMeta = function(key, value) {
+      private$meta$setTech(key, value)
       invisible(self)
     },
 
