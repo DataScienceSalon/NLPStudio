@@ -141,6 +141,8 @@ Collection0 <- R6::R6Class(
 
       if (length(private$..documents) == 0) return(NULL)
 
+      heading <- paste0("\n\nDocuments attached to ", self$getName(), ":")
+      cat(heading)
       documentMeta <- private$getDocumentMeta(classname)
       classes <- names(documentMeta)
       lapply(seq_along(documentMeta), function(x) {
@@ -159,15 +161,13 @@ Collection0 <- R6::R6Class(
           if (nrow(sections[[i]]) > 0)  docSummary <- cbind(docSummary, sections[[i]])
         }
 
-        # Remove non-essential data
-        docSummary <- docSummary %>% select(-classname, -modified, -modifiedBy,
+        # Remove non-essential data, replace NAs with spaces and print
+        docSummary <- docSummary %>% select(-modified, -modifiedBy,
                                             -nModified, -accessed, -accessedBy,
                                             -nAccessed, -lastState, -hardware,
                                             -os, -release, -version)
-
-        # Print summary
-        cat("\n\n")
-        print(classes[x], row.names = FALSE)
+        docSummary[is.na(docSummary)] <- " "
+        cat("\n")
         print(docSummary, row.names = FALSE)
       })
 
@@ -227,7 +227,7 @@ Collection0 <- R6::R6Class(
       private$..inventory <- rbind(private$..inventory, credentials)
 
       # Update date/time metadata and create log entry
-      event <- paste0("Attached ", x$getName(), " object to ", self$getName(), ".")
+      event <- paste0("Added ", x$getName(), " object to ", self$getName(), ".")
       private$meta$modified(event = event)
       private$logR$log(method = 'addDocument',
                        event = event)
@@ -249,7 +249,7 @@ Collection0 <- R6::R6Class(
         event <- paste0("Removed ", x$getName(), " from ",
                                   self$getName(), ".")
         private$meta$modified(event = event)
-        private$logR$log( method = 'removeDocument',
+        private$logR$log(method = 'removeDocument',
                          event = event)
       } else {
         event <- paste0("Object is not attached to ",
@@ -258,6 +258,49 @@ Collection0 <- R6::R6Class(
                          event = event, level = "Warn")
       }
       invisible(self)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                           Summary Method                                #
+    #-------------------------------------------------------------------------#
+    summary = function(select = NULL) {
+
+      private$..params <- list()
+      private$..params$discrete$variables <- 'select'
+      private$..params$discrete$values <- select
+      private$..params$discrete$valid <- list(c('id', 'descriptive', 'functional',
+                                                'quant', 'documents', 'admin',
+                                                'tech'))
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = 'summary',  event = v$msg, level = "Error")
+        stop()
+      }
+
+      sd <- list()
+
+      if (is.null(select)) {
+        sd$id <- private$summarizeIdMeta()
+        sd$descriptive <- private$summarizeDescriptiveMeta()
+        sd$quant <- private$summarizeQuantMeta()
+        sd$functional  <- private$summarizeFunctionalMeta()
+        sd$documents <- private$summarizeDocumentMeta()
+        sd$admin <- private$summarizeAdminMeta()
+        sd$tech <- private$summarizeTechMeta()
+        invisible(sd)
+      } else {
+        sd <- switch(select,
+                     id = private$summarizeIdMeta(),
+                     descriptive = private$summarizeDescriptiveMeta(),
+                     functional = private$summarizeFunctionalMeta(),
+                     documents <- private$summarizeDocumentMeta(),
+                     quant = private$summarizeQuantMeta(),
+                     admin = private$summarizeAdminMeta(),
+                     tech = private$summarizeTechMeta()
+        )
+      }
+
+      invisible(sd)
     }
   )
 )

@@ -31,24 +31,34 @@ Meta0 <- R6::R6Class(
     ),
 
     #-------------------------------------------------------------------------#
+    #                             Utility Methods                             #
+    #-------------------------------------------------------------------------#
+    checkNames = function(name, type) {
+      types2check <- names(private$..meta)[!names(private$..meta) %in% type]
+      for (i in 1:length(types2check)) {
+        if (name %in% names(private$..meta[[types2check[i]]])) return(FALSE)
+      }
+      return(TRUE)
+    },
+
+    #-------------------------------------------------------------------------#
     #                           Identity Metadata                             #
     #-------------------------------------------------------------------------#
 
-    setIdentity = function(x, name = NULL) {
+    setIdentity = function(x, objectName = NULL) {
 
       # Designate class
       private$..meta$identity$classname <- class(x)[1]
 
       # Creates unique identifier
       settings <- hashids::hashid_settings(salt = 'this is my salt', min_length = 8)
-      private$..meta$identity$id <- hashids::encode(as.integer(Sys.time()) * 1000000 +
-                                                      sample(1:1000, 1, replace = TRUE), settings)
+      private$..meta$identity$id <- toupper(hashids::encode(as.integer(Sys.time()) * 1000000 +
+                                                      sample(1:1000, 1, replace = TRUE), settings))
 
       # Designate/create object name
-      private$..meta$identity$name <- ifelse(is.null(name),
-                                             paste0(private$..meta$identity$class,
-                                                    " (", toupper(private$..meta$identity$id),
-                                                    ")"), name)
+      private$..meta$identity$objectName <- ifelse(is.null(objectName),
+                                                   private$..meta$identity$id,
+                                                   objectName)
       invisible(self)
     },
 
@@ -82,11 +92,14 @@ Meta0 <- R6::R6Class(
     getIdentity = function(key = NULL) {
 
       if (!is.null(key)) {
-        if (key == 'id') { return(private$..meta$identity$id) }
-        if (key == 'name') { return(private$..meta$identity$name) }
+        if (key == 'id') {
+          return(private$..meta$identity$id)
+        } else if (key == 'objectName') {
+          return(private$..meta$identity$objectName)
+        }
+      } else {
+        return(private$..meta$identity)
       }
-      return(private$..meta$identity)
-
     },
 
     #-------------------------------------------------------------------------#
@@ -123,7 +136,16 @@ Meta0 <- R6::R6Class(
       }
 
       for (i in 1:length(key)) {
-        private$..meta$descriptive[[key[i]]] <- value[i]
+        if (private$checkNames(key[i], type = 'descriptive'))  {
+          private$..meta$descriptive[[key[i]]] <- value[i]
+        } else {
+          event <- paste0("Variable named ", key[i], " is a duplicate of an ",
+                          "existing metadata variable name. Duplicate ",
+                          "metadata variable names are not permitted.")
+          private$logR$log(method = "setDescriptive", event = event,
+                           level = "Error")
+          stop()
+        }
       }
       invisible(self)
     },
@@ -169,7 +191,16 @@ Meta0 <- R6::R6Class(
       }
 
       for (i in 1:length(key)) {
-        private$..meta$functional[[key[i]]] <- value[i]
+        if (private$checkNames(key[i], type = 'functional'))  {
+          private$..meta$functional[[key[i]]] <- value[i]
+        } else {
+          event <- paste0("Variable named ", key[i], " is a duplicate of an ",
+                          "existing metadata variable name. Duplicate ",
+                          "metadata variable names are not permitted.")
+          private$logR$log(method = "setFunctional", event = event,
+                           level = "Error")
+          stop()
+        }
       }
       invisible(self)
     },
@@ -212,12 +243,12 @@ Meta0 <- R6::R6Class(
       private$..meta$tech$os <- Sys.info()["sysname"]
       private$..meta$tech$release <- Sys.info()["release"]
       private$..meta$tech$version <- Sys.info()["version"]
-      private$..meta$tech$size <- as.character(format(object.size(x),
+      private$..meta$tech$objectSize <- as.character(format(objectSize(x),
                                                       units = "auto"))
       private$..meta$tech$fileName <- fileName
       private$..meta$tech$directory <- directory
-      if (!is.null(fileName) & !is.null(fileSource)) {
-        private$..meta$tech$fileSize <- file.size(file.path(fileSource, fileName))
+      if (!is.null(fileName) & !is.null(directory)) {
+        private$..meta$tech$fileSize <- file.size(file.path(directory, fileName))
       }
       private$..meta$tech$url <- url
 

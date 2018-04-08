@@ -32,9 +32,9 @@ Document0 <- R6::R6Class(
     summarizeIdMeta = function() {
 
       identity <- private$meta$getIdentity()
-      cat(paste0("\nObject Class : ", identity$class))
+      cat(paste0("\nObject Class : ", identity$classname))
       cat(paste0("\nObject Id    : ", identity$id))
-      cat(paste0("\nObject Name  : ", identity$name))
+      cat(paste0("\nObject Name  : ", identity$objectName))
       return(identity)
 
     },
@@ -110,7 +110,7 @@ Document0 <- R6::R6Class(
     #                             Metadata Methods                            #
     #-------------------------------------------------------------------------#
     getId = function() { return(private$meta$getIdentity(key = 'id')) },
-    getName = function() { return(private$meta$getIdentity(key = 'name')) },
+    getName = function() { return(private$meta$getIdentity(key = 'objectName')) },
     getIdentity = function() { return(private$meta$getIdentity()) },
     getMeta = function() { return(private$meta$getMeta()) },
     getDescriptiveMeta = function(key = NULL) { return(private$meta$getDescriptive(key)) },

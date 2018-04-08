@@ -67,7 +67,7 @@ Corpus <- R6::R6Class(
       k <- c("documents", "sentences", "words", "types", "characters")
       v <- c(documents, sentences, words, types, characters)
       private$meta$setQuant(key = k, value = v)
-      return(TRUE)
+      return(private$meta$getQuant())
     },
 
     #-------------------------------------------------------------------------#
@@ -92,10 +92,10 @@ Corpus <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Core Methods                                  #
     #-------------------------------------------------------------------------#
-    initialize = function(x, name = NULL) {
+    initialize = function(objectName = NULL) {
 
       private$loadDependencies()
-      private$meta <- Meta$new(x = self, name = name)
+      private$meta <- Meta$new(x = self, objectName = objectName)
       private$logR$log(method = 'initialize',
                        event = "Initialization complete.")
       invisible(self)
@@ -133,6 +133,10 @@ Corpus <- R6::R6Class(
       invisible(self)
 
     },
+    #-------------------------------------------------------------------------#
+    #                           Summary Methods                               #
+    #-------------------------------------------------------------------------#
+    getQuantMeta = function() { return(private$getQuant()) },
 
     #-------------------------------------------------------------------------#
     #                           Visitor Methods                               #

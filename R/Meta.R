@@ -21,10 +21,10 @@ Meta <- R6::R6Class(
 
   public = list(
 
-    initialize = function(x, name = NULL) {
+    initialize = function(x, objectName = NULL) {
 
       private$loadDependencies()
-      private$setIdentity(x, name)
+      private$setIdentity(x, objectName)
       private$setAdmin()
       self$setTech(x)
       invisible(self)
