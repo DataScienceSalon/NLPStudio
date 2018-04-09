@@ -129,13 +129,12 @@ Corpus <- R6::R6Class(
     text = function(x = NULL, note = NULL) {
       docs <- self$getDocument(key = "classname", value = "Document" )
       if (is.null(x)) {
-        return(lapply(docs, function(d) { d$text() }))
+        return(as.character(lapply(docs, function(d) { d$text() })))
       } else {
-        if (!is.list(x)) x <- as.list(x)
         if (length(docs) == length(x)) {
           if (length(note) == 1) note <- rep(note, length(docs))
           for (i in 1:length(docs)) {
-            docs[[i]]$text(x = x[[i]], note = note[i])
+            docs[[i]]$text(x = x[i], note = note[i])
           }
         } else {
           event <- paste0("The 'x' parameter must be a list of texts with ",

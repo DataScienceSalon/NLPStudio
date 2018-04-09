@@ -24,15 +24,15 @@ ConverterQuanteda <- R6::R6Class(
     to = function(x) {
 
       # Obtain corpus and document metadata
-      corpusMeta <- corpus$getMeta()
-      docMeta <- corpus$getDocMeta(classname = 'Document')
+      corpusMeta <- x$getMeta()
+      docMeta <- x$getDocMeta(classname = 'Document')
 
       # Obtain corpus text and text names
-      docs <- x$getDocument(key = 'classname', value = 'Document')
-      text <- unlist(lapply(docs, function(d) {
-        paste(d$text(), collapse = "")
+      text <- x$text()
+      docs <- x$getDocument()
+      docNames <- unlist(lapply(docs, function(d) {
+        d$getName()
       }))
-      docNames <- unlist(lapply(docs, function(d) {d$getName()}))
 
       # Create quanteda corpus object
       qCorpus <- quanteda::corpus(text, docnames = docNames)
@@ -46,16 +46,20 @@ ConverterQuanteda <- R6::R6Class(
 
       # Assign docvars
       docVars <- as.data.frame(docMeta$Document$descriptive)
-      vars <- names(docVars)
-      for (i in 1:length(vars)) {
-        docvars(x = qCorpus, field = vars[i]) <- docVars[,i]
+      if (nrow(docVars) > 0) {
+        vars <- names(docVars)
+        for (i in 1:length(vars)) {
+          docvars(x = qCorpus, field = vars[i]) <- docVars[,i]
+        }
       }
 
       # Assign metadoc variables
       metaDoc <- as.data.frame(docMeta$Document$functional)
-      vars <- names(metaDoc)
-      for (i in 1:length(vars)) {
-        metadoc(x = qCorpus, field = vars[i]) <- metaDoc[,i]
+      if (nrow(metaDoc) > 0) {
+        vars <- names(metaDoc)
+        for (i in 1:length(vars)) {
+          metadoc(x = qCorpus, field = vars[i]) <- metaDoc[,i]
+        }
       }
 
       return(qCorpus)
