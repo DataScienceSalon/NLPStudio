@@ -24,10 +24,7 @@ Meta <- R6::R6Class(
     initialize = function(x, name = NULL) {
 
       private$loadDependencies()
-      private$setIdentity(x)
-      if (!is.null(name)) self$setDescriptive(key = "name", value = name)
-      private$setAdmin()
-      self$setTech(x)
+      private$setup(x, name)
       invisible(self)
 
     },

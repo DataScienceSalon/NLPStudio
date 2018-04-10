@@ -29,26 +29,24 @@ ConverterTM <- R6::R6Class(
 
     to = function(x) {
 
-      # Obtain corpus and document metadata
-      corpusMeta <- corpus$getMeta()
-      docMeta <- corpus$getDocMeta(classname = 'Document')
+      # Obtain metadata and text
+      text <- x$text()
+      cMeta <- x$getMeta()$descriptive
+      cMetaVars <- names(cMeta)
+      docMeta <- x$getDocMeta(classname = 'Document')$Document
 
-      # Obtain corpus text and text names
-      docs <- x$getDocument(key = 'classname', value = 'Document')
-      text <- unlist(lapply(docs, function(d) {
-        paste(d$text(), collapse = "")
-      }))
-      docNames <- unlist(lapply(docs, function(d) {d$getName()}))
+      # Format dataframe
+      id <- data.frame(doc_id = docMeta$identity$id)
+      descriptive <- docMeta$descriptive
+      text <- as.data.frame(text)
+      docs <- cbind(id, descriptive, text)
 
       # Create tm corpus object
-      tmSource <- tm::VectorSource(text)
-      tmCorpus <- tm::Corpus(tmSource)
+      tmCorpus <- tm::Corpus(DataframeSource(docs))
 
-      # Create corpus level meta data
-      if (length(cMeta) > 0) {
-        for (i in 1:length(cMeta)) {
-          NLP::meta(tmCorpus, tag = cMetaNames[i], type = "corpus") <- cMeta[[i]]
-        }
+      # Add corpus level metadata
+      for (i in 1:length(cMetaVars)) {
+        NLP::meta(tmCorpus, tag = cMetaVars[i], type = "corpus") <- cMeta[[i]]
       }
 
       return(tmCorpus)
@@ -56,14 +54,17 @@ ConverterTM <- R6::R6Class(
 
     from = function(x) {
 
-      # Obtain metadata
+      # Obtain metadata and text
       cMeta <- NLP::meta(x, type = "corpus")
-      dMeta <- lapply(seq_along(x), function(m) {
-        NLP::meta(x[[m]], type = "local")
+      dMeta <- NLP::meta(x, type = "indexed")
+      text <- lapply(seq_along(x), function(d) {
+        x[[d]]$content
       })
+      docNames <- names(x)
 
-      # Create Documents and Metadata
-      docs <- lapply(x, function(d) { Document$new(d[[1]]) })
+      # Create Documents from text.
+      docs <- lapply(seq_along(text), function(t) { Document$new(x = text[[t]], name = docNames[i]) })
+
       for (i in 1:length(dMeta)) {
         varnames <- names(dMeta[[i]])
         for (j in 1:length(varnames)) {

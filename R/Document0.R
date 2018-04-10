@@ -31,7 +31,7 @@ Document0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     summarizeIdMeta = function() {
 
-      identity <- private$meta$getIdentity()
+      identity <- private$meta$get(type = 'identity')
       cat(paste0("\nObject Class : ", identity$classname))
       cat(paste0("\nObject Id    : ", identity$id))
       return(identity)
@@ -40,7 +40,7 @@ Document0 <- R6::R6Class(
 
     summarizeDescriptiveMeta = function() {
 
-      descriptive <- private$meta$getDescriptive()
+      descriptive <- private$meta$get(type = 'descriptive')
       if (length(descriptive) > 0) {
         metaDf <- as.data.frame(descriptive, stringsAsFactors = FALSE,
                                 row.names = NULL)
@@ -53,7 +53,7 @@ Document0 <- R6::R6Class(
 
     summarizeQuantMeta = function() {
 
-      quant <- private$meta$getQuant()
+      quant <- private$meta$get(type = 'quant')
       if (length(quant > 0)) {
         quantDf <- as.data.frame(quant, stringsAsFactors = FALSE,
                                  row.names = NULL)
@@ -66,7 +66,7 @@ Document0 <- R6::R6Class(
 
     summarizeFunctionalMeta = function() {
 
-      functional <- private$meta$getFunctional()
+      functional <- private$meta$get(type = 'functional')
       if (length(functional) > 0) {
         metaDf <- as.data.frame(functional, stringsAsFactors = FALSE,
                                 row.names = NULL)
@@ -80,7 +80,7 @@ Document0 <- R6::R6Class(
 
     summarizeAdminMeta = function() {
 
-      admin <- private$meta$getAdmin()
+      admin <- private$meta$get(type = 'admin')
       adminDf <- as.data.frame(admin, stringsAsFactors = FALSE, row.names = NULL)
       cat("\nAdministrative:\n")
       print(adminDf, row.names = FALSE)
@@ -90,7 +90,7 @@ Document0 <- R6::R6Class(
 
     summarizeTechMeta = function() {
 
-      tech <- private$meta$getTech()
+      tech <- private$meta$get(type = 'tech')
 
       techDf <- as.data.frame(tech, stringsAsFactors = FALSE, row.names = NULL)
       cat("\nTechnical:\n")
@@ -108,33 +108,14 @@ Document0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                             Metadata Methods                            #
     #-------------------------------------------------------------------------#
-    getId = function() { return(private$meta$getIdentity(key = 'id')) },
-    getName = function() {
-      name <- private$meta$getDescriptive(key = 'name')
-      if (is.null(name)) name <- private$meta$getIdentity(key = 'id')
-      return(name)
+    getId = function() { return(private$meta$get(key = 'id')) },
+    getName = function() { return(private$meta$get(key = 'name')) },
+    getMeta = function(key = NULL, type = NULL ) {
+      return(private$meta$get(key = key, type = type))
     },
-    getIdentity = function() { return(private$meta$getIdentity()) },
-    getMeta = function() { return(private$meta$getMeta()) },
-    getDescriptiveMeta = function(key = NULL) { return(private$meta$getDescriptive(key)) },
-    getQuantMeta = function() { return(private$meta$getQuant()) },
-    getFunctionalMeta = function() { return(private$meta$getFunctional()) },
-    getAdminMeta = function() { return(private$meta$getAdmin()) },
-    getTechMeta = function() { return(private$meta$getTech()) },
     query = function(key, value) { return(private$meta$query(key, value)) },
-
-    setDescriptiveMeta = function(key, value) {
-      private$meta$setDescriptive(key, value)
-      invisible(self)
-    },
-
-    setFunctionalMeta = function(key, value) {
-      private$meta$setFunctional(key, value)
-      invisible(self)
-    },
-
-    setTechMeta = function(key, value) {
-      private$meta$setTech(key, value)
+    setMeta = function(key, value, type = 'descriptive') {
+      private$meta$set(key = key, value = value, type = type)
       invisible(self)
     },
 

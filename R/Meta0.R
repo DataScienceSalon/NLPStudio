@@ -21,6 +21,7 @@ Meta0 <- R6::R6Class(
   inherit = Super,
 
   private = list(
+    ..owner = character(),
     ..meta = list(
       identity = list(),
       descriptive = list(),
@@ -31,7 +32,29 @@ Meta0 <- R6::R6Class(
     ),
 
     #-------------------------------------------------------------------------#
-    #                             Utility Methods                             #
+    #                             Search Method                               #
+    #-------------------------------------------------------------------------#
+    search = function(key, types = NULL) {
+
+      if (is.null(types)) {
+        for (i in 1:length(private$..meta)) {
+          if (!is.null(private$..meta[[i]][[key]])) {
+            return(private$..meta[[i]][[key]])
+          }
+        }
+        return(NULL)
+      } else {
+        for (i in 1:length(types)) {
+          if (!is.null(private$..meta[[types[i]]][[key]])) {
+            return(private$..meta[[types[i]]][[key]])
+          }
+        }
+        return(NULL)
+      }
+    },
+
+    #-------------------------------------------------------------------------#
+    #                           CheckNames Method                             #
     #-------------------------------------------------------------------------#
     checkNames = function(name, type) {
       types2check <- names(private$..meta)[!names(private$..meta) %in% type]
@@ -42,27 +65,27 @@ Meta0 <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                           Identity Metadata                             #
+    #                             Setup Metadata                              #
     #-------------------------------------------------------------------------#
 
-    setIdentity = function(x, name = NULL) {
+    setup = function(x, name = NULL) {
 
-      # Designate class
+      private$..owner <- x
+
+      # Setup Identity Metadata
       private$..meta$identity$classname <- class(x)[1]
-
-      # Creates unique identifier
       settings <- hashids::hashid_settings(salt = 'this is my salt', min_length = 8)
       private$..meta$identity$id <- toupper(hashids::encode(as.integer(Sys.time()) * 1000000 +
                                                       sample(1:1000, 1, replace = TRUE), settings))
 
-      invisible(self)
-    },
+      # Setup Descriptive Metadata
+      if (!is.null(name)) {
+        private$..meta$descriptive$name <- name
+      } else {
+        private$..meta$descriptive$name <- private$..meta$identity$id
+      }
 
-    #-------------------------------------------------------------------------#
-    #                       Administrative Metadata                           #
-    #-------------------------------------------------------------------------#
-    setAdmin = function() {
-
+      # Setup Admin Metadata
       private$..meta$admin$created <- Sys.time()
       private$..meta$admin$createdBy <- Sys.info()[["user"]]
       private$..meta$admin$modified <- Sys.time()
@@ -70,142 +93,102 @@ Meta0 <- R6::R6Class(
       private$..meta$admin$nModified <- 0
       private$..meta$admin$lastState <- "Instantiated."
 
-      return(TRUE)
+      # Setup Technical Metadata
+      private$..meta$tech$hardware <- Sys.info()["machine"]
+      private$..meta$tech$os <- Sys.info()["sysname"]
+      private$..meta$tech$release <- Sys.info()["release"]
+      private$..meta$tech$version <- Sys.info()["version"]
+      private$..meta$tech$objectSize <- as.character(format(objectSize(x),
+                                                            units = "auto"))
+
+      invisible(self)
     }
   ),
 
   public = list(
 
     initialize = function() { stop("This method is not implemented for this base class.") },
-    getMeta = function() { return(private$..meta) },
 
     #-------------------------------------------------------------------------#
-    #                            Identity Methods                             #
+    #                             Get Method                                  #
     #-------------------------------------------------------------------------#
-    getIdentity = function(key = NULL) {
+    get = function(type = NULL, key = NULL) {
+
+      if (is.null(type) & is.null(key)) return(private$..meta)
 
       if (!is.null(key)) {
-        if (key == 'id') {
-          return(private$..meta$identity$id)
-        } else if (key == 'name') {
-          return(private$..meta$identity$name)
+        value <- private$search(key)
+        if (is.null(value)) {
+          event <- paste0("Variable, ", key, " not found in metadata.")
+          private$logR$log(method = 'get', event = event, level = "Warn")
+          return(NULL)
+        } else {
+          return(value)
         }
       } else {
-        return(private$..meta$identity)
+
+        if (grepl("^i", type, ignore.case = TRUE)) {
+          return(private$..meta$identity)
+        } else if (grepl("^q", type, ignore.case = TRUE)) {
+          return(private$..meta$quant)
+        } else if (grepl("^d", type, ignore.case = TRUE)) {
+          return(private$..meta$descriptive)
+        } else if (grepl("^f", type, ignore.case = TRUE)) {
+          return(private$..meta$functional)
+        } else if (grepl("^a", type, ignore.case = TRUE)) {
+          return(private$..meta$admin)
+        } else if (grepl("^t", type, ignore.case = TRUE)) {
+          return(private$..meta$tech)
+        }
       }
     },
 
     #-------------------------------------------------------------------------#
-    #                         Descriptive Metadata Methods                    #
+    #                       Set Descriptive Method                            #
     #-------------------------------------------------------------------------#
-    getDescriptive = function(key = NULL) {
+    set = function(key, value, type = 'descriptive') {
 
-      if (length(private$..meta$descriptive) == 0) {
-        return(NULL)
-      } else if (is.null(key)) {
-        return(private$..meta$descriptive)
-      } else if (!is.null(private$..meta$descriptive[[key]])) {
-        return(private$..meta$descriptive[[key]])
+      if (grepl("^d", type, ignore.case = TRUE)) {
+        type <- 'descriptive'
+      } else if (grepl("^f", type, ignore.case = TRUE)) {
+        type <- 'functional'
+      } else if (grepl("^q", type, ignore.case = TRUE)) {
+        type <- 'quant'
       } else {
-        event <- paste0("Key, '", key, "', is not a valid descriptive metadata ",
-                        "variable. See ?", class(self)[1],
-                        " for further assistance.")
-        private$logR$log(method = 'getDescriptive',
-                         event = event, level = "Warn")
-        return(FALSE)
+        event <- paste0("Unable to set metadata of type ", type, ". Permitted ",
+                        "types include c('descriptive', 'functional').  See?",
+                        class(self)[1], " for further assistance.")
+        private$logR$log(method = 'set', event = event, level = "Error")
+        stop()
       }
-    },
-
-    setDescriptive = function(key, value) {
 
       private$..params$kv$key <- key
       private$..params$kv$value <- value
       private$..params$kv$equalLen <- TRUE
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
-        private$logR$log( method = 'setDescriptive',
+        private$logR$log( method = 'set',
                           event = v$msg, level = 'Error')
         stop()
       }
 
       for (i in 1:length(key)) {
-        if (private$checkNames(key[i], type = 'descriptive'))  {
-          private$..meta$descriptive[[key[i]]] <- value[i]
+        if (private$checkNames(key[i], type = type))  {
+          private$..meta[[type]][[key[i]]] <- value[i]
         } else {
           j <- 1
           newVar <- paste0(key[i], "_", j)
-          while(private$checkNames(newVar, type = 'descriptive') == FALSE) {
+          while(private$checkNames(newVar, type = type) == FALSE) {
             j <- j + 1
             newVar <- paste0(key[i], "_", j)
           }
-          private$..meta$descriptive[[newVar]] <- value[i]
+          private$..meta[[type]][[newVar]] <- value[i]
           event <- paste0("Duplicate metadata variable names are not ",
                           "permitted. Variable named ", key[i],
                           " was changed to ", newVar, ".")
-          private$logR$log(method = "setDescriptive", event = event,
+          private$logR$log(method = "set", event = event,
                            level = "Warn")
         }
-      }
-      invisible(self)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                           Functional  Methods                           #
-    #-------------------------------------------------------------------------#
-    getFunctional = function() { return(private$..meta$functional) },
-
-    setFunctional = function(key, value) {
-
-      private$..params$kv$key <- key
-      private$..params$kv$value <- value
-      private$..params$kv$equalLen <- TRUE
-      v <- private$validator$validate(self)
-      if (v$code == FALSE) {
-        private$logR$log( method = 'setFunctional',
-                          event = v$msg, level = "Error")
-        stop()
-      }
-
-      for (i in 1:length(key)) {
-        if (private$checkNames(key[i], type = 'functional'))  {
-          private$..meta$functional[[key[i]]] <- value[i]
-        } else {
-          j <- 1
-          newVar <- paste0(key[i], "_", j)
-          while(private$checkNames(newVar, type = 'functional') == FALSE) {
-            j <- j + 1
-            newVar <- paste0(key[i], "_", j)
-          }
-          private$..meta$functional[[newVar]] <- value[i]
-          event <- paste0("Duplicate metadata variable names are not ",
-                          "permitted. Variable named ", key[i],
-                          " was changed to ", newVar, ".")
-          private$logR$log(method = "setFunctional", event = event,
-                           level = "Warn")
-        }
-      }
-      invisible(self)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                             Quant Methods                               #
-    #-------------------------------------------------------------------------#
-    getQuant = function() { return(private$..meta$quant) },
-
-    setQuant = function(key, value) {
-
-      private$..params$kv$key <- key
-      private$..params$kv$value <- value
-      private$..params$kv$equalLen <- TRUE
-      v <- private$validator$validate(self)
-      if (v$code == FALSE) {
-        private$logR$log( method = 'setQuant',
-                          event = v$msg, level = "Error")
-        stop()
-      }
-
-      for (i in 1:length(key)) {
-        private$..meta$quant[[key[i]]] <- value[i]
       }
       invisible(self)
     },
@@ -213,43 +196,55 @@ Meta0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                             Admin Methods                               #
     #-------------------------------------------------------------------------#
-    getAdmin = function() { return(private$..meta$admin) },
-
     modified = function(event = NULL) {
 
       private$..meta$admin$modified <- Sys.time()
       private$..meta$admin$modifiedBy <- Sys.info()[["user"]]
       private$..meta$admin$nModified <- private$..meta$admin$nModified + 1
       private$..meta$admin$lastState <- ifelse(is.null(event), "Modified.", event)
+      private$..meta$tech$objectSize <- as.character(format(objectSize(private$..owner),
+                                                            units = "auto"))
 
       invisible(self)
     },
 
     #-------------------------------------------------------------------------#
-    #                          Technical Metadata                             #
+    #                           Set Source Method                             #
     #-------------------------------------------------------------------------#
-    getTech = function() { private$..meta$tech },
+    setSource = function(key, value) {
 
-    setTech = function(x, fileName = NULL, directory = NULL, url = NULL,
-                       source = NULL) {
+      type <- "tech"
 
-      private$..meta$tech$hardware <- Sys.info()["machine"]
-      private$..meta$tech$os <- Sys.info()["sysname"]
-      private$..meta$tech$release <- Sys.info()["release"]
-      private$..meta$tech$version <- Sys.info()["version"]
-      private$..meta$tech$objectSize <- as.character(format(objectSize(x),
-                                                      units = "auto"))
-      private$..meta$tech$fileName <- fileName
-      private$..meta$tech$directory <- directory
-      if (!is.null(fileName) & !is.null(directory)) {
-        private$..meta$tech$fileSize <- file.size(file.path(directory, fileName))
+      private$..params$kv$key <- key
+      private$..params$kv$value <- value
+      private$..params$kv$equalLen <- TRUE
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log( method = 'setSource',
+                          event = v$msg, level = 'Error')
+        stop()
       }
-      private$..meta$tech$url <- url
-      private$..meta$tech$source <- source
 
-      return(TRUE)
+      for (i in 1:length(key)) {
+        if (private$checkNames(key[i], type = type))  {
+          private$..meta[[type]][[key[i]]] <- value[i]
+        } else {
+          j <- 1
+          newVar <- paste0(key[i], "_", j)
+          while(private$checkNames(newVar, type = type) == FALSE) {
+            j <- j + 1
+            newVar <- paste0(key[i], "_", j)
+          }
+          private$..meta[[type]][[newVar]] <- value[i]
+          event <- paste0("Duplicate metadata variable names are not ",
+                          "permitted. Variable named ", key[i],
+                          " was changed to ", newVar, ".")
+          private$logR$log(method = "set", event = event,
+                           level = "Warn")
+        }
+      }
+      invisible(self)
     },
-
 
     #-------------------------------------------------------------------------#
     #                             Query Methods                               #

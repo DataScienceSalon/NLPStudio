@@ -51,7 +51,7 @@ Corpus <- R6::R6Class(
 
   private = list(
 
-    getQuant = function() {
+    setQuant = function() {
 
       quant <- rbindlist(lapply(private$..documents, function(d) {
         meta <- d$getMeta()
@@ -66,16 +66,16 @@ Corpus <- R6::R6Class(
 
       k <- c("documents", "sentences", "words", "types", "characters")
       v <- c(documents, sentences, words, types, characters)
-      private$meta$setQuant(key = k, value = v)
-      return(private$meta$getQuant())
+      private$meta$set(key = k, value = v, type = 'quant')
+      return(TRUE)
     },
 
     #-------------------------------------------------------------------------#
     #                           Summary Methods                               #
     #-------------------------------------------------------------------------#
     summarizeQuant = function(verbose = TRUE) {
-      private$getQuant()
-      quant <- private$meta$getQuant()
+      private$setQuant()
+      quant <- private$meta$get(type = 'quant')
       if (verbose) {
         if (!is.null(quant)) {
           quantDf <- as.data.frame(quant, stringsAsFactors = FALSE, row.names = NULL)
@@ -146,11 +146,6 @@ Corpus <- R6::R6Class(
         }
       }
     },
-
-    #-------------------------------------------------------------------------#
-    #                           Summary Methods                               #
-    #-------------------------------------------------------------------------#
-    getQuantMeta = function() { return(private$getQuant()) },
 
     #-------------------------------------------------------------------------#
     #                           Visitor Methods                               #

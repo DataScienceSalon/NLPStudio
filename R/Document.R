@@ -61,14 +61,14 @@ Document <- R6::R6Class(
       strsplit(memDecompress(x, "g", asChar = TRUE), "\n")[[1]]
     },
 
-    getQuant = function(x) {
+    setQuant = function(x) {
       sentences <- sum(quanteda::nsentence(x))
       words <- sum(quanteda::ntoken(x))
       types <- sum(quanteda::ntype(x))
       characters <- sum(nchar(x))
       k <- c("sentences", "words", "types", "characters")
       v <- c(sentences, words, types, characters)
-      private$meta$setQuant(key = k, value = v)
+      private$meta$set(key = k, value = v, type = 'quant')
       return(TRUE)
     },
 
@@ -89,7 +89,7 @@ Document <- R6::R6Class(
 
         # Update text, compute statistics and update admin information
         private$..text <- private$compress(x)
-        private$getQuant(x)
+        private$setQuant(x)
         private$meta$modified(event = note)
       }
       return(TRUE)
@@ -114,7 +114,7 @@ Document <- R6::R6Class(
         private$..params$classes$valid <- list('character')
         v <- private$validator$validate(self)
         if (v$code == FALSE) {
-          private$logR$log(method = method,
+          private$logR$log(method = 'initialize',
                            event = v$msg, level = "Error")
           stop()
         }

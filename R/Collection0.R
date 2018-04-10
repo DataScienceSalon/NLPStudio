@@ -61,7 +61,7 @@ Collection0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     attach = function(x) {
     # Get document credentials, add document and update inventory
-      credentials <- x$getIdentity()
+      credentials <- x$getMeta(type = 'identity')
       private$..documents[[credentials$id]] <- x
       credentials <- as.data.frame(credentials, stringsAsFactors = FALSE, row.names = NULL)
       private$..inventory <- rbind(private$..inventory, credentials)
@@ -261,31 +261,47 @@ Collection0 <- R6::R6Class(
       return(documentMeta)
     },
     #-------------------------------------------------------------------------#
-    setDocMeta = function(key, value, classname = "Document",
-                          descriptive = TRUE) {
+    setDocMeta = function(docMeta, classname = "Document",
+                          type = 'descriptive') {
 
-      docs <- self$getDocument(key = 'classname', value = classname)
-
-      if ((length(key) != 1) & (length(value) != length(docs))) {
-        event <- paste0("Key vector must have a length equal to one ",
-                        "and the value vector must have a length equal to ",
-                        length(docs), ", the number of ", classname, " objects ",
-                        "in the collection. See ?", class(self)[1],
-                        " for further assistance.")
-        private$logR$log(method = "setDocMeta", event = event, level = "Error")
+      # Validate class of object.
+      private$..params <- list()
+      private$..params$classes$name <- list('docMeta')
+      private$..params$classes$objects <- list(docMeta)
+      private$..params$classes$valid <- list(c('data.frame', 'data.table'))
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = 'setDocMeta',
+                         event = v$msg, level = "Error")
         stop()
       }
 
-
-      if (descriptive) {
-        for (i in 1:length(docs)) {
-          docs[[i]]$setDescriptiveMeta(key = key, value = value[i])
-        }
-      } else {
-        for (i in 1:length(docs)) {
-          docs[[i]]$setFunctionalMeta(key = key, value = value[i])
-        }
+      cls <- classname
+      if (nrow(private$..inventory %>% filter(classname == cls)) == 0) {
+        event <- paste0("There are no documents of type ", classname,
+                        " attached to this collection. See?",
+                        class(self)[1], " for further assistance.")
+        private$logR$log(method = 'setDocMeta', event = event,
+                         level = "Error")
+        stop()
       }
+
+      docs <- self$getDocument(key = 'classname', value = classname)
+
+      if (nrow(docMeta) != length(docs)) {
+        event <- paste0("The docMeta variable must be a data.frame or ",
+                        "data.table with one row for each document in ",
+                        "the collection. See?", class(self)[1], " for ",
+                        "further assistance.")
+        private$logR$log(method = "setDocMeta", event = event, level = "Error")
+      }
+
+      vars <- names(docMeta)
+      for (i in 1:nrow(docMeta)) {
+        for (j in 1:length(docMeta))
+          self$setMeta(key = vars[j], value = docMeta[i,j], type = type)
+      }
+
       invisible(self)
     },
 
