@@ -74,10 +74,8 @@ ConverterQuanteda <- R6::R6Class(
       # Obtain and transfer corpus metadata
       descriptive <- metacorpus(x)[!names(metacorpus(x)) %in% c('source', 'created')]
       vars <- names(descriptive)
-      for (i in 1:length(descriptive)) {
-        corpus$setDescriptiveMeta(key = vars[i], value = descriptive[[i]])
-      }
-      corpus$setTechMeta(key = 'source', value = metacorpus(x)['source'][1])
+      corpus$setMeta(key = vars, value = as.character(descriptive), type = 'd')
+      corpus$setSource(key = 'source', value = metacorpus(x)['source'][1])
 
       # Create Document Objects from quanteda corpus text and add to corpus
       docNames <- docnames(x)
@@ -87,21 +85,13 @@ ConverterQuanteda <- R6::R6Class(
       }
 
       # Add document descriptive metadata
-      descriptiveValues <- docvars(x)
-      descriptiveVars <- names(descriptiveValues)
-      for (i in 1:length(descriptiveVars)) {
-        corpus$setDocMeta(key = descriptiveVars[i],
-                              value = descriptiveValues[,i])
-      }
+      corpus$setDocMeta(docMeta = docvars(x), classname = 'Document',
+                        type = 'd')
 
       # Add document functional metadata
-      functionalValues <- metadoc(x)
-      functionalVars <- gsub("_", "", names(functionalValues))
-      for (i in 1:length(functionalVars)) {
-        corpus$setDocMeta(key = functionalVars[i],
-                              value = functionalValues[,i],
-                              descriptive = FALSE)
-      }
+      corpus$setDocMeta(docMeta = metadoc(x), classname = 'Document',
+                        type = 'f')
+      print(corpus$getMeta(type = 'd'))
       return(corpus)
     }
   ),

@@ -190,7 +190,7 @@ Collection0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Document Metadata                             #
     #-------------------------------------------------------------------------#
-    getDocMeta = function(classname = NULL) {
+    getDocMeta = function(classname = NULL, type = NULL) {
 
       if (nrow(private$..inventory) == 0) return(NULL)
 
@@ -218,10 +218,9 @@ Collection0 <- R6::R6Class(
         for (j in 1:nrow(documents)) {
           id <- documents$id[j]
           document <- private$..documents[[id]]
-          meta[[id]] <- document$getMeta()
+          meta[[id]] <- document$getMeta(type = type)
         }
 
-        # Create separate dataframes containing document meta for each type
         type <- list()
 
         # Extract identity information
@@ -299,7 +298,7 @@ Collection0 <- R6::R6Class(
       vars <- names(docMeta)
       for (i in 1:nrow(docMeta)) {
         for (j in 1:length(docMeta))
-          self$setMeta(key = vars[j], value = docMeta[i,j], type = type)
+          docs[[i]]$setMeta(key = vars[j], value = docMeta[i,j], type = type)
       }
 
       invisible(self)

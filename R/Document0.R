@@ -114,8 +114,14 @@ Document0 <- R6::R6Class(
       return(private$meta$get(key = key, type = type))
     },
     query = function(key, value) { return(private$meta$query(key, value)) },
+
     setMeta = function(key, value, type = 'descriptive') {
       private$meta$set(key = key, value = value, type = type)
+      invisible(self)
+    },
+
+    setSource = function(key, value) {
+      private$meta$setSource(key,value)
       invisible(self)
     },
 
