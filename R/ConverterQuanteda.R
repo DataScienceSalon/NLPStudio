@@ -74,7 +74,7 @@ ConverterQuanteda <- R6::R6Class(
       # Obtain and transfer corpus metadata
       descriptive <- metacorpus(x)[!names(metacorpus(x)) %in% c('source', 'created')]
       vars <- names(descriptive)
-      corpus$setMeta(key = vars, value = as.character(descriptive), type = 'd')
+      corpus$setMeta(key = vars, value = descriptive, type = 'd')
       corpus$setSource(key = 'source', value = metacorpus(x)['source'][1])
 
       # Create Document Objects from quanteda corpus text and add to corpus
@@ -91,7 +91,6 @@ ConverterQuanteda <- R6::R6Class(
       # Add document functional metadata
       corpus$setDocMeta(docMeta = metadoc(x), classname = 'Document',
                         type = 'f')
-      print(corpus$getMeta(type = 'd'))
       return(corpus)
     }
   ),

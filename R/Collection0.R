@@ -210,6 +210,7 @@ Collection0 <- R6::R6Class(
 
       documentMeta <- list()
 
+
       for (i in 1:length(classes)) {
         documents <- subset(private$..inventory, classname == classes[i])
 
@@ -218,44 +219,44 @@ Collection0 <- R6::R6Class(
         for (j in 1:nrow(documents)) {
           id <- documents$id[j]
           document <- private$..documents[[id]]
-          meta[[id]] <- document$getMeta(type = type)
+          meta[[id]] <- document$getMeta()
         }
 
-        type <- list()
+        section <- list()
 
         # Extract identity information
-        type$identity <- rbindlist(lapply(meta, function(m) {
+        section$identity <- rbindlist(lapply(meta, function(m) {
           m$identity
         }))
 
         # Extract descriptive metadata
-        type$descriptive <- as.data.frame(rbindlist(lapply(meta, function(m) {
+        section$descriptive <- as.data.frame(rbindlist(lapply(meta, function(m) {
           m$descriptive
         }), fill = TRUE, use.names = TRUE))
-        type$descriptive[is.na(type$descriptive)] <- " "
+        section$descriptive[is.na(section$descriptive)] <- " "
 
         # Extract functional metadata
-        type$functional <- as.data.frame(rbindlist(lapply(meta, function(m) {
+        section$functional <- as.data.frame(rbindlist(lapply(meta, function(m) {
           m$functional
         }), fill = TRUE, use.names = TRUE))
-        type$functional[is.na(type$functional)] <- " "
+        section$functional[is.na(section$functional)] <- " "
 
         # Extract quant metadata
-        type$quant <- rbindlist(lapply(meta, function(m) {
+        section$quant <- rbindlist(lapply(meta, function(m) {
           m$quant
         }))
 
         # Extract admin metadata
-        type$admin <- rbindlist(lapply(meta, function(m) {
+        section$admin <- rbindlist(lapply(meta, function(m) {
           m$admin
         }))
 
         # Extract technical metadata
-        type$tech <- rbindlist(lapply(meta, function(m) {
+        section$tech <- rbindlist(lapply(meta, function(m) {
           m$tech
         }))
 
-        documentMeta[[classes[i]]] <- type
+        documentMeta[[classes[i]]] <- section
       }
       return(documentMeta)
     },

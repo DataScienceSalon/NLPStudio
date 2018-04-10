@@ -25,10 +25,6 @@ Converter <- R6::R6Class(
   lock_class = FALSE,
   inherit = Super,
 
-  private = list(
-
-  ),
-
   public = list(
 
     initialize = function() { invisible(self) },

@@ -110,7 +110,7 @@ Document0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     getId = function() { return(private$meta$get(key = 'id')) },
     getName = function() { return(private$meta$get(key = 'name')) },
-    getMeta = function(key = NULL, type = NULL ) {
+    getMeta = function(key = NULL, type = NULL) {
       return(private$meta$get(key = key, type = type))
     },
     query = function(key, value) { return(private$meta$query(key, value)) },
