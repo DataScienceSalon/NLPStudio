@@ -256,7 +256,24 @@ Collection0 <- R6::R6Class(
           m$tech
         }))
 
-        documentMeta[[classes[i]]] <- section
+        if (!is.null(type)) {
+
+          if (grepl("^i", type, ignore.case = TRUE)) {
+            documentMeta[[classes[i]]] <- section$identity
+          } else if (grepl("^q", type, ignore.case = TRUE)) {
+            documentMeta[[classes[i]]] <- section$quant
+          } else if (grepl("^d", type, ignore.case = TRUE)) {
+            documentMeta[[classes[i]]] <- section$descriptive
+          } else if (grepl("^f", type, ignore.case = TRUE)) {
+            documentMeta[[classes[i]]] <- section$functional
+          } else if (grepl("^a", type, ignore.case = TRUE)) {
+            documentMeta[[classes[i]]] <- section$admin
+          } else if (grepl("^t", type, ignore.case = TRUE)) {
+            documentMeta[[classes[i]]] <- section$tech
+          }
+        } else {
+          documentMeta[[classes[i]]] <- section
+        }
       }
       return(documentMeta)
     },

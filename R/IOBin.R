@@ -50,7 +50,7 @@ IOBin <- R6::R6Class(
       return(text)
     },
 
-    write = function(path, text) {
+    write = function(path, content) {
 
       private$logR <- LogR$new()
 
@@ -60,7 +60,7 @@ IOBin <- R6::R6Class(
       # Create directory if necessary
       dir.create(dirName, showWarnings = FALSE, recursive = TRUE)
 
-      writeBin(text, path)
+      writeBin(content, path)
 
       event <- paste0("Successfully wrote ", fileName, ".")
       private$logR$log( event = event)

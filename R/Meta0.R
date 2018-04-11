@@ -211,7 +211,7 @@ Meta0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Set Source Method                             #
     #-------------------------------------------------------------------------#
-    setSource = function(key, value) {
+    setSource = function(key, value, type = 'tech') {
 
       type <- "tech"
 

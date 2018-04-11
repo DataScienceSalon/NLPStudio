@@ -58,7 +58,7 @@ IOText <- R6::R6Class(
       return(text)
     },
 
-    write = function(path, text) {
+    write = function(path, content) {
 
       private$logR <- LogR$new()
 
@@ -70,7 +70,7 @@ IOText <- R6::R6Class(
 
       con <- file(path)
       on.exit(close(con))
-      writeLines(text, con)
+      writeLines(content, con)
 
       event <- paste0("Successfully wrote ", fileName, ".")
       private$logR$log( event = event)

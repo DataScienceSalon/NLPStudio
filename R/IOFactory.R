@@ -36,15 +36,14 @@ IOFactory <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                      Object Creation and Read                           #
     #-------------------------------------------------------------------------#
-    initialize = function(path) {
+    initialize = function() {
       private$logR <- LogR$new()
-      private$..path <- path
       invisible(self)
     },
 
-    getIOStrategy = function() {
+    strategy = function(path) {
 
-      type <- tolower(tools::file_ext(private$..path))
+      type <- tolower(tools::file_ext(path))
 
       io <- switch(type,
                    txt = IOText$new(),

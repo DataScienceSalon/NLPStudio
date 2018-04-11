@@ -52,7 +52,7 @@ IOCSV <- R6::R6Class(
       return(text)
     },
 
-    write = function(path, text) {
+    write = function(path, content) {
 
       private$logR <- LogR$new()
 
@@ -62,7 +62,7 @@ IOCSV <- R6::R6Class(
       # Create directory if necessary
       dir.create(dirName, showWarnings = FALSE, recursive = TRUE)
 
-      write.csv(text, file = path, row.names = FALSE)
+      write.csv(content, file = path, row.names = FALSE)
 
       event <- paste0("Successfully wrote ", fileName, ".")
       private$logR$log( event = event)

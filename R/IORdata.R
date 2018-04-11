@@ -53,7 +53,7 @@ IORdata <- R6::R6Class(
       return(text)
     },
 
-    write = function(path, text) {
+    write = function(path, content) {
 
       private$logR <- LogR$new()
 
@@ -63,7 +63,7 @@ IORdata <- R6::R6Class(
       # Create directory if necessary
       dir.create(dirName, showWarnings = FALSE, recursive = TRUE)
 
-      save(object = text, file = path, compression_level = 9)
+      save(object = content, file = path, compression_level = 9)
 
       event <- paste0("Successfully wrote ", fileName, ".")
       private$logR$log( event = event)

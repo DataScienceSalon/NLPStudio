@@ -77,7 +77,18 @@ ValidationVisitor <- R6::R6Class(
       return(private$validate(object))
 
     },
-    textDocument = function(object) {
+    document = function(object) {
+      return(private$validate(object))
+    },
+
+    #-------------------------------------------------------------------------#
+    #                      Corpus Sourcing Classes                            #
+    #-------------------------------------------------------------------------#
+    csourceVector = function(object) {
+      return(private$validate(object))
+    },
+
+    csourceDir = function(object) {
       return(private$validate(object))
     },
 
@@ -86,10 +97,6 @@ ValidationVisitor <- R6::R6Class(
     #-------------------------------------------------------------------------#
 
     meta = function(object) {
-      return(private$validate(object))
-    },
-
-    metaDocument = function(object) {
       return(private$validate(object))
     },
 

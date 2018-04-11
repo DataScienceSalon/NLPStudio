@@ -145,7 +145,7 @@ Document <- R6::R6Class(
     #                           Visitor Methods                               #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$textDocument(self)
+      visitor$document(self)
     }
   )
 )

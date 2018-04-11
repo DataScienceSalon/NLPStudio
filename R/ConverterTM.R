@@ -63,13 +63,13 @@ ConverterTM <- R6::R6Class(
       docNames <- names(x)
 
       # Create Documents from text.
-      docs <- lapply(seq_along(text), function(t) { Document$new(x = text[[t]], name = docNames[i]) })
+      docs <- lapply(seq_along(text), function(t) { Document$new(x = text[[t]], name = docNames[t]) })
 
-      for (i in 1:length(dMeta)) {
-        varnames <- names(dMeta[[i]])
+      for (i in 1:length(docNames)) {
+        varnames <- names(dMeta)
         for (j in 1:length(varnames)) {
-          if (length(dMeta[[i]][[j]]) > 0) {
-            docs[[i]]$meta(key = varnames[j], value = dMeta[[i]][[j]])
+          if (length(dMeta[i,j]) > 0) {
+            docs[[i]]$setMeta(key = varnames[j], value = dMeta[i,j])
           }
         }
       }
@@ -78,7 +78,7 @@ ConverterTM <- R6::R6Class(
       corpus <- Corpus$new()
       keys <- names(cMeta)
       values <- cMeta
-      corpus$getMeta(key = keys, value = values)
+      corpus$setMeta(key = keys, value = values)
 
       # Add documents
       for (i in 1:length(docs)) {
@@ -97,10 +97,10 @@ ConverterTM <- R6::R6Class(
 
       private$..classname <- "ConverterTM"
       private$..methodName <- "initialize"
-      private$logR <- LogR$new()
+      private$logR <- LogR$new(self)
 
       event <- paste0("Initiated ", private$..classname)
-      private$logR$log(classname = class(self)[1], event = event)
+      private$logR$log(method = 'initialize', event = event)
 
       invisible(self)
 
