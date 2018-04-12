@@ -46,8 +46,25 @@ CSourceDir <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                          Execute Method                                 #
     #-------------------------------------------------------------------------#
-    source = function(x, name = NULL, encoding = NULL, ctrl = TRUE,
-                      docNames = TRUE) {
+    source = function(x, name = NULL, encoding = NULL, replaceCtrl = TRUE,
+                      docNames = TRUE, codes = NULL) {
+
+      # Validation
+      if (!is.null(encoding)) {
+        private$..params <- list()
+        private$..params$discrete$variables <- list("encoding")
+        private$..params$discrete$values <- list(encoding)
+        private$..params$discrete$valid <- list(c("UTF-8", "latin1", "bytes"))
+        v <- private$validator$validate(self)
+        if (v$code == FALSE) {
+          private$logR$log(method = 'source',
+                           event = v$msg, level = "Error")
+          stop()
+        }
+      }
+
+      if (!is.numeric(codes)) stop(paste("Invalid codes parameter. Numeric vector,",
+                                         "of numbers between 0 and 31 expected."))
 
       private$..corpus$setMeta(key = 'name', value = name)
 
@@ -61,24 +78,26 @@ CSourceDir <- R6::R6Class(
 
       lapply(paths, function(p) {
 
-        # Obtain file object
+        # Instantiate File and Document objects
         if (docNames) {
-          file <- File$new(path = p,
-                           name = tools::file_path_sans_ext(basename(f)))
+          name <- tools::file_path_sans_ext(basename(f))
+          file <- File$new(path = p, name = name)
+          doc <- Document$new(name = name)
         } else {
           file <- File$new(path = p)
+          doc <- Document$new()
         }
 
-        # Replace control characters
-        if (ctrl) {
-          studio <- FileStudio$new()
-          studio$ctrl(path = p)
-        }
+        # Conduct required file conditioning
+        studio <- FileStudio$new()
+        if (replaceCtrl) studio$ctrl(self, codes)
+        if (!is.null(encoding)) studio$encode(self, encoding)
+
 
         # Read content and create Document objects.
         name <- file$getName()
-        content <- IOText$new()$read(p)
-        doc <- Document$new(x = content, name = name)
+        content <- file$read()
+        doc$text(content)
         private$..corpus$addDocument(x = doc)
       })
 

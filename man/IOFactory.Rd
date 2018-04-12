@@ -28,9 +28,6 @@ Class creates IO objects based upon the file type
 }
 }
 
-\seealso{
-Other IO Classes: \code{\link{IO}}
-}
 \author{
 John James, \email{jjames@datasciencesalon.org}
 }

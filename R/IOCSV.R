@@ -21,19 +21,19 @@ IOCSV <- R6::R6Class(
   classname = "IOCSV",
   lock_objects = TRUE,
   lock_class = FALSE,
-
-  private = list(
-    logR = character()
-  ),
+  inherit = Super,
 
   public = list(
 
     #-------------------------------------------------------------------------#
     #                           Core Methods                                  #
     #-------------------------------------------------------------------------#
-    read = function(path, header = TRUE) {
+    initialize = function() {
+      private$loadDependencies()
+      invisible(self)
+    },
 
-      private$logR <- LogR$new()
+    read = function(path, header = TRUE) {
 
       fileName <- basename(path)
 
@@ -46,15 +46,13 @@ IOCSV <- R6::R6Class(
       } else {
         event <- paste0('Unable to read ', fileName, '. ',
                                   'File does not exist.')
-        private$logR$log( event = event, level = "Error")
+        private$logR$log(method = 'read', event = event, level = "Error")
         stop()
       }
       return(text)
     },
 
     write = function(path, content) {
-
-      private$logR <- LogR$new()
 
       fileName <- basename(path)
       dirName <- dirname(path)
@@ -65,7 +63,7 @@ IOCSV <- R6::R6Class(
       write.csv(content, file = path, row.names = FALSE)
 
       event <- paste0("Successfully wrote ", fileName, ".")
-      private$logR$log( event = event)
+      private$logR$log(method = 'write', event = event)
 
       invisible(self)
     }

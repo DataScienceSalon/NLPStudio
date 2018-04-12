@@ -3,9 +3,9 @@ Type: Package
 Title: Natural Language Processing in Objected Oriented R Environment
 Version: 0.1.0
 Authors@: person("John", "James", email = "jjames@datasciencesalon.org",
-                  role = c("aut", "cre"))
+    role = c("aut", "cre"))
 Maintainer: John James <jjames@datasciencesalon.org>
-Description: NLPStudio 
+Description: NLPStudio
 License: MIT
 Encoding: UTF-8
 LazyData: true

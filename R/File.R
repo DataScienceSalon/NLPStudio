@@ -32,7 +32,11 @@ File <- R6::R6Class(
   classname = "File",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = Super,
+  inherit = Document0,
+
+  private = list(
+    ..path = character()
+  ),
 
   public = list(
 
@@ -44,7 +48,14 @@ File <- R6::R6Class(
       private$loadDependencies()
       private$meta <- Meta$new(x = self, name = name)
       private$meta$set(key = 'path', value = path, type = 'functional')
-      private$meta$set(key = 'name', value = name, type = 'descriptive')
+      private$meta$set(key = 'name', value = ifelse(is.null(name),
+                                                    tools::file_path_sans_ext(basename(path)),
+                                                    name),
+                       type = 'descriptive')
+      private$meta$set(key = 'directory', value = dirname(path))
+      private$meta$set(key = 'fileName', value = basename(path))
+
+      private$..path <- path
 
       private$logR$log(method = 'initialize',
                        event = "Initialization complete.")
@@ -54,10 +65,10 @@ File <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Getter Methods                                #
     #-------------------------------------------------------------------------#
-    getName = function() {private$meta$get(key = 'name')},
     getFileName = function() {private$meta$get(key = 'fileName')},
     getDirectory = function() {private$meta$get(key = 'directory')},
     getPath = function() {private$meta$get(key = 'path')},
+    getMeta = function(key = NULL) { private$meta$get(key = key) },
 
 
     #-------------------------------------------------------------------------#
@@ -85,7 +96,7 @@ File <- R6::R6Class(
       # Validation
       if (file.exists(path) & overwrite == FALSE) {
         event <- "File already exists and overwrite is FALSE."
-        private$LogR$log(method = 'move', event = event, level = 'error')
+        private$logR$log(method = 'move', event = event, level = 'error')
         stop()
       }
 
@@ -94,7 +105,7 @@ File <- R6::R6Class(
       file.rename(private$..path, path)
 
       # Log
-      event <- paste0("File, ", basename(private$..path), ", moved from ",
+      event <- paste0("File, ", basename(path), ", moved from ",
                       private$..path, " to ", path, ".")
       private$logR$log(method = 'move', event = event)
 
@@ -116,17 +127,35 @@ File <- R6::R6Class(
       file.copy(private$..path, path)
 
       # Log
-      event <- paste0("File, ", basename(private$..path), ", copied from ",
+      event <- paste0("File, ", basename(path), ", copied from ",
                       private$..path, " to ", path, ".")
       private$logR$log(method = 'copy', event = event)
 
       invisible(self)
     },
 
-    ctrl = function(codes = NULL) {
+    #-------------------------------------------------------------------------#
+    #                     File Conditioning Methods                           #
+    #-------------------------------------------------------------------------#
+    ctrl = function(self, codes = NULL) {
       path <- private$meta$get(key = 'path')
       studio <- FileStudio$new()
       studio$ctrl(path = path, codes = codes)
+
+      # Update file object
+      event <- "Replaced control characters."
+      private$meta$modified(event)
+      invisible(self)
+    },
+
+    encode = function(self, encoding = "latin1") {
+      path <- private$meta$get(key = 'path')
+      studio <- FileStudio$new()
+      studio$encode(path = path, encoding = encoding)
+
+      # Update file object
+      event <- "Declared and converted to UTF-8 Encoding."
+      private$meta$modified(event)
       invisible(self)
     },
 

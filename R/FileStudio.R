@@ -35,9 +35,11 @@ FileStudio <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                         ASCII Code Methods                              #
+    #                       Replace Control Characters                        #
     #-------------------------------------------------------------------------#
-    ctrl = function(path, codes = NULL) {
+    ctrl = function(file, codes = NULL) {
+
+      path <- file$getMeta(key = 'path')
 
       # Validate path and file type
       if (!R.utils::isFile(path)) stop(paste("File", path, "does not exist."))
@@ -58,11 +60,39 @@ FileStudio <- R6::R6Class(
 
       # Save to temp file and re-read
       d <- tempfile(fileext = '.txt')
-      ioTxt$write(path = d, content = content)
+      ioBin$write(path = d, content = content)
       content <- ioTxt$read(path = d)
 
       # Write back to original location
       ioTxt$write(path = path, content = content)
+
+      invisible(self)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                                Encoding                                 #
+    #-------------------------------------------------------------------------#
+    encode = function(file, encoding = 'latin1') {
+
+      private$..params <- list()
+      private$..params$discrete$variables <- list("encoding")
+      private$..params$discrete$values <- list(encoding)
+      private$..params$discrete$valid <- list(c("UTF-8", "latin1", "bytes"))
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = 'encode',
+                         event = v$msg, level = "Error")
+        stop()
+      }
+
+      path <- file$getPath()
+
+      io <- IOFactory$new()$strategy(path)
+      content <- io$read(path)
+      Encoding(content) <- encoding
+      content <- enc2utf8(content)
+      content <- iconv(content, "UTF-8", "ASCII", sub = "")
+      io$write(content = content, path = path)
 
       invisible(self)
     },

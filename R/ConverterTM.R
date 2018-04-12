@@ -95,11 +95,7 @@ ConverterTM <- R6::R6Class(
     #-------------------------------------------------------------------------#
     initialize = function() {
 
-      private$..classname <- "ConverterTM"
-      private$..methodName <- "initialize"
-      private$logR <- LogR$new(self)
-
-      event <- paste0("Initiated ", private$..classname)
+      event <- paste0("Initiated.")
       private$logR$log(method = 'initialize', event = event)
 
       invisible(self)

@@ -25,10 +25,10 @@ IOFactory <- R6::R6Class(
   "IOFactory",
   lock_class = FALSE,
   lock_objects = FALSE,
+  inherit = Super,
 
   private = list(
-    ..path = character(),
-    logR = character()
+    ..path = character()
   ),
 
   public = list(
@@ -37,7 +37,7 @@ IOFactory <- R6::R6Class(
     #                      Object Creation and Read                           #
     #-------------------------------------------------------------------------#
     initialize = function() {
-      private$logR <- LogR$new()
+      private$loadDependencies()
       invisible(self)
     },
 
