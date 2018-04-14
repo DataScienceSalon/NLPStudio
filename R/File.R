@@ -68,7 +68,6 @@ File <- R6::R6Class(
     getFileName = function() {private$meta$get(key = 'fileName')},
     getDirectory = function() {private$meta$get(key = 'directory')},
     getPath = function() {private$meta$get(key = 'path')},
-    getMeta = function(key = NULL) { private$meta$get(key = key) },
 
 
     #-------------------------------------------------------------------------#
@@ -137,10 +136,10 @@ File <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                     File Conditioning Methods                           #
     #-------------------------------------------------------------------------#
-    ctrl = function(self, codes = NULL) {
+    ctrl = function(codes = NULL) {
       path <- private$meta$get(key = 'path')
       studio <- FileStudio$new()
-      studio$ctrl(path = path, codes = codes)
+      studio$ctrl(self, codes = codes)
 
       # Update file object
       event <- "Replaced control characters."
@@ -148,10 +147,10 @@ File <- R6::R6Class(
       invisible(self)
     },
 
-    encode = function(self, encoding = "latin1") {
+    encode = function(encoding = "latin1") {
       path <- private$meta$get(key = 'path')
       studio <- FileStudio$new()
-      studio$encode(path = path, encoding = encoding)
+      studio$encode(self, encoding = encoding)
 
       # Update file object
       event <- "Declared and converted to UTF-8 Encoding."

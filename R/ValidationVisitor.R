@@ -81,6 +81,10 @@ ValidationVisitor <- R6::R6Class(
       return(private$validate(object))
     },
 
+    file = function(object) {
+      return(private$validate(object))
+    },
+
     #-------------------------------------------------------------------------#
     #                      Corpus Sourcing Classes                            #
     #-------------------------------------------------------------------------#
@@ -154,14 +158,17 @@ ValidationVisitor <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                             Studio Classes                              #
     #-------------------------------------------------------------------------#
+    fileStudio = function(object) {
+      return(private$validate(object))
+    },
+
+    textStudio0 = function(object) {
+      return(private$validate(object))
+    },
+
     textStudio = function(object) {
       return(private$validate(object))
     },
-
-    dataStudio = function(object) {
-      return(private$validate(object))
-    },
-
 
     #-------------------------------------------------------------------------#
     #                             Misc Classes                                #

@@ -26,6 +26,9 @@ Document0 <- R6::R6Class(
   inherit = Super,
 
   private = list(
+
+    ..content = character(),
+
     #-------------------------------------------------------------------------#
     #                           Summary Methods                               #
     #-------------------------------------------------------------------------#
@@ -100,6 +103,75 @@ Document0 <- R6::R6Class(
     }
   ),
 
+  active = list(
+
+    name = function(value) {
+      if (missing(value)) {
+        return(private$meta$get(key = 'name'))
+      } else {
+
+        # Validate class and length of value parameter.
+        private$..params <- list()
+        private$..params$classes$name <- list('value')
+        private$..params$classes$objects <- list(value)
+        private$..params$classes$valid <- list('character')
+        v <- private$validator$validate(self)
+        if (v$code == FALSE) {
+          private$logR$log(method = 'name', event = v$msg, level = "Error")
+          stop()
+        }
+        if (length(value) != 1) {
+          event <- paste0("The value parameter for the 'name' method ",
+                          "must be character a single string. See ?Document0 ",
+                          "for further assistance.")
+          private$logR$log(method = 'name', event = v$msg, level = "Error")
+          stop()
+        }
+        private$meta$set(key = 'name', value = value, type = 'descriptive')
+        event <- paste0("Object name set to '", value, "' .")
+        invisible(self)
+      }
+    },
+
+    description = function(value) {
+      if (missing(value)) {
+        return(private$meta$get(key = 'description'))
+      } else {
+
+        # Validate class and length of value parameter.
+        private$..params <- list()
+        private$..params$classes$name <- list('value')
+        private$..params$classes$objects <- list(value)
+        private$..params$classes$valid <- list('character')
+        v <- private$validator$validate(self)
+        if (v$code == FALSE) {
+          private$logR$log(method = 'description', event = v$msg, level = "Error")
+          stop()
+        }
+        if (length(value) != 1) {
+          event <- paste0("The value parameter for the 'description' method ",
+                          "must be character a single string. See ?Document0 ",
+                          "for further assistance.")
+          private$logR$log(method = 'description', event = v$msg, level = "Error")
+          stop()
+        }
+        private$meta$set(key = 'description', value = value, type = 'descriptive')
+        event <- paste0("Object description set to '", value, "' .")
+        invisible(self)
+      }
+    },
+
+    content = function(value) {
+
+      if (missing(value)) {
+        return(private$..content)
+      } else {
+        private$..content <- content
+        invisible(self)
+      }
+    }
+  ),
+
 
 
   public = list(
@@ -126,11 +198,11 @@ Document0 <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                            Receive Method                               #
+    #                            Message Method                               #
     #-------------------------------------------------------------------------#
-    receive = function(x, notice) {
-      private$meta$modified(event = notice)
-      private$logR$log(x = x, event = notice, level = "Info")
+    message = function(event) {
+      private$meta$modified(event = event)
+      private$logR$log(method = 'message', event = event, level = "Info")
     },
 
     #-------------------------------------------------------------------------#

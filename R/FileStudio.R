@@ -21,7 +21,7 @@ FileStudio <- R6::R6Class(
   classname = "FileStudio",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = Super,
+  inherit = Document0,
 
   public = list(
 

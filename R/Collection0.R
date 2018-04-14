@@ -149,7 +149,7 @@ Collection0 <- R6::R6Class(
       private$..params <- list()
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list('Document0')
+      private$..params$classes$valid <- list(c('Document', 'File'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'addDocument',

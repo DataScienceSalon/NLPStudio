@@ -46,7 +46,7 @@ CSourceDir <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                          Execute Method                                 #
     #-------------------------------------------------------------------------#
-    source = function(x, name = NULL, encoding = NULL, replaceCtrl = TRUE,
+    source = function(x, name = NULL, encoding = NULL, replaceCtrl = FALSE,
                       docNames = TRUE, codes = NULL) {
 
       # Validation
@@ -63,10 +63,14 @@ CSourceDir <- R6::R6Class(
         }
       }
 
-      if (!is.numeric(codes)) stop(paste("Invalid codes parameter. Numeric vector,",
+      if (!is.null(codes)) {
+        if (!is.numeric(codes)) stop(paste("Invalid codes parameter. Numeric vector,",
                                          "of numbers between 0 and 31 expected."))
+      }
 
-      private$..corpus$setMeta(key = 'name', value = name)
+      if (!is.null(name)) {
+        private$..corpus$setMeta(key = 'name', value = name)
+      }
 
       if (isDirectory(x)) {
         paths <- list.files(x, full.names = TRUE)
@@ -80,7 +84,7 @@ CSourceDir <- R6::R6Class(
 
         # Instantiate File and Document objects
         if (docNames) {
-          name <- tools::file_path_sans_ext(basename(f))
+          name <- tools::file_path_sans_ext(basename(p))
           file <- File$new(path = p, name = name)
           doc <- Document$new(name = name)
         } else {
@@ -90,11 +94,18 @@ CSourceDir <- R6::R6Class(
 
         # Conduct required file conditioning
         studio <- FileStudio$new()
-        if (replaceCtrl) studio$ctrl(self, codes)
-        if (!is.null(encoding)) studio$encode(self, encoding)
+        if (replaceCtrl) {
+          studio$ctrl(file, codes)
+          file$message("Removed control characters from text.")
+        }
+        if (!is.null(encoding)) {
+          studio$encode(file, encoding)
+          file$message("Declared and converted encoding to 'UTF-8'.")
+        }
 
 
-        # Read content and create Document objects.
+        # Add content and File to the Document and add Document to Corpus
+        doc$addDocument(file)
         name <- file$getName()
         content <- file$read()
         doc$text(content)

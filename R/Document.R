@@ -51,7 +51,6 @@ Document <- R6::R6Class(
   inherit = Collection0,
 
   private = list(
-    ..text = character(),
 
     compress = function(x) {
       memCompress(x, "g")
@@ -88,11 +87,27 @@ Document <- R6::R6Class(
         }
 
         # Update text, compute statistics and update admin information
-        private$..text <- private$compress(x)
+        private$..content <- private$compress(x)
         private$setQuant(x)
         private$meta$modified(event = note)
       }
       return(TRUE)
+    }
+  ),
+
+  active = list(
+
+    content = function(value) {
+
+      if (missing(value)) {
+        if (length(private$..content) > 0) {
+          return(private$decompress(private$..content))
+        } else {
+          return(NULL)
+        }
+      } else {
+        private$processContent(value)
+      }
     }
   ),
 
@@ -133,7 +148,7 @@ Document <- R6::R6Class(
     text = function(x = NULL, note = NULL) {
 
       if (missing(x)) {
-        return(private$decompress(private$..text))
+        return(private$decompress(private$..content))
 
       } else {
         private$processContent(x, note = note)

@@ -94,10 +94,10 @@ CSourceVector <- R6::R6Class(
       } else {
         docNames <- names(x)
         for (i in 1:length(x)) {
-          if (is.null(name)) {
+          if (is.null(docNames[i])) {
             name <- paste0("Document-",i)
           }
-          doc <- Document$new(x = x[i], name = name)
+          doc <- Document$new(x = x[i], name = docNames[i])
           private$..corpus$addDocument(doc)
         }
       }
