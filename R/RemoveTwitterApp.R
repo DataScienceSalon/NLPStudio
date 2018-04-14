@@ -41,8 +41,11 @@ RemoveTwitterApp <- R6::R6Class(
       }
 
       private$..x <- x
-      private$..regex <- '\\B#\\w*[a-zA-Z]+\\w*'
+      private$..pattern <- '\\B#\\w*[a-zA-Z]+\\w*'
       private$..replacement <- " "
+      private$..ignoreCase <- TRUE
+      private$..perl <- TRUE
+      private$..fixed <- FALSE
 
       invisible(self)
     }

@@ -89,15 +89,19 @@ ReplaceTokensApp <- R6::R6Class(
       }
 
       private$..x <- x
-      private$..tokens <- tokens
-      private$..replacement <- replacement
+
+      if (class(tokens)[1] == "data.frame") {
+        private$..tokens <- as.character(tokens[,1])
+        private$..replacement <- as.character(tokens[,2])
+      } else {
+        private$..tokens <- tokens
+        private$..replacement <- replacement
+      }
       private$..leadspace <- leadspace
       private$..trailspace <- trailspace
       private$..fixed <- fixed
       private$..trim <- trim
       private$..orderPattern <- orderPattern
-
-      if (private$validate(x)$code == FALSE) stop()
 
       invisible(self)
     }

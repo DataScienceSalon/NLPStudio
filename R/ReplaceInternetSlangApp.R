@@ -62,7 +62,12 @@ ReplaceInternetSlangApp <- R6::R6Class(
       private$..params$kv$equalLen <- TRUE
       private$..params$logicals$variables <- c('ignoreCase')
       private$..params$logicals$values <- c(ignoreCase)
-      if (private$validate(x)$code == FALSE) stop()
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = 'initialize',
+                         event = v$msg, level = "Error")
+        stop()
+      }
 
       private$..x <- x
       private$..slang <- slang

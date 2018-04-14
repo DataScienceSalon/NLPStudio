@@ -39,7 +39,11 @@ RemoveEmailApp <- R6::R6Class(
       }
 
       private$..x <- x
-      private$..regex <- "[a-zA-Z0-9\\-_~]+(\\.[a-zA-Z0-9\\-_~]+)*@[a-zA-Z0-9\\-_~]+(\\.[a-zA-Z0-9\\-_~]+)*\\.[a-zA-Z]{2,}"
+      private$..pattern <- "[a-zA-Z0-9\\-_~]+(\\.[a-zA-Z0-9\\-_~]+)*@[a-zA-Z0-9\\-_~]+(\\.[a-zA-Z0-9\\-_~]+)*\\.[a-zA-Z]{2,}"
+      private$..replacement <- " "
+      private$..ignoreCase <- TRUE
+      private$..perl <- TRUE
+      private$..fixed <- FALSE
 
       invisible(self)
     }

@@ -54,6 +54,18 @@ ReplaceTokens <- R6::R6Class(
                           fixed = TRUE, trim = FALSE, orderPattern = fixed) {
       private$loadDependencies()
 
+      # Validate parameters
+      private$..params$kv$key <- tokens
+      private$..params$kv$value <- replacement
+      private$..params$logicals$variables <- c('leadspace', 'trailspace', 'fixed', 'trim', 'orderPattern')
+      private$..params$logicals$values <- c(leadspace, trailspace, fixed, trim, orderPattern)
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = 'initialize',
+                         event = v$msg, level = "Error")
+        stop()
+      }
+
       private$..tokens <- tokens
       private$..replacement <- replacement
       private$..leadspace <- leadspace

@@ -56,6 +56,20 @@ ReplaceContractions <- R6::R6Class(
                           trailspace = FALSE, fixed = TRUE, trim = FALSE,
                           orderPattern = fixed) {
       private$loadDependencies()
+
+      # Validate parameters
+      private$..params$kv$key <- contractions
+      private$..params$kv$value <- replacement
+      private$..params$kv$equalLen <- TRUE
+      private$..params$logicals$variables <- c('leadSpace', 'trailspace', 'fixed', 'trim', 'orderPattern')
+      private$..params$logicals$values <- c(leadspace, trailspace, fixed, trim, orderPattern)
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = 'initialize',
+                         event = v$msg, level = "Error")
+        stop()
+      }
+
       private$..contractions <- contractions
       private$..replacement <- replacement
       private$..leadspace <- leadspace

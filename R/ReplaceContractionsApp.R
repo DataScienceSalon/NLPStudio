@@ -86,7 +86,6 @@ ReplaceContractionsApp <- R6::R6Class(
       private$loadDependencies()
 
       # Validate parameters
-      # Validate parameters
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
       private$..params$classes$valid <- list(c('Document', 'Corpus'))
@@ -95,7 +94,12 @@ ReplaceContractionsApp <- R6::R6Class(
       private$..params$kv$equalLen <- TRUE
       private$..params$logicals$variables <- c('leadSpace', 'trailspace', 'fixed', 'trim', 'orderPattern')
       private$..params$logicals$values <- c(leadspace, trailspace, fixed, trim, orderPattern)
-      if (private$validate(x)$code == FALSE) stop()
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = 'initialize',
+                         event = v$msg, level = "Error")
+        stop()
+      }
 
       private$..x <- x
       private$..contractions <- contractions

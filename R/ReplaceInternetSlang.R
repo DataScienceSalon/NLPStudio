@@ -37,6 +37,20 @@ ReplaceInternetSlang <- R6::R6Class(
     initialize = function(slang = NULL, replacement = NULL, ignoreCase = TRUE) {
 
       private$loadDependencies()
+
+      # Validate parameters# Validate parameters
+      private$..params$kv$key <- slang
+      private$..params$kv$value <- replacement
+      private$..params$kv$equalLen <- TRUE
+      private$..params$logicals$variables <- c('ignoreCase')
+      private$..params$logicals$values <- c(ignoreCase)
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = 'initialize',
+                         event = v$msg, level = "Error")
+        stop()
+      }
+
       private$..slang <- slang
       private$..replacement <- replacement
       private$..ignoreCase <- ignoreCase

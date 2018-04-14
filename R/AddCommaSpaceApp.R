@@ -40,8 +40,10 @@ AddCommaSpaceApp <- R6::R6Class(
       }
 
       private$..x <- x
-      private$..regex <- "(,)([^ ])"
+      private$..pattern <- "(,)([^ ])"
       private$..replacement <- "\\1 \\2"
+      private$..perl <- TRUE
+      private$..fixed <- FALSE
       invisible(self)
     }
   )

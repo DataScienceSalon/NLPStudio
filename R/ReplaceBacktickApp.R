@@ -41,8 +41,11 @@ ReplaceBacktickApp <- R6::R6Class(
       }
 
       private$..x <- x
-      private$..regex <- "\\`"
+      private$..pattern <- "\\`"
       private$..replacement <- "\\'"
+      private$..ignoreCase <- FALSE
+      private$..perl <- FALSE
+      private$..fixed <- FALSE
 
       invisible(self)
     }

@@ -44,6 +44,18 @@ ReplaceSymbol <- R6::R6Class(
     initialize = function(dollar = TRUE, percent = TRUE, pound = TRUE,
                           at = TRUE, and = TRUE, with = TRUE) {
       private$loadDependencies()
+
+      # Validate parameters
+      private$..params$logicals$variables <- c('dollar', 'percent', 'pound',
+                                               'at', 'and', 'with')
+      private$..params$logicals$values <- c(dollar, percent, pound, at, and, with)
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = 'initialize',
+                         event = v$msg, level = "Error")
+        stop()
+      }
+
       private$..dollar <- dollar
       private$..percent <- percent
       private$..pound <- pound

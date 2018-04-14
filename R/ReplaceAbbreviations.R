@@ -37,6 +37,20 @@ ReplaceAbbreviations <- R6::R6Class(
   public = list(
     initialize = function(abbreviations = NULL, replacement = NULL, ignoreCase = TRUE) {
       private$loadDependencies()
+
+      # Validate parameters
+      private$..params$kv$key <- abbreviations
+      private$..params$kv$value <- replacement
+      private$..params$kv$equalLen <- TRUE
+      private$..params$logicals$variables <- c('ignoreCase')
+      private$..params$logicals$values <- c(ignoreCase)
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = 'initialize',
+                         event = v$msg, level = "Error")
+        stop()
+      }
+
       private$..abbreviations <- abbreviations
       private$..replacement <- replacement
       private$..ignoreCase <- ignoreCase

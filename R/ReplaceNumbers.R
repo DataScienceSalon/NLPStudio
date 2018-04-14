@@ -35,6 +35,17 @@ ReplaceNumbers <- R6::R6Class(
   public = list(
     initialize = function(joinNumbers = FALSE, remove = FALSE) {
       private$loadDependencies()
+
+      # Validate parameters
+      private$..params$logicals$variables <- c('joinNumbers', 'remove')
+      private$..params$logicals$values <- c(joinNumbers, remove)
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = 'initialize',
+                         event = v$msg, level = "Error")
+        stop()
+      }
+
       private$..joinNumbers <- joinNumbers
       private$..remove <- remove
       invisible(self)

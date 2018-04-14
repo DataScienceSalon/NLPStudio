@@ -35,6 +35,16 @@ ReplaceOrdinal <- R6::R6Class(
   public = list(
     initialize = function(joinOrdinal = FALSE, remove = FALSE) {
       private$loadDependencies()
+
+      # Validate parameters
+      private$..params$logicals$variables <- c('joinOrdinal', 'remove')
+      private$..params$logicals$values <- c(joinOrdinal, remove)
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = 'initialize',
+                         event = v$msg, level = "Error")
+        stop()
+      }
       private$..joinOrdinal <- joinOrdinal
       private$..remove <- remove
       invisible(self)

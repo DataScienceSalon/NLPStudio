@@ -34,6 +34,16 @@ ReplaceHTML <- R6::R6Class(
   public = list(
     initialize = function(symbol = TRUE) {
       private$loadDependencies()
+
+      # Validate parameters
+      private$..params$logicals$variables <- c('symbol')
+      private$..params$logicals$values <- c(symbol)
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = 'initialize',
+                         event = v$msg, level = "Error")
+        stop()
+      }
       private$..symbol <- symbol
       invisible(self)
     },

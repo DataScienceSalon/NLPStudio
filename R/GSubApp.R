@@ -1,11 +1,11 @@
 #------------------------------------------------------------------------------#
-#                          Remove Numbers App                                  #
+#                                   GSub App                                   #
 #------------------------------------------------------------------------------#
-#' RemoveNumbersApp
+#' GSubApp
 #'
-#' \code{RemoveNumbersApp} Removes numbers from text.
+#' \code{GSubApp} Removes email addresses from text.
 #'
-#' @usage RemoveNumbersAppApp$new(x)$execute()
+#' @usage GSubAppApp$new(x)$execute()
 #'
 #' @template textStudioParams
 #' @template textStudioMethods
@@ -16,14 +16,15 @@
 #' @author John James, \email{jjames@@dataScienceSalon.org}
 #' @family TextStudio Classes
 #' @export
-RemoveNumbersApp <- R6::R6Class(
-  classname = "RemoveNumbersApp",
+GSubApp <- R6::R6Class(
+  classname = "GSubApp",
   lock_objects = FALSE,
   lock_class = FALSE,
   inherit = TextStudio0,
 
   public = list(
-    initialize = function(x) {
+    initialize = function(x, pattern, replacement, ignoreCase = FALSE,
+                          perl = FALSE, fixed = FALSE) {
 
       private$loadDependencies()
 
@@ -31,6 +32,8 @@ RemoveNumbersApp <- R6::R6Class(
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
       private$..params$classes$valid <- list(c('Document', 'Corpus'))
+      private$..params$logicals$variables <- c('ignoreCase', 'perl', 'fixed')
+      private$..params$logicals$values <- c(ignoreCase, perl, fixed)
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize',
@@ -39,8 +42,11 @@ RemoveNumbersApp <- R6::R6Class(
       }
 
       private$..x <- x
-      private$..regex <- '[[:digit:]]'
-      private$..replacement <- " "
+      private$..pattern <- pattern
+      private$..replacement <- replacement
+      private$..ignoreCase <- ignoreCase
+      private$..perl <- perl
+      private$..fixed <- fixed
 
       invisible(self)
     }

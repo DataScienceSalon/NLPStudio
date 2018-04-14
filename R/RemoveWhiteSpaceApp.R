@@ -39,8 +39,11 @@ RemoveWhiteSpaceApp <- R6::R6Class(
       }
 
       private$..x <- x
-      private$..regex <- "\\s+"
+      private$..pattern <- "\\s+"
       private$..replacement <- " "
+      private$..ignoreCase <- FALSE
+      private$..perl <- FALSE
+      private$..fixed <- FALSE
 
       invisible(self)
     }

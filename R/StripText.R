@@ -45,6 +45,17 @@ StripText <- R6::R6Class(
     initialize = function(keepChar = NULL, removeDigit = TRUE,
                           removeApostrophe = TRUE, lowerCase = TRUE) {
       private$loadDependencies()
+
+      # Validate parameters
+      private$..params$logicals$variables <- c('removeDigit', 'removeApostrophe', 'lowerCase')
+      private$..params$logicals$values <- c(removeDigit, removeApostrophe, lowerCase)
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = 'initialize',
+                         event = v$msg, level = "Error")
+        stop()
+      }
+
       private$..keepChar <- keepChar
       private$..removeDigit <- removeDigit
       private$..removeApostrophe <- removeApostrophe

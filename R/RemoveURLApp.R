@@ -41,9 +41,11 @@ RemoveURLApp <- R6::R6Class(
       }
 
       private$..x <- x
-      private$..regex <- "(?:(?:https?:\\/\\/)|(?:www\\.))[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,4}\\b(?:[-a-zA-Z0-9@:%_\\+.~#?&/=]*)"
-
-      private$..replacement <- " "
+      private$..pattern <- "(?:(?:https?:\\/\\/)|(?:www\\.))[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,4}\\b(?:[-a-zA-Z0-9@:%_\\+.~#?&/=]*)"
+      private$..replacement = " "
+      private$..ignoreCase <- TRUE
+      private$..perl <- TRUE
+      private$..fixed <- FALSE
 
       invisible(self)
     }

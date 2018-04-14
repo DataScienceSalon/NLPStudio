@@ -59,6 +59,8 @@ StripTextApp <- R6::R6Class(
     initialize = function(x, keepChar = "~~", removeDigit = TRUE,
                           removeApostrophe = FALSE, lowerCase = TRUE) {
 
+      private$loadDependencies()
+
       # Validate parameters
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)

@@ -61,7 +61,6 @@ ReplaceHTMLApp <- R6::R6Class(
                          event = v$msg, level = "Error")
         stop()
       }
-      if (private$validate(x)$code == FALSE) stop()
 
 
       private$..x <- x

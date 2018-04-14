@@ -25,8 +25,11 @@ TextStudio0 <- R6::R6Class(
 
   private = list(
     ..x = character(),
-    ..regex = character(),
-    ..replacement = " ",
+    ..pattern = character(),
+    ..replacement = character(),
+    ..ignoreCase = logical(),
+    ..perl = logical(),
+    ..fixed = logical(),
     ..params = list(),
 
     logEvent = function(x) {
@@ -35,9 +38,12 @@ TextStudio0 <- R6::R6Class(
     },
 
     processDocument = function(document) {
-      document$content <- gsub(private$..regex,
-                      private$..replacement,
-                      document$content, perl = TRUE)
+      document$content <- gsub(pattern = private$..pattern,
+                      replacement = private$..replacement,
+                      x = document$content,
+                      ignore.case = private$..ignoreCase,
+                      perl = private$..perl,
+                      fixed = private$..fixed)
       private$logEvent(document)
       return(document)
     },
