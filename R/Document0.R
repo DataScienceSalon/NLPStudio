@@ -206,6 +206,46 @@ Document0 <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
+    #                           Summary Method                                #
+    #-------------------------------------------------------------------------#
+    summary = function(select = NULL) {
+
+      private$..params <- list()
+      private$..params$discrete$variables <- 'select'
+      private$..params$discrete$values <- select
+      private$..params$discrete$valid <- list(c('id', 'descriptive', 'functional',
+                                                'quant', 'admin', 'tech'))
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = 'summary',  event = v$msg, level = "Error")
+        stop()
+      }
+
+      sd <- list()
+
+      if (is.null(select)) {
+        sd$id <- private$summarizeIdMeta()
+        sd$descriptive <- private$summarizeDescriptiveMeta()
+        sd$quant <- private$summarizeQuantMeta()
+        sd$functional  <- private$summarizeFunctionalMeta()
+        sd$admin <- private$summarizeAdminMeta()
+        sd$tech <- private$summarizeTechMeta()
+        invisible(sd)
+      } else {
+        sd <- switch(select,
+                     id = private$summarizeIdMeta(),
+                     descriptive = private$summarizeDescriptiveMeta(),
+                     functional = private$summarizeFunctionalMeta(),
+                     quant = private$summarizeQuantMeta(),
+                     admin = private$summarizeAdminMeta(),
+                     tech = private$summarizeTechMeta()
+        )
+      }
+
+      invisible(sd)
+    },
+
+    #-------------------------------------------------------------------------#
     #                           Print Log Method                              #
     #-------------------------------------------------------------------------#
     printLog = function() {

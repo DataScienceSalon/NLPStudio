@@ -104,8 +104,8 @@ CSourceDir <- R6::R6Class(
         }
 
 
-        # Add content and File to the Document and add Document to Corpus
-        doc$addDocument(file)
+        # Add content and File to Corpus
+        private$..corpus$addDocument(x = file)
         name <- file$getName()
         content <- file$read()
         doc$text(content)

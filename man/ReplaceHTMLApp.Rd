@@ -90,8 +90,7 @@ Other TextStudio Classes: \code{\link{AddCommaSpaceApp}},
   \code{\link{ReplaceTokensApp}},
   \code{\link{ReplaceTokens}},
   \code{\link{ReplaceWordElongationApp}},
-  \code{\link{ReplaceWordElongation}},
-  \code{\link{StripTextApp}}, \code{\link{StripText}}
+  \code{\link{ReplaceWordElongation}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

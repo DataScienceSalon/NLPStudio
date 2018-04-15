@@ -95,6 +95,7 @@ ConverterTM <- R6::R6Class(
     #-------------------------------------------------------------------------#
     initialize = function() {
 
+      private$loadDependencies()
       event <- paste0("Initiated.")
       private$logR$log(method = 'initialize', event = event)
 

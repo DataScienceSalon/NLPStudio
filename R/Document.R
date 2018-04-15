@@ -48,7 +48,7 @@ Document <- R6::R6Class(
   classname = "Document",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = Collection0,
+  inherit = Document0,
 
   private = list(
 

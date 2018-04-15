@@ -115,11 +115,12 @@ Collection0 <- R6::R6Class(
   public = list(
 
     #-------------------------------------------------------------------------#
-    #                             getDocument                                 #
+    #                         Document Management                             #
     #-------------------------------------------------------------------------#
-    getDocument = function(key = NULL, value = NULL) {
+    getDocument = function(classname = "Document", key = NULL, value = NULL) {
 
-      if (is.null(key)) return(private$..documents)
+      key <- c(key, "classname")
+      value <- c(value, classname)
 
       # Validate key/value pair
       private$..params <- list()
@@ -128,7 +129,7 @@ Collection0 <- R6::R6Class(
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log( method = 'getDocument',
-                         event = v$msg, level = "Error")
+                          event = v$msg, level = "Error")
         stop()
       }
 
@@ -140,31 +141,8 @@ Collection0 <- R6::R6Class(
       return(result)
     },
 
-    #-------------------------------------------------------------------------#
-    #                             addDocument                                 #
-    #-------------------------------------------------------------------------#
-    addDocument = function(x) {
+    addDocument = function(x) { stop("Not implemented for this abstract class.") },
 
-      # Validate class of object.
-      private$..params <- list()
-      private$..params$classes$name <- list('x')
-      private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list(c('Document', 'File'))
-      v <- private$validator$validate(self)
-      if (v$code == FALSE) {
-        private$logR$log(method = 'addDocument',
-                         event = v$msg, level = "Error")
-        stop()
-      }
-
-      private$attach(x)
-
-      invisible(self)
-
-    },
-    #-------------------------------------------------------------------------#
-    #                             removeDocument                              #
-    #-------------------------------------------------------------------------#
     removeDocument = function(x) {
 
       identifier <- x$getId()

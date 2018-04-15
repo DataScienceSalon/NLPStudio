@@ -110,8 +110,7 @@ Other TextStudio Classes: \code{\link{AddCommaSpaceApp}},
   \code{\link{ReplaceSymbolApp}},
   \code{\link{ReplaceSymbol}}, \code{\link{ReplaceTokens}},
   \code{\link{ReplaceWordElongationApp}},
-  \code{\link{ReplaceWordElongation}},
-  \code{\link{StripTextApp}}, \code{\link{StripText}}
+  \code{\link{ReplaceWordElongation}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}
