@@ -62,7 +62,7 @@ ReplaceContractionsApp <- R6::R6Class(
 
       if (is.null(private$..contractions)) {
         document$content <- textclean::replace_contraction(x = content,
-                                                ignore.case = private$..ignoreCase)
+                                                ignore.case = TRUE)
       } else {
         document$content <- textclean::mgsub(x = content,
                                     pattern = private$..contractions,
@@ -102,8 +102,18 @@ ReplaceContractionsApp <- R6::R6Class(
       }
 
       private$..x <- x
-      private$..contractions <- contractions
-      private$..replacement <- replacement
+      if ('data.frame' %in% class(contractions)) {
+        if (ncol(contractions) == 2) {
+          private$..contractions <- as.character(contractions[,1])
+          private$..replacement <- as.character(contractions[,2])
+        } else {
+          private$..contractions <- as.character(contractions[,1])
+          private$..replacement <- replacement
+        }
+      } else {
+        private$..contractions <- contractions
+        private$..replacement <- replacement
+      }
       private$..leadspace <- leadspace
       private$..trailspace <- trailspace
       private$..fixed <- fixed

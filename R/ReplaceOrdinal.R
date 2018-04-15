@@ -33,24 +33,24 @@ ReplaceOrdinal <- R6::R6Class(
   ),
 
   public = list(
-    initialize = function(joinOrdinal = FALSE, remove = FALSE) {
+    initialize = function(numPaste = FALSE, remove = FALSE) {
       private$loadDependencies()
 
       # Validate parameters
-      private$..params$logicals$variables <- c('joinOrdinal', 'remove')
-      private$..params$logicals$values <- c(joinOrdinal, remove)
+      private$..params$logicals$variables <- c('numPaste', 'remove')
+      private$..params$logicals$values <- c(numPaste, remove)
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize',
                          event = v$msg, level = "Error")
         stop()
       }
-      private$..joinOrdinal <- joinOrdinal
+      private$..numPaste <- numPaste
       private$..remove <- remove
       invisible(self)
     },
     execute = function(x) {
-      x <- ReplaceOrdinalApp$new(x, joinOrdinal = private$..joinOrdinal,
+      x <- ReplaceOrdinalApp$new(x, numPaste = private$..numPaste,
                               remove = private$..remove)$execute()
       return(x)
     }

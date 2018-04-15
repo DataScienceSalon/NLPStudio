@@ -39,8 +39,8 @@ ReplaceOrdinalApp <- R6::R6Class(
     ..remove = logical(),
 
     processDocument = function(document) {
-      document$content <- textclean::replace_number(x = document$content,
-                                            num.paste = private$..joinOrdinal,
+      document$content <- qdap::replace_ordinal(text.var = document$content,
+                                            num.paste = private$..numPaste,
                                             remove = private$..remove)
       private$logEvent(document)
       return(document)
@@ -48,7 +48,7 @@ ReplaceOrdinalApp <- R6::R6Class(
   ),
 
   public = list(
-    initialize = function(x, joinOrdinal = FALSE, remove = FALSE) {
+    initialize = function(x, numPaste = TRUE, remove = FALSE) {
 
       private$loadDependencies()
 
@@ -56,8 +56,8 @@ ReplaceOrdinalApp <- R6::R6Class(
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
       private$..params$classes$valid <- list(c('Document', 'Corpus'))
-      private$..params$logicals$variables <- c('joinOrdinal', 'remove')
-      private$..params$logicals$values <- c(joinOrdinal, remove)
+      private$..params$logicals$variables <- c('numPaste', 'remove')
+      private$..params$logicals$values <- c(numPaste, remove)
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize',
@@ -66,7 +66,7 @@ ReplaceOrdinalApp <- R6::R6Class(
       }
 
       private$..x <- x
-      private$..joinOrdinal <- joinOrdinal
+      private$..numPaste <- numPaste
       private$..remove <- remove
 
       invisible(self)

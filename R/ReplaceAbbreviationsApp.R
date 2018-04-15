@@ -43,7 +43,7 @@ ReplaceAbbreviationsApp <- R6::R6Class(
 
       } else {
         if ("data.frame" %in% class(private$..abbreviations)) {
-          pattern <- as.character(private$..abbreviations[,1])
+          pattern <- paste("\\b",as.character(private$..abbreviations[,1]), "(?!\\w)", sep = "")
           if (ncol(private$..abbreviations) == 2) {
             replacement <- as.character(private$..abbreviations[,2])
           } else if (ncol(private$..abbreviations) == 1) {

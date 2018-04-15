@@ -6,15 +6,16 @@
 \title{ReplaceTokensApp}
 \format{An object of class \code{R6ClassGenerator} of length 24.}
 \usage{
-ReplaceTokensApp$new(x, pattern, replacement, leadspace = FALSE)$execute()
+ReplaceTokensApp$new(x, tokens, replacement, leadspace, trailspace, fixed, trim, orderPattern)$execute()
 }
 \arguments{
 \item{x}{Object of to be processed. This can be an object of the Corpus, Document, character classes, or a list of character vectors.}
 
-\item{tokens}{Character string(s) to be matched in the given character vector.}
+\item{tokens}{Character string of tokens to be matched in the
+given character vector.}
 
-\item{replacement}{Character string equal in length to pattern or of length
-one which are  a replacement for matched pattern.}
+\item{replacement}{Character string equal in length to tokens containing
+the long forms of the tokens.}
 
 \item{leadspace}{logical.  If \code{TRUE} inserts a leading space in the
 replacements.}
@@ -22,26 +23,28 @@ replacements.}
 \item{trailspace}{logical.  If \code{TRUE} inserts a trailing space in the
 replacements.}
 
-\item{fixed}{logical. If \code{TRUE}, pattern is a string to be matched as is.
+\item{fixed}{logical. If \code{TRUE}, tokens is a string to be matched as is.
 Overrides all conflicting arguments.}
 
 \item{trim}{logical.  If \code{TRUE} leading and trailing white spaces are
 removed and multiple white spaces are reduced to a single white space.}
 
-\item{order.pattern}{logical.  If \code{TRUE} and \code{fixed = TRUE}, the
-\code{pattern} string is sorted by number of characters to prevent substrings
-replacing meta strings (e.g., \code{pattern = c("the", "then")} resorts to
+\item{orderPattern}{logical.  If \code{TRUE} and \code{fixed = TRUE}, the
+\code{tokens} string is sorted by number of characters to prevent substrings
+replacing meta strings (e.g., \code{tokens = c("the", "then")} resorts to
 search for "then" first).}
+
+\item{\dots}{ignored.}
 }
 \value{
-\code{ReplaceTokensApp} - Returns a vector with the pattern replaced.
+\code{ReplaceTokensApp} Returns a vector with tokens replaced.
 }
 \description{
-\code{ReplaceTokensApp}  Replace a vector of search tokens
+\code{ReplaceTokensApp}  Replace tokens.
 }
 \details{
-A wrapper for \code{\link[textclean]{mgsub}} that takes a vector
-of search tokens and a vector or single value of replacements.
+A wrapper for \code{\link[textclean]{mgsub}}, A wrapper for gsub that takes
+a vector of search terms and a vector or single value of replacements.
 Source \url{https://cran.r-project.org/web/packages/textclean/textclean.pdf}
 }
 \section{Methods}{
@@ -69,6 +72,9 @@ the family of text cleaning classes, encapsulates class and allows
 text cleaning algorithms to be selected and exchagned at runtime.
 }
 
+\examples{
+
+}
 \seealso{
 Other TextStudio Classes: \code{\link{AddCommaSpaceApp}},
   \code{\link{AddCommaSpace}}, \code{\link{GSubApp}},

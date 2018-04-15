@@ -3,36 +3,41 @@
 #------------------------------------------------------------------------------#
 #' ReplaceTokensApp
 #'
-#' \code{ReplaceTokensApp}  Replace a vector of search tokens
+#' \code{ReplaceTokensApp}  Replace tokens.
 #'
-#' A wrapper for \code{\link[textclean]{mgsub}} that takes a vector
-#' of search tokens and a vector or single value of replacements.
+#' A wrapper for \code{\link[textclean]{mgsub}}, A wrapper for gsub that takes
+#' a vector of search terms and a vector or single value of replacements.
 #' Source \url{https://cran.r-project.org/web/packages/textclean/textclean.pdf}
 #'
-#' @usage ReplaceTokensApp$new(x, pattern, replacement, leadspace = FALSE)$execute()
+#' @usage ReplaceTokensApp$new(x, tokens, replacement, leadspace, trailspace, fixed, trim, orderPattern)$execute()
 #'
 #' @template textStudioParams
-#' @param tokens Character string(s) to be matched in the given character vector.
-#' @param replacement Character string equal in length to pattern or of length
-#' one which are  a replacement for matched pattern.
+#' @param tokens Character string of tokens to be matched in the
+#' given character vector.
+#' @param replacement Character string equal in length to tokens containing
+#'  the long forms of the tokens.
 #' @param leadspace logical.  If \code{TRUE} inserts a leading space in the
 #' replacements.
 #' @param trailspace logical.  If \code{TRUE} inserts a trailing space in the
 #' replacements.
-#' @param fixed logical. If \code{TRUE}, pattern is a string to be matched as is.
+#' @param fixed logical. If \code{TRUE}, tokens is a string to be matched as is.
 #' Overrides all conflicting arguments.
 #' @param trim logical.  If \code{TRUE} leading and trailing white spaces are
 #' removed and multiple white spaces are reduced to a single white space.
-#' @param order.pattern logical.  If \code{TRUE} and \code{fixed = TRUE}, the
-#' \code{pattern} string is sorted by number of characters to prevent substrings
-#' replacing meta strings (e.g., \code{pattern = c("the", "then")} resorts to
+#' @param orderPattern logical.  If \code{TRUE} and \code{fixed = TRUE}, the
+#' \code{tokens} string is sorted by number of characters to prevent substrings
+#' replacing meta strings (e.g., \code{tokens = c("the", "then")} resorts to
 #' search for "then" first).
+#' @param \dots ignored.
 #'
 #' @template textStudioMethods
 #' @template textStudioClasses
 #' @template textStudioDesign
 #'
-#' @return \code{ReplaceTokensApp} - Returns a vector with the pattern replaced.
+#' @examples
+#'
+#' @return \code{ReplaceTokensApp} Returns a vector with tokens replaced.
+#'
 #' @docType class
 #' @author John James, \email{jjames@@dataScienceSalon.org}
 #' @family TextStudio Classes
@@ -53,23 +58,24 @@ ReplaceTokensApp <- R6::R6Class(
 
     processDocument = function(document) {
 
-      document$content <- textclean::mgsub(x = document$content,
+      content <- document$content
+
+      document$content <- textclean::mgsub(x = content,
                                   pattern = private$..tokens,
                                   replacement = private$..replacement,
                                   leadspace = private$..leadspace,
                                   trailspace = private$..trailspace,
-                                  fixed = private$..fixed,
+                                  fixed = FALSE,
                                   trim = private$..trim,
-                                  order.pattern = private$..orderPattern)
+                                  order.pattern = TRUE)
       private$logEvent(document)
       return(document)
     }
   ),
 
   public = list(
-    initialize = function(x, tokens, replacement, leadspace = FALSE,
-                          trailspace = FALSE, fixed = TRUE, trim = FALSE,
-                          orderPattern = fixed) {
+    initialize = function(x, tokens = NULL, replacement = NULL, leadspace = FALSE,
+                          trailspace = FALSE, trim = FALSE) {
 
       private$loadDependencies()
 
@@ -79,8 +85,9 @@ ReplaceTokensApp <- R6::R6Class(
       private$..params$classes$valid <- list(c('Document', 'Corpus'))
       private$..params$kv$key <- tokens
       private$..params$kv$value <- replacement
-      private$..params$logicals$variables <- c('leadspace', 'trailspace', 'fixed', 'trim', 'orderPattern')
-      private$..params$logicals$values <- c(leadspace, trailspace, fixed, trim, orderPattern)
+      private$..params$kv$equalLen <- TRUE
+      private$..params$logicals$variables <- c('leadSpace', 'trailspace', 'trim')
+      private$..params$logicals$values <- c(leadspace, trailspace, trim)
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize',
@@ -89,19 +96,21 @@ ReplaceTokensApp <- R6::R6Class(
       }
 
       private$..x <- x
-
-      if (class(tokens)[1] == "data.frame") {
-        private$..tokens <- as.character(tokens[,1])
-        private$..replacement <- as.character(tokens[,2])
+      if ('data.frame' %in% class(tokens)) {
+        if (ncol(tokens) == 2) {
+          private$..tokens <- paste("\\b",as.character(tokens[,1]), "\\b", sep = "")
+          private$..replacement <- as.character(tokens[,2])
+        } else {
+          private$..tokens <- paste("\\b",as.character(tokens[,1]), "\\b", sep = "")
+          private$..replacement <- replacement
+        }
       } else {
-        private$..tokens <- tokens
+        private$..tokens <- paste("\\b",as.character(tokens), "\\b", sep = "")
         private$..replacement <- replacement
       }
       private$..leadspace <- leadspace
       private$..trailspace <- trailspace
-      private$..fixed <- fixed
       private$..trim <- trim
-      private$..orderPattern <- orderPattern
 
       invisible(self)
     }

@@ -6,15 +6,16 @@
 \title{ReplaceTokens}
 \format{An object of class \code{R6ClassGenerator} of length 24.}
 \usage{
-ReplaceTokens$new(joinTokens = FALSE, remove = FALSE)
+ReplaceTokens$new(tokens = NULL, ignoreCase = TRUE)
 }
 \arguments{
 \item{x}{Object of to be processed. This can be an object of the Corpus, Document, character classes, or a list of character vectors.}
 
-\item{tokens}{Character string(s) to be matched in the given character vector.}
+\item{tokens}{Character string of tokens to be matched in the
+given character vector.}
 
-\item{replacement}{Character string equal in length to pattern or of length
-one which are  a replacement for matched pattern.}
+\item{replacement}{Character string equal in length to tokens containing
+the long forms of the tokens.}
 
 \item{leadspace}{logical.  If \code{TRUE} inserts a leading space in the
 replacements.}
@@ -22,16 +23,18 @@ replacements.}
 \item{trailspace}{logical.  If \code{TRUE} inserts a trailing space in the
 replacements.}
 
-\item{fixed}{logical. If \code{TRUE}, pattern is a string to be matched as is.
+\item{fixed}{logical. If \code{TRUE}, tokens is a string to be matched as is.
 Overrides all conflicting arguments.}
 
 \item{trim}{logical.  If \code{TRUE} leading and trailing white spaces are
 removed and multiple white spaces are reduced to a single white space.}
 
-\item{order.pattern}{logical.  If \code{TRUE} and \code{fixed = TRUE}, the
-\code{pattern} string is sorted by number of characters to prevent substrings
-replacing meta strings (e.g., \code{pattern = c("the", "then")} resorts to
+\item{orderPattern}{logical.  If \code{TRUE} and \code{fixed = TRUE}, the
+\code{tokens} string is sorted by number of characters to prevent substrings
+replacing meta strings (e.g., \code{tokens = c("the", "then")} resorts to
 search for "then" first).}
+
+\item{\dots}{ignored.}
 }
 \description{
 \code{ReplaceTokens} Command for the ReplaceTokens class.
