@@ -42,7 +42,7 @@ ConverterTM <- R6::R6Class(
       docs <- cbind(id, descriptive, text)
 
       # Create tm corpus object
-      tmCorpus <- tm::Corpus(DataframeSource(docs))
+      tmCorpus <- tm::Corpus(tm::DataframeSource(docs))
 
       # Add corpus level metadata
       for (i in 1:length(cMetaVars)) {

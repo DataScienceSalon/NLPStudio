@@ -24,7 +24,7 @@ TermFreqTdm <- R6::R6Class(
   classname = "TermFreqTdm",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = TermFreq0,
+  inherit = Document0,
 
   private = list(
     ..tdm = character()
@@ -51,16 +51,35 @@ TermFreqTdm <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                             Core Methods                                #
     #-------------------------------------------------------------------------#
-    initialize = function(name = NULL, corpusId = NULL) {
+    initialize = function(x, name = NULL, tolower = TRUE,
+                          stem = FALSE, dictionary = NULL) {
 
       private$loadDependencies()
+      private$meta <- Meta$new(x = self, name = name)
 
-      private$coreMeta(name = name,
-                       type = "TermDocumentMatrix",
-                       corpusId = corpusId)
-      private$logR$log(cls = class(self)[1], event = "Initialized.")
+      # Validate class of object.
+      private$..params <- list()
+      private$..params$classes$name <- list('x')
+      private$..params$classes$objects <- list(x)
+      private$..params$classes$valid <- list(c('Corpus'))
+      private$..params$logicals$variables <- c("tolower", "stem")
+      private$..params$logicals$values <- c(tolower, stem)
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = 'initialize',
+                         event = v$msg, level = "Error")
+        stop()
+      }
+
+      private$..x <- x
+      self$setName(name = name)
+      private$meta$set(key = 'tolower', value = tolower, type = 'f')
+      private$meta$set(key = 'stem', value = stem, type = 'f')
+      private$logR$log(method = 'initialize', event = "Initialized.")
       invisible(self)
     },
+
+    get = function() { return(private$..tdm) },
 
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #

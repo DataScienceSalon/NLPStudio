@@ -51,35 +51,41 @@ TermFreqFactoryDtm <- R6::R6Class(
 
       private$loadDependencies()
 
-      # Validate parameters
-      private$..params$x <- x
+      # Validate class of object.
+      private$..params <- list()
+      private$..params$classes$name <- list('x')
+      private$..params$classes$objects <- list(x)
+      private$..params$classes$valid <- list(c('Corpus'))
       private$..params$logicals$variables <- c("tolower", "stem")
       private$..params$logicals$values <- c(tolower, stem)
-      if (private$validate()$code == FALSE) stop()
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = 'initialize',
+                         event = v$msg, level = "Error")
+        stop()
+      }
 
       private$..x <- x
       private$..settings$tolower <- tolower
       private$..settings$stem <- stem
       private$..settings$dictionary <- dictionary
       name <- paste0(x$getName() ," Document Term Matrix")
-      corpusId <- x$getId()
 
-      private$..termFreq <- TermFreqDtm$new(name = name, corpusId = corpusId)
+      private$..termFreq <- TermFreqDtm$new(x, name = name)
 
-      private$logR$log(cls = class(self)[1], event = "Initialized.")
+      private$logR$log(method = 'initialize', event = "Initialized.")
       invisible(self)
     },
 
     execute = function() {
-
-      private$..methodName <- "execute"
 
       private$processCorpus()
 
       # Log it
       event <- paste0("Executed ", class(self)[1], " on ",
                                 private$..x$getName(), ". ")
-      private$logR$log(cls = class(self)[1], event = event)
+      private$..termFreq$message(event = event)
+      private$logR$log(method = 'execute', event = event)
 
       return(private$..termFreq)
     },

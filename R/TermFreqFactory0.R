@@ -1,9 +1,9 @@
 #------------------------------------------------------------------------------#
-#                     Term Frequency Matrix Interface                          #
+#                 Term Frequency Matrix Factory Interface                      #
 #------------------------------------------------------------------------------#
 #' TermFreqFactory0
 #'
-#' \code{TermFreqFactory0}  Abstract "strategy" class that defines interface for the TermFreq classes.
+#' \code{TermFreqFactory0}  Abstract factory class that defines interface for the TermFreq classes.
 #'
 #' @docType class
 #' @author John James, \email{jjames@@dataScienceSalon.org}
@@ -14,7 +14,7 @@ TermFreqFactory0 <- R6::R6Class(
   classname = "TermFreqFactory0",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = DataStudio0,
+  inherit = Super,
 
   private = list(
     ..x = character(),

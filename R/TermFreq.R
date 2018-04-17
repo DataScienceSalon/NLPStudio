@@ -38,15 +38,14 @@ TermFreq <- R6::R6Class(
   classname = "TermFreq",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = DataStudio0,
+  inherit = Super,
 
   private = list(
     ..x = character(),
     ..settings = list(
       tolower = logical(),
       stem = logical(),
-      dictionary = character(),
-      type = character()
+      dictionary = character()
     )
   ),
 
@@ -56,50 +55,56 @@ TermFreq <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                             Core Methods                                #
     #-------------------------------------------------------------------------#
-    initialize = function(x, tolower = TRUE, stem = FALSE, dictionary = NULL,
-                          type = "dfm") {
+    initialize = function(x, tolower = TRUE, stem = FALSE, dictionary = NULL) {
 
       private$loadDependencies()
 
-      # Validate parameters
-      private$..params$x <- x
+      # Validate class of object.
+      private$..params <- list()
+      private$..params$classes$name <- list('x')
+      private$..params$classes$objects <- list(x)
+      private$..params$classes$valid <- list(c('Corpus'))
       private$..params$logicals$variables <- c("tolower", "stem")
       private$..params$logicals$values <- c(tolower, stem)
-      private$..params$discrete$variables <- c("type")
-      private$..params$discrete$values <- c(type)
-      private$..params$discrete$valid <- list(c("dfm", "dtm", "tdm"))
-      if (private$validate()$code == FALSE) stop()
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = 'initialize',
+                         event = v$msg, level = "Error")
+        stop()
+      }
 
       private$..x <- x
       private$..settings$tolower <- tolower
       private$..settings$stem <- stem
       private$..settings$dictionary <- dictionary
-      private$..settings$type <- type
 
       invisible(self)
     },
 
     #-------------------------------------------------------------------------#
-    #                           Factory Method                                #
+    #                           Factory Methods                               #
     #-------------------------------------------------------------------------#
-    execute = function() {
+    dfm = function() {
+      termFreq <- TermFreqFactoryDfm$new(x = private$..x,
+                                         tolower = private$..settings$tolower,
+                                         stem = private$..settings$stem,
+                                         dictionary = private$..settings$dictionary)$execute()
+      return(termFreq)
+    },
 
-      if (private$..settings$type == "dfm") {
-        termFreq <- TermFreqFactoryDfm$new(x = private$..x,
-                                           tolower = private$..settings$tolower,
-                                           stem = private$..settings$stem,
-                                           dictionary = private$..settings$dictionary)$execute()
-      } else if (private$..settings$type == "tdm") {
-        termFreq <- TermFreqFactoryTdm$new(x = private$..x,
-                                           tolower = private$..settings$tolower,
-                                           stem = private$..settings$stem,
-                                           dictionary = private$..settings$dictionary)$execute()
-      } else {
-        termFreq <- TermFreqFactoryDtm$new(x = private$..x,
-                                           tolower = private$..settings$tolower,
-                                           stem = private$..settings$stem,
-                                           dictionary = private$..settings$dictionary)$execute()
-      }
+    dtm = function() {
+      termFreq <- TermFreqFactoryDtm$new(x = private$..x,
+                                         tolower = private$..settings$tolower,
+                                         stem = private$..settings$stem,
+                                         dictionary = private$..settings$dictionary)$execute()
+      return(termFreq)
+    },
+
+    tdm = function() {
+      termFreq <- TermFreqFactoryTdm$new(x = private$..x,
+                                         tolower = private$..settings$tolower,
+                                         stem = private$..settings$stem,
+                                         dictionary = private$..settings$dictionary)$execute()
       return(termFreq)
     },
 

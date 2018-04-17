@@ -9,7 +9,7 @@
 TermFreqFactory0
 }
 \description{
-\code{TermFreqFactory0}  Abstract "strategy" class that defines interface for the TermFreq classes.
+\code{TermFreqFactory0}  Abstract factory class that defines interface for the TermFreq classes.
 }
 \seealso{
 Other DataStudio Classes: \code{\link{TermFreqFactoryDfm}},
