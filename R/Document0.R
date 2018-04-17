@@ -27,6 +27,7 @@ Document0 <- R6::R6Class(
 
   private = list(
 
+    ..parent = character(),
     ..content = character(),
 
     #-------------------------------------------------------------------------#
@@ -181,19 +182,24 @@ Document0 <- R6::R6Class(
     #                             Metadata Methods                            #
     #-------------------------------------------------------------------------#
     getId = function() { return(private$meta$get(key = 'id')) },
+
     getName = function() { return(private$meta$get(key = 'name')) },
+    setName = function(name) { return(private$meta$set(key = "name",
+                                                       value = name,
+                                                       type = 'd'))},
+
     getMeta = function(key = NULL, type = NULL) {
       return(private$meta$get(key = key, type = type))
     },
-    query = function(key, value) { return(private$meta$query(key, value)) },
-
     setMeta = function(key, value, type = 'descriptive') {
       private$meta$set(key = key, value = value, type = type)
       invisible(self)
     },
 
-    setSource = function(key, value) {
-      private$meta$setSource(key,value)
+    query = function(key, value) { return(private$meta$query(key, value)) },
+
+    setParent = function(x) {
+      private$..parent <- x
       invisible(self)
     },
 

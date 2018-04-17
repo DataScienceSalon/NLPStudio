@@ -33,7 +33,7 @@ Source \url{https://cran.r-project.org/web/packages/tm/tm.pdf.}
 \seealso{
 Other DataStudio Classes: \code{\link{TermFreqFactory0}},
   \code{\link{TermFreqFactoryDfm}},
-  \code{\link{TermFreqFactoryDtm}}, \code{\link{Tokenizer}}
+  \code{\link{TermFreqFactoryDtm}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

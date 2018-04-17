@@ -14,7 +14,7 @@ TermFreqFactory0
 \seealso{
 Other DataStudio Classes: \code{\link{TermFreqFactoryDfm}},
   \code{\link{TermFreqFactoryDtm}},
-  \code{\link{TermFreqFactoryTdm}}, \code{\link{Tokenizer}}
+  \code{\link{TermFreqFactoryTdm}}
 
 Other Term Frequency Classes: \code{\link{TermFreqDfm}},
   \code{\link{TermFreqDtm}}, \code{\link{TermFreqTdm}},

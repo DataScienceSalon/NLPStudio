@@ -6,21 +6,16 @@
 \title{Tokens}
 \format{An object of class \code{R6ClassGenerator} of length 24.}
 \usage{
-tokenizedCorpus <- Tokens$new(name = 'Sentence Tokens', what = "sentence")
+tokens <- Tokens$new()
 }
 \arguments{
-\item{x}{The Corpus object to be tokenized.}
-
-\item{name}{Character string containing the name to assign to the Tokenized Corpus}
-
-\item{what}{Character string indicating the level of tokenization. Valid
-values are c("sentence", "word", "character").}
+\item{x}{The source Document object.}
 }
 \value{
-Tokens object.
+Tokens object, containing the tokens for a single Document object.
 }
 \description{
-\code{Tokens} Class representing a Tokenized Corpus.
+\code{Tokens} Class representing tokenized Document objects.
 
 @param x The principal object
  @param key Character string or a vector of strings containing a key or
@@ -36,18 +31,20 @@ Tokens object.
  c('list', 'data.frame')
 }
 \details{
-Tokens objects are Corpus level objects containing collections of
-Tokenized Document objects.
+Class containing the tokenized representation of a Document object.
 }
 \section{Core Methods}{
 
  \itemize{
-  \item{\code{new()}}{Initializes an object of the Tokens class.}
+  \item{\code{new(x)}}{Initializes an object of the Tokens class.}
+  \item{\code{content}}{Active binding used to set and retrieve Tokens content. Tokens
+  content may be changed via assignment. Referencing this method retrieves the current
+  Tokens content.}
  }
 }
 
 \seealso{
-Other Tokens Classes: \code{\link{Tokenizer}}
+Other Tokens Classes: \code{\link{TokensCollection}}
 }
 \author{
 John James, \email{jjames@datasciencesalon.org}

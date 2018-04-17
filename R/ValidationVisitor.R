@@ -107,15 +107,11 @@ ValidationVisitor <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                 Validate Data Processing Classes                        #
     #-------------------------------------------------------------------------#
-    tokenFactorySent = function(object) {
-      return(private$validate(object))
-    },
-
-    tokenFactoryWord = function(object) {
-      return(private$validate(object))
-    },
-
     tokens = function(object) {
+      return(private$validate(object))
+    },
+
+    tokensCollection = function(object) {
       return(private$validate(object))
     },
 

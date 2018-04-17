@@ -35,7 +35,7 @@ Source \url{https://cran.r-project.org/web/packages/quanteda/quanteda.pdf}
 \seealso{
 Other DataStudio Classes: \code{\link{TermFreqFactory0}},
   \code{\link{TermFreqFactoryDtm}},
-  \code{\link{TermFreqFactoryTdm}}, \code{\link{Tokenizer}}
+  \code{\link{TermFreqFactoryTdm}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}
