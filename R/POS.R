@@ -1,30 +1,31 @@
-#' Tokens
+#' POS
 #'
-#' \code{Tokens} Class representing tokenized Document objects.
+#' \code{POS} Creates part-of-speech tagged documents.
 #'
-#' Class containing the tokenized representation of a Document object.
+#' Class containing the methods for creating and reporting part-of-speech tags
+#' for a Document object.
 #'
-#' @usage tokens <- Tokens$new()
+#' @usage pos <- POS$new()
 #'
 #' @section Core Methods:
 #'  \itemize{
-#'   \item{\code{new(x)}}{Initializes an object of the Tokens class.}
-#'   \item{\code{content}}{Active binding used to set and retrieve Tokens content. Tokens
+#'   \item{\code{new(x)}}{Initializes an object of the POS class.}
+#'   \item{\code{content}}{Active binding used to set and retrieve POS content. POS
 #'   content may be changed via assignment. Referencing this method retrieves the current
-#'   Tokens content.}
+#'   POS content.}
 #'  }
 #'
 #' @param x The source Document object.
 #' @template metadataParams
 #'
-#' @return Tokens object, containing the tokens for a single Document object.
+#' @return POS object, containing the tokens for a single Document object.
 #'
 #' @docType class
 #' @author John James, \email{jjames@@datasciencesalon.org}
-#' @family Tokens Classes
+#' @family POS Classes
 #' @export
-Tokens <- R6::R6Class(
-  classname = "Tokens",
+POS <- R6::R6Class(
+  classname = "POS",
   lock_objects = FALSE,
   lock_class = FALSE,
   inherit = Document0,
@@ -32,30 +33,21 @@ Tokens <- R6::R6Class(
   private = list(
 
     ..x = character(),
+    ..pos = list(),
 
-    tokenize = function(tokenType = 'word') {
+    tagDocument = function() {
 
       content <- private$..x$content
-
-      # Produce tokens
-      if (tokenType %in% c("sentence")) {
-
-        # Use sentence token from openNLP and NLP packages
-        s <- paste(content, collapse = "")
-        s <- NLP::as.String(s)
-        sa <- openNLP::Maxent_Sent_Token_Annotator()
-        a <- NLP::annotate(s, sa)
-        private$..content <- s[a]
-        ntokens <- length(private$..content)
-
-      } else {
-        private$..content <- quanteda::tokens(x = content, what = tokenType)
-        ntokens <- length(private$..content[[1]])
-      }
-
-      # Update text, compute statistics and update admin information
-      private$meta$set(key = 'tokenType', value = tokenType)
-      private$meta$set(key = 'ntokens', value = ntokens)
+      s <- paste(content, collapse = "")
+      s <- NLP::as.String(s)
+      pa <- openNLP::Maxent_POS_Tag_Annotator()
+      sa <- openNLP::Maxent_Sent_Token_Annotator()
+      wa <- openNLP::Maxent_Word_Token_Annotator()
+      a2 <- annotate(s, list(sa, wa))
+      a3 <- annotate(s, pa, a2)
+      a3w <- subset(a3, type == "word")
+      private$..pos$tags <- sapply(a3w$features, `[[`, "POS")
+      private$..pos$distribution <- table(tags)
 
       return(TRUE)
     }
@@ -88,54 +80,22 @@ Tokens <- R6::R6Class(
       invisible(self)
     },
 
-    get = function() { return(private$..content) },
+    get = function() { return(private$..pos) },
     getText = function() { return(private$..x$content) },
 
     #-------------------------------------------------------------------------#
-    #                           Word Tokens                                   #
+    #                            Render Tags                                  #
     #-------------------------------------------------------------------------#
-    word = function() {
+    tag = function() {
 
-      private$tokenize(tokenType = 'word')
-      event <- paste0("Created word token representation of ",
+      private$tagDocument()
+      event <- paste0("Created POS tag representation of ",
                       private$..x$getName(), ".")
-      name <- paste0(private$..x$getName(), " (Word Tokens)")
+      name <- paste0(private$..x$getName(), " (POS)")
       self$setName(name = name)
       private$meta$modified(event = event)
-      private$logR$log(method = 'word', event = event)
+      private$logR$log(method = 'tag', event = event)
 
-      invisible(self)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                           Sentence Tokens                               #
-    #-------------------------------------------------------------------------#
-    sentence = function() {
-
-      private$..type <- "sentence"
-      private$tokenize(tokenType = 'sentence')
-      event <- paste0("Created sentence token representation of ",
-                      private$..x$getName(), ".")
-      name <- paste0(private$..x$getName(), " (Sentence Tokens)")
-      self$setName(name = name)
-      private$meta$modified(event = event)
-      private$logR$log(method = 'sentence', event = event)
-
-      invisible(self)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                       Character Tokens                                  #
-    #-------------------------------------------------------------------------#
-    char = function(x) {
-
-      private$tokenize(tokenType = 'character')
-      event <- paste0("Created character token representation of ",
-                      private$..x$getName(), ".")
-      name <- paste0(private$..x$getName(), " (Character Tokens)")
-      self$setName(name = name)
-      private$meta$modified(event = event)
-      private$logR$log(method = 'character', event = event)
       invisible(self)
     },
 
@@ -143,7 +103,7 @@ Tokens <- R6::R6Class(
     #                           Visitor Methods                               #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$tokens(self)
+      visitor$pos(self)
     }
   )
 )
