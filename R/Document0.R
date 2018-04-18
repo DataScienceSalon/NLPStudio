@@ -36,6 +36,10 @@ Document0 <- R6::R6Class(
     summarizeIdMeta = function() {
 
       identity <- private$meta$get(type = 'identity')
+      NLPStudio::printHeading(text = paste0(identity$classname, ": ",
+                                            self$getName(), " Summary"),
+                              symbol = "=",
+                              newlines = 2)
       cat(paste0("\nObject Class : ", identity$classname))
       cat(paste0("\nObject Id    : ", identity$id))
       return(identity)
@@ -46,9 +50,9 @@ Document0 <- R6::R6Class(
 
       descriptive <- private$meta$get(type = 'descriptive')
       if (length(descriptive) > 0) {
+        NLPStudio::printHeading(text = "Descriptive Metadata", symbol = "-")
         metaDf <- as.data.frame(descriptive, stringsAsFactors = FALSE,
                                 row.names = NULL)
-        cat("\n\nDescriptive:\n")
         print(metaDf, row.names = FALSE)
         return(descriptive)
       }
@@ -59,9 +63,9 @@ Document0 <- R6::R6Class(
 
       quant <- private$meta$get(type = 'quant')
       if (length(quant > 0)) {
+        NLPStudio::printHeading(text = "Quantitative Metadata", symbol = "-")
         quantDf <- as.data.frame(quant, stringsAsFactors = FALSE,
                                  row.names = NULL)
-        cat("\n\nQuantitative:\n")
         print(quantDf, row.names = FALSE)
         return(quant)
       }
@@ -72,9 +76,9 @@ Document0 <- R6::R6Class(
 
       functional <- private$meta$get(type = 'functional')
       if (length(functional) > 0) {
+        NLPStudio::printHeading(text = "Functional Metadata", symbol = "-")
         metaDf <- as.data.frame(functional, stringsAsFactors = FALSE,
                                 row.names = NULL)
-        cat("\n\nFunctional:\n")
         print(metaDf, row.names = FALSE)
         return(functional)
       }
@@ -84,22 +88,19 @@ Document0 <- R6::R6Class(
 
     summarizeAdminMeta = function() {
 
+      NLPStudio::printHeading(text = "Administrative Metadata", symbol = "-")
       admin <- private$meta$get(type = 'admin')
       adminDf <- as.data.frame(admin, stringsAsFactors = FALSE, row.names = NULL)
-      cat("\nAdministrative:\n")
       print(adminDf, row.names = FALSE)
-      cat("\n")
       return(admin)
     },
 
     summarizeTechMeta = function() {
 
       tech <- private$meta$get(type = 'tech')
-
+      NLPStudio::printHeading(text = "Technical Metadata", symbol = "-")
       techDf <- as.data.frame(tech, stringsAsFactors = FALSE, row.names = NULL)
-      cat("\nTechnical:\n")
       print(techDf, row.names = FALSE)
-      cat("\n")
       return(tech)
     }
   ),

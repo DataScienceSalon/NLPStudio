@@ -78,8 +78,8 @@ Corpus <- R6::R6Class(
       quant <- private$meta$get(type = 'quant')
       if (verbose) {
         if (!is.null(quant)) {
+          NLPStudio::printHeading(text = "Quantitative Metadata", symbol = "-")
           quantDf <- as.data.frame(quant, stringsAsFactors = FALSE, row.names = NULL)
-          cat("\n\nQuantitative:\n")
           print(quantDf, row.names = FALSE)
         }
       }

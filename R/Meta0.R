@@ -209,44 +209,6 @@ Meta0 <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                           Set Source Method                             #
-    #-------------------------------------------------------------------------#
-    setSource = function(key, value, type = 'tech') {
-
-      type <- "tech"
-
-      private$..params$kv$key <- key
-      private$..params$kv$value <- value
-      private$..params$kv$equalLen <- TRUE
-      v <- private$validator$validate(self)
-      if (v$code == FALSE) {
-        private$logR$log( method = 'setSource',
-                          event = v$msg, level = 'Error')
-        stop()
-      }
-
-      for (i in 1:length(key)) {
-        if (private$checkNames(key[i], type = type))  {
-          private$..meta$admin[[key[i]]] <- value[i]
-        } else {
-          j <- 1
-          newVar <- paste0(key[i], "_", j)
-          while(private$checkNames(newVar, type = type) == FALSE) {
-            j <- j + 1
-            newVar <- paste0(key[i], "_", j)
-          }
-          private$..meta$admin[[newVar]] <- value[i]
-          event <- paste0("Duplicate metadata variable names are not ",
-                          "permitted. Variable named ", key[i],
-                          " was changed to ", newVar, ".")
-          private$logR$log(method = "set", event = event,
-                           level = "Warn")
-        }
-      }
-      invisible(self)
-    },
-
-    #-------------------------------------------------------------------------#
     #                             Query Methods                               #
     #-------------------------------------------------------------------------#
     query = function(key, value) {
@@ -265,15 +227,15 @@ Meta0 <- R6::R6Class(
       }
 
       for (i in 1:length(key)) {
-        for (j in 1:length(private$..meta)) {
-          if (!is.null(private$..meta[[j]][[key[i]]])) {
-            if (private$..meta[[j]][[key[i]]] %in% value[i])
-              return(TRUE)
-          }
+        v <- private$search(key = key[i])
+        if (is.null(v)) {
+          return(FALSE)
+        } else if (v != value[i]) {
+          return(FALSE)
         }
       }
 
-      return(FALSE)
+      return(TRUE)
     }
   )
 )

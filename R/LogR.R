@@ -85,9 +85,13 @@ LogR <- R6::R6Class(
     },
 
     printLog = function() {
-
-      cat("\n\nObject Log:")
-      private$..x$summary(select = 'id')
+      identity <- private$..x$getMeta(type = 'identity')
+      NLPStudio::printHeading(text = paste0(identity$classname, ": ",
+        private$..x$getName(), " Log"),
+                              symbol = "=",
+                              newlines = 2)
+      cat(paste0("\nObject Class : ", identity$classname))
+      cat(paste0("\nObject Id    : ", identity$id))
       log <- private$..log
 
       if (nrow(log) > 0) {

@@ -47,7 +47,7 @@ Class contains Tokens objects
   \item{\code{word()}}{Creates word tokens.}
   \item{\code{sentence()}}{Creates sentence tokens.}
   \item{\code{char()}}{Creates character tokens.}
-  \item{\code{getTokens()}}{Returns the tokens.}
+  \item{\code{get()}}{Returns the tokens.}
   \item{\code{getText()}}{Returns the original text.}
  }
 }

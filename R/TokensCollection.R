@@ -12,7 +12,7 @@
 #'   \item{\code{word()}}{Creates word tokens.}
 #'   \item{\code{sentence()}}{Creates sentence tokens.}
 #'   \item{\code{char()}}{Creates character tokens.}
-#'   \item{\code{getTokens()}}{Returns the tokens.}
+#'   \item{\code{get()}}{Returns the tokens.}
 #'   \item{\code{getText()}}{Returns the original text.}
 #'  }
 #'
@@ -44,18 +44,42 @@ TokensCollection <- R6::R6Class(
     tokenize = function(tokenType = 'word') {
       docs <- private$..x$getDocument()
       ntokens <- 0
-      for (i in 1:length(docs)) {
+
+      # Process Document corpus text combined into a single document.
+      if (private$..collapse) {
+
+        corpusText <- paste(docs, lapply(docs, function(d) {
+          d$text()
+        }) , collapse = " ")
+        corpusDoc <- Document$new(x = corpusText, name = self$getName())
         tokensObject <- switch(tokenType,
-                         word = Tokens$new(docs[[i]])$word(),
-                         sentence = Tokens$new(docs[[i]])$sentence(),
-                         character = Tokens$new(docs[[i]])$char())
+                               word = Tokens$new(corpusDoc)$word(),
+                               sentence = Tokens$new(corpusDoc)$sentence(),
+                               character = Tokens$new(corpusDoc)$char())
         self$addDocument(tokensObject)
-        tokens <- tokensObject$getTokens()
+        tokens <- tokensObject$get()
 
         if (class(tokens)[1] == 'tokens') {
           ntokens <- ntokens + ntoken(tokens)
         } else {
           ntokens <- ntokens + length(tokens)
+        }
+
+      # Process individual documents
+      } else {
+        for (i in 1:length(docs)) {
+          tokensObject <- switch(tokenType,
+                           word = Tokens$new(docs[[i]])$word(),
+                           sentence = Tokens$new(docs[[i]])$sentence(),
+                           character = Tokens$new(docs[[i]])$char())
+          self$addDocument(tokensObject)
+          tokens <- tokensObject$get()
+
+          if (class(tokens)[1] == 'tokens') {
+            ntokens <- ntokens + ntoken(tokens)
+          } else {
+            ntokens <- ntokens + length(tokens)
+          }
         }
       }
       private$meta$set(key = tokenType, value = ntokens, type = 'q')
@@ -85,7 +109,7 @@ TokensCollection <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Core Methods                                  #
     #-------------------------------------------------------------------------#
-    initialize = function(x) {
+    initialize = function(x, collapse = FALSE) {
 
       private$loadDependencies()
 
@@ -94,6 +118,8 @@ TokensCollection <- R6::R6Class(
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
       private$..params$classes$valid <- list('Corpus')
+      private$..params$logicals$variables <- c("collapse")
+      private$..params$logicals$values <- c(collapse)
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize',
@@ -102,14 +128,15 @@ TokensCollection <- R6::R6Class(
       }
 
       private$..x <- x
+      private$..collapse <- collapse
       private$meta <- Meta$new(x = self)
       private$logR$log(method = 'initialize', event = "Initialization complete.")
       invisible(self)
     },
 
-    getTokens = function() {
+    get = function() {
       tokens <- lapply(private$..documents, function(d) {
-        d$getTokens()
+        d$get()
       })
       return(tokens)
     },

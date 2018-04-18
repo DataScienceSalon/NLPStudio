@@ -9,6 +9,9 @@ proper(x)
 \description{
 \code{proper} Converts text string to proper case
 }
+\seealso{
+Other Internal Functions: \code{\link{printHeading}}
+}
 \author{
 John James, \email{jjames@DataScienceSalon.org}
 }
