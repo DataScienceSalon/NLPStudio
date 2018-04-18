@@ -115,11 +115,11 @@ ValidationVisitor <- R6::R6Class(
       return(private$validate(object))
     },
 
-    posFactory = function(object) {
+    pos = function(object) {
       return(private$validate(object))
     },
 
-    pos = function(object) {
+    posCollection = function(object) {
       return(private$validate(object))
     },
 

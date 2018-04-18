@@ -67,7 +67,8 @@ Collection0 <- R6::R6Class(
       private$..inventory <- rbind(private$..inventory, credentials)
 
       # Update date/time metadata and create log entry
-      event <- paste0("Added ", x$getName(), " object to ", self$getName(), ".")
+      classname <- x$getMeta(key = "classname")
+      event <- paste0("Added ", classname, " object '", x$getName(), "' to ", self$getName(), ".")
       private$meta$modified(event = event)
       private$logR$log(method = 'addDocument', event = event)
     },
@@ -79,8 +80,8 @@ Collection0 <- R6::R6Class(
 
       if (length(private$..documents) == 0) return(NULL)
 
-      heading <- paste0("\n\nDocuments attached to ", self$getId(), ":")
-      cat(heading)
+      heading <- paste0("Objects attached to ", self$getName())
+      NLPStudio::printHeading(text = heading, symbol = "-")
       documentMeta <- self$getDocMeta(classname)
       classes <- names(documentMeta)
       lapply(seq_along(documentMeta), function(x) {

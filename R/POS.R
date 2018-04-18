@@ -43,8 +43,8 @@ POS <- R6::R6Class(
       pa <- openNLP::Maxent_POS_Tag_Annotator()
       sa <- openNLP::Maxent_Sent_Token_Annotator()
       wa <- openNLP::Maxent_Word_Token_Annotator()
-      a2 <- annotate(s, list(sa, wa))
-      a3 <- annotate(s, pa, a2)
+      a2 <- NLP::annotate(s, list(sa, wa))
+      a3 <- NLP::annotate(s, pa, a2)
       a3w <- subset(a3, type == "word")
       private$..pos$tags <- sapply(a3w$features, `[[`, "POS")
       private$..pos$distribution <- table(tags)
@@ -81,6 +81,8 @@ POS <- R6::R6Class(
     },
 
     get = function() { return(private$..pos) },
+    getTags = function() { return(private$..pos$tags) },
+    getDistribution = function() {return(private$..pos$distribution) },
     getText = function() { return(private$..x$content) },
 
     #-------------------------------------------------------------------------#

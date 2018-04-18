@@ -111,7 +111,8 @@ Corpus <- R6::R6Class(
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
       private$..params$classes$valid <- list(c('Document', 'File', 'TermFreq',
-                                             'Tokens', 'POS', 'TokensCollection'))
+                                             'Tokens', 'POS', 'TokensCollection',
+                                             'POSCollection'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'addDocument',
