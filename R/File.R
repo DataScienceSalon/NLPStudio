@@ -52,8 +52,8 @@ File <- R6::R6Class(
                                                     tools::file_path_sans_ext(basename(path)),
                                                     name),
                        type = 'descriptive')
-      private$meta$set(key = 'directory', value = dirname(path))
-      private$meta$set(key = 'fileName', value = basename(path))
+      private$meta$set(key = 'directory', value = dirname(path), type = 'f')
+      private$meta$set(key = 'fileName', value = basename(path), type = 'f')
 
       private$..path <- path
 
@@ -77,13 +77,17 @@ File <- R6::R6Class(
       path <- private$meta$get(key = 'path')
       io <- IOFactory$new()$strategy(path = path)
       content <- io$read(path = path)
+      event <- paste0("Read performed on ", self$getName())
+      private$meta$accessed(event = event)
       return(content)
     },
 
     write = function(x) {
-      path <- private$meta$get(key = 'path')
+      path <- self$getPath
       io <- IOFactory$new()$strategy(path = path)
       io$write(path = path, content = x)
+      event <- paste0("Write performed on ", self$getName())
+      private$meta$modified(event = event)
       invisible(self)
     },
 
@@ -104,8 +108,8 @@ File <- R6::R6Class(
       file.rename(private$..path, path)
 
       # Log
-      event <- paste0("File, ", basename(path), ", moved from ",
-                      private$..path, " to ", path, ".")
+      event <- paste0("File, ", self$getName(), ", moved from ",
+                      self$getPath(), " to ", path, ".")
       private$logR$log(method = 'move', event = event)
 
       private$meta$set(key = 'path', value = path, type = 'functional')
@@ -126,35 +130,10 @@ File <- R6::R6Class(
       file.copy(private$..path, path)
 
       # Log
-      event <- paste0("File, ", basename(path), ", copied from ",
-                      private$..path, " to ", path, ".")
+      event <- paste0("File, ", self$getName(), ", copied from ",
+                      self$getPath(), " to ", path, ".")
       private$logR$log(method = 'copy', event = event)
 
-      invisible(self)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                     File Conditioning Methods                           #
-    #-------------------------------------------------------------------------#
-    ctrl = function(codes = NULL) {
-      path <- private$meta$get(key = 'path')
-      studio <- FileStudio$new()
-      studio$ctrl(self, codes = codes)
-
-      # Update file object
-      event <- "Replaced control characters."
-      private$meta$modified(event)
-      invisible(self)
-    },
-
-    encode = function(encoding = "latin1") {
-      path <- private$meta$get(key = 'path')
-      studio <- FileStudio$new()
-      studio$encode(self, encoding = encoding)
-
-      # Update file object
-      event <- "Declared and converted to UTF-8 Encoding."
-      private$meta$modified(event)
       invisible(self)
     },
 

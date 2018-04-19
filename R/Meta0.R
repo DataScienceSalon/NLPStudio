@@ -91,6 +91,9 @@ Meta0 <- R6::R6Class(
       private$..meta$admin$modified <- Sys.time()
       private$..meta$admin$modifiedBy <- Sys.info()[["user"]]
       private$..meta$admin$nModified <- 0
+      private$..meta$admin$accessed <- Sys.time()
+      private$..meta$admin$accessedBy <- Sys.info()[["user"]]
+      private$..meta$admin$nAccessed <- 0
       private$..meta$admin$lastState <- "Instantiated."
 
       # Setup Technical Metadata
@@ -196,6 +199,15 @@ Meta0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                             Admin Methods                               #
     #-------------------------------------------------------------------------#
+    accessed = function(event = NULL) {
+
+      private$..meta$admin$accessed <- Sys.time()
+      private$..meta$admin$accessedBy <- Sys.info()[["user"]]
+      private$..meta$admin$nAccessed <- private$..meta$admin$nAccessed + 1
+      private$..meta$admin$lastState <- ifelse(is.null(event), "Accessed.", event)
+
+      invisible(self)
+    },
     modified = function(event = NULL) {
 
       private$..meta$admin$modified <- Sys.time()

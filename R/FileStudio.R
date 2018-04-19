@@ -1,107 +1,130 @@
 #==============================================================================#
-#                               FileStudio                                     #
+#                               TextStudio                                     #
 #==============================================================================#
-#' FileStudio
+#' TextStudio
 #'
-#' \code{FileStudio} Class for treating and repair files.
+#' \code{TextStudio} Class for performing text cleaning and preprocessing
 #'
-#' Class responsible for treating and performing repairs on text files
-#' at binary level.
+#' @template textStudioClasses
 #'
-#' @param path Character string indicating the path to a file to be repaired.
-#' @param code Numeric vector containing up to 32 numbers between 0 and 31,
-#' in which each number relates to the decimal ASCII code for the control
-#' characters to remove from the file.
+#' @section TextStudio methods:
+#' \strong{Core Methods:}
+#'  \itemize{
+#'   \item{\code{new()}}{Method for instantiating a TextStudio.}
+#'   \item{\code{addCommand()}}{Method that adds a text processing command to the queue. }
+#'   \item{\code{removeCommand()}}{Method that removes a command from the queue.}
+#'   \item{\code{execute()}}{Method that executes the job queue. }
+#'   \item{\code{getResult()}}{Method that returns the object following execution of the job queue. }
+#'  }
+#'
+#' @section Parameters:
+#' @param object The object to be processed.
+#' @param queue The job queue containing text processing commands.
 #'
 #' @docType class
 #' @author John James, \email{jjames@@datasciencesalon.org}
-#' @family File Classes
+#' @family TextStudio classes
 #' @export
-FileStudio <- R6::R6Class(
-  classname = "FileStudio",
+TextStudio <- R6::R6Class(
+  classname = "TextStudio",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = Document0,
+  inherit = Super,
 
   public = list(
 
     #-------------------------------------------------------------------------#
-    #                       Initialization Method                             #
+    #                           Core Methods                                  #
     #-------------------------------------------------------------------------#
-    initialize = function() {
+    initialize = function(x) {
 
       private$loadDependencies()
-      invisible(self)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                       Replace Control Characters                        #
-    #-------------------------------------------------------------------------#
-    ctrl = function(file, codes = NULL) {
-
-      path <- file$getMeta(key = 'path')
-
-      # Validate path and file type
-      if (!R.utils::isFile(path)) stop(paste("File", path, "does not exist."))
-      if (tools::file_ext(path) != "txt") {
-        stop("This method operates on '.txt' files only.")
-      }
-
-      ioBin <- IOBin$new()
-      ioTxt <- IOText$new()
-
-      content <- ioBin$read(path = path)
-
-      if (is.null(codes)) codes <- seq(0,31)
-
-      for (i in 1:length(codes)) {
-        content[content == as.raw(codes[i])] = as.raw(32)
-      }
-
-      # Save to temp file and re-read
-      d <- tempfile(fileext = '.txt')
-      ioBin$write(path = d, content = content)
-      content <- ioTxt$read(path = d)
-
-      # Write back to original location
-      ioTxt$write(path = path, content = content)
-
-      invisible(self)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                                Encoding                                 #
-    #-------------------------------------------------------------------------#
-    encode = function(file, encoding = 'latin1') {
 
       private$..params <- list()
-      private$..params$discrete$variables <- list("encoding")
-      private$..params$discrete$values <- list(encoding)
-      private$..params$discrete$valid <- list(c("UTF-8", "latin1", "bytes"))
+      private$..params$classes$name <- list("x")
+      private$..params$classes$objects <- list(x)
+      private$..params$classes$valid <- list(c("Corpus", "Document"))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
-        private$logR$log(method = 'encode',
+        private$logR$log(method = 'initialize',
                          event = v$msg, level = "Error")
         stop()
       }
 
-      path <- file$getPath()
+      if (class(x)[1] == 'Corpus') private$..x <- Clone$new()$corpus(x = x)
+      if (class(x)[1] == 'Document') private$..x <- Clone$new()$document(x = x)
 
-      io <- IOFactory$new()$strategy(path)
-      content <- io$read(path)
-      Encoding(content) <- encoding
-      content <- enc2utf8(content)
-      content <- iconv(content, "UTF-8", "ASCII", sub = "")
-      io$write(content = content, path = path)
+      # Create log entry
+      event <- paste0("TextStudio object instantiated.")
+      private$logR$log(method = 'initialize', event = event)
 
       invisible(self)
     },
 
     #-------------------------------------------------------------------------#
-    #                            Visitor Method                               #
+    #                           Command Management                            #
+    #-------------------------------------------------------------------------#
+    add = function(cmd) {
+
+      if (!c("TextStudio0") %in% class(cmd)) {
+        event <- paste0("Invalid TextStudio object. Object must be ",
+                                  "of the TextStudio0 classes.  See ?TextStudio0",
+                                  " for further assistance.")
+        private$logR$log(method = 'add', event = event, level = "Error")
+        stop()
+      }
+
+      name <- class(cmd)[1]
+      private$..jobQueue[[name]] <- cmd
+
+      event <- paste0("Added ", name, " to ", private$..x$getName(),
+                                " job queue." )
+      private$logR$log(method = 'add', event = event)
+
+      invisible(self)
+    },
+
+    remove = function(cmd) {
+
+      name <- class(cmd)[1]
+      private$..jobQueue[[name]] <- NULL
+
+      event <- paste0("Removed ", name, " from ", private$..x$getName(),
+                                " job queue." )
+      private$logR$log(method = 'remove', event = event)
+      invisible(self)
+
+    },
+
+    #-------------------------------------------------------------------------#
+    #                       Execute and Return Results                        #
+    #-------------------------------------------------------------------------#
+    execute = function() {
+
+      if (length(private$..jobQueue) > 0) {
+
+        for (i in 1:length(private$..jobQueue)) {
+          private$..x <- private$..jobQueue[[i]]$execute(private$..x)
+        }
+
+        event <- paste0("Executed TextStudio commands on ",
+                                  private$..x$getName(), "." )
+        private$logR$log(method = 'execute', event = event)
+
+        invisible(private$..x)
+      } else {
+        event <- paste0("TextStudio job queue is empty.")
+        private$logR$log(method = 'execute', event = event, level = 'Error')
+        stop()
+      }
+
+    },
+
+    #-------------------------------------------------------------------------#
+    #                           Visitor Methods                               #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$fileStudio(self)
+      visitor$textStudio(self)
     }
   )
 )
