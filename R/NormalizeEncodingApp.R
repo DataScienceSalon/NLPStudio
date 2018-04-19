@@ -52,7 +52,7 @@ NormalizeEncodingApp <- R6::R6Class(
       private$..params$classes$valid <- list(c('Document', 'Corpus'))
       private$..params$discrete$variables <- c('encoding')
       private$..params$discrete$values <- list(encoding)
-      private$..params$discreate$valid <-  list(c('latin1', 'UTF-8', 'bytes'))
+      private$..params$discrete$valid <-  list(c('latin1', 'UTF-8', 'bytes'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize',

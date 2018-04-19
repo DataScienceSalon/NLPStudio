@@ -56,8 +56,9 @@ text cleaning algorithms to be selected and exchagned at runtime.
 \seealso{
 Other TextStudio Classes: \code{\link{AddCommaSpaceApp}},
   \code{\link{AddCommaSpace}}, \code{\link{GSubApp}},
-  \code{\link{GSub}}, \code{\link{RemoveEmailApp}},
-  \code{\link{RemoveEmail}},
+  \code{\link{GSub}}, \code{\link{NormalizeEncodingApp}},
+  \code{\link{NormalizeEncoding}},
+  \code{\link{RemoveEmailApp}}, \code{\link{RemoveEmail}},
   \code{\link{RemoveTwitterApp}},
   \code{\link{RemoveTwitter}}, \code{\link{RemoveURLApp}},
   \code{\link{RemoveURL}},

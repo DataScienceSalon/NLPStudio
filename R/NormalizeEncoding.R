@@ -32,14 +32,14 @@ NormalizeEncoding <- R6::R6Class(
   ),
 
   public = list(
-    initialize = function(encoding) {
+    initialize = function(encoding = "latin1") {
 
       private$loadDependencies()
 
       # Validate parameters
       private$..params$discrete$variables <- c('encoding')
       private$..params$discrete$values <- list(encoding)
-      private$..params$discreate$valid <-  list(c('latin1', 'UTF-8', 'bytes'))
+      private$..params$discrete$valid <-  list(c('latin1', 'UTF-8', 'bytes'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize',

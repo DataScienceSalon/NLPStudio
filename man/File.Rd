@@ -39,7 +39,8 @@ and repair methods.
 }
 
 \seealso{
-Other File Classes: \code{\link{FileStudio}}
+Other File Classes: \code{\link{FileCollection}},
+  \code{\link{FileStudio}}
 }
 \author{
 John James, \email{jjames@datasciencesalon.org}

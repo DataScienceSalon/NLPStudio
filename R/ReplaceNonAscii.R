@@ -1,16 +1,17 @@
 #------------------------------------------------------------------------------#
-#                                  RemoveNonPrintable                          #
+#                                  ReplaceNonAscii                             #
 #------------------------------------------------------------------------------#
-#' RemoveNonPrintable
+#' ReplaceNonAscii
 #'
-#' \code{RemoveNonPrintable} Command for the RemoveNonPrintableApp class.
+#' \code{ReplaceNonAscii} Command for the ReplaceNonAscii class.
 #'
-#' Class that encapsulates the command to execute an object of the RemoveNonPrintableApp
+#' Class that encapsulates the command to execute an object of the ReplaceNonAscii
 #' class
 #'
+#' @usage ReplaceNonAscii$new(removeNonConverted = FALSE)
+#'
 #' @template textStudioParams
-#' @param codes Vector of integers representing the decimal code for control
-#' characters to be removed from the file.
+#' @param removeNonConverted Logical. If TRUE unmapped encodings are deleted from the string.
 #' @template textStudioMethods
 #' @template textStudioClasses
 #' @template textStudioDesign
@@ -19,25 +20,23 @@
 #' @author John James, \email{jjames@@dataScienceSalon.org}
 #' @family TextStudio Classes
 #' @export
-RemoveNonPrintable <- R6::R6Class(
-  classname = "RemoveNonPrintable",
+ReplaceNonAscii <- R6::R6Class(
+  classname = "ReplaceNonAscii",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = FileStudio0,
+  inherit = TextStudio0,
 
   private = list(
-    ..codes = numeric()
+    ..removeNonConverted = logical()
   ),
 
   public = list(
-    initialize = function(codes = setdiff(seq(0,31), 12)) {
-
+    initialize = function(removeNonConverted = TRUE) {
       private$loadDependencies()
 
       # Validate parameters
-      private$..params$classes$name <- list('codes')
-      private$..params$classes$objects <- list(codes)
-      private$..params$classes$valid <- list(c("numeric"))
+      private$..params$logicals$variables <- c('removeNonConverted')
+      private$..params$logicals$values <- c(removeNonConverted)
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize',
@@ -45,11 +44,11 @@ RemoveNonPrintable <- R6::R6Class(
         stop()
       }
 
-      private$..codes <- codes
+      private$..removeNonConverted <- removeNonConverted
       invisible(self)
     },
     execute = function(x) {
-      x <- RemoveNonPrintableApp$new(x, codes = private$..codes)$execute()
+      x <- ReplaceNonAsciiApp$new(x, removeNonConverted = private$..removeNonConverted)$execute()
       return(x)
     }
   )
