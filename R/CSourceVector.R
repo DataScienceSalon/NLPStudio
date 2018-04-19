@@ -1,6 +1,6 @@
-#' FCSourceVector
+#' CSourceVector
 #'
-#' \code{FCSourceVector} Sources a Corpus object from a character vector or vectors.
+#' \code{CSourceVector} Sources a Corpus object from a character vector or vectors.
 #'
 #' Sources a Corpus object from a character vector or vectors. Each vector element
 #' is treated as a separate document unless the collapse paramter is set to TRUE.
@@ -10,7 +10,7 @@
 #'
 #' @section Methods:
 #'  \itemize{
-#'   \item{\code{new(x, name = NULL)}}{Initializes an object of the FCSourceVector class.}
+#'   \item{\code{new(x, name = NULL)}}{Initializes an object of the CSourceVector class.}
 #'   \item{\code{execute()}}{Executes the process of sourcing the Corpus object.}
 #'  }
 #'
@@ -30,17 +30,17 @@
 #' world’s — largest companies, ranging from stalwarts like Walt
 #' Disney to upstarts like Uber.")
 #'
-#' corpus <- FCSource$new(x = txt, name = "Goldman")$vector()
+#' corpus <- CSource$new(x = txt, name = "Goldman")$vector()
 #'
 #' @docType class
 #' @author John James, \email{jjames@@datasciencesalon.org}
-#' @family File Collection Source Classes
+#' @family Corpus Source Classes
 #' @export
-FCSourceVector <- R6::R6Class(
-  classname = "FCSourceVector",
+CSourceVector <- R6::R6Class(
+  classname = "CSourceVector",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = FCSource0,
+  inherit = CSource0,
 
   public = list(
 
@@ -108,7 +108,7 @@ FCSourceVector <- R6::R6Class(
     #                           Visitor Methods                               #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$fcsourceVector(self)
+      visitor$csourceVector(self)
     }
   )
 )
