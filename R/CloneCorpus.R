@@ -1,12 +1,11 @@
 #==============================================================================#
-#                                   Clone                                      #
+#                               CloneCorpus                                    #
 #==============================================================================#
-#' Clone
+#' CloneCorpus
 #'
-#' \code{Clone} Class responsible for cloning primitive and composite objects.
+#' \code{CloneCorpus} Class responsible for cloning Corpus and Document objects.
 #'
-#' Class clones primitive and composite objects. Currently supports
-#' Document and Corpus objects.
+#' Class responsible for cloning Corpus and Document objects.
 #'
 #' @section Methods:
 #' \describe{
@@ -23,35 +22,13 @@
 #' @author John James, \email{jjames@@datasciencesalon.org}
 #' @docType class
 #' @export
-Clone <- R6::R6Class(
-  "Clone",
+CloneCorpus <- R6::R6Class(
+  "CloneCorpus",
   lock_class = FALSE,
   lock_objects = FALSE,
-  inherit = Super,
+  inherit = Clone0,
 
   private = list(
-
-    cloneMeta = function(x, out) {
-
-      # Clone descriptive
-      descriptive <- x$getMeta(type = 'd')
-      if (length(descriptive) > 0){
-        keys <- names(descriptive)
-        for (i in 1:length(descriptive)) {
-          out$setMeta(key = keys[i], value = descriptive[[i]], type = 'd')
-        }
-      }
-
-      # Clone functional
-      functional <- x$getMeta(type = 'f')
-      if (length(functional) > 0) {
-        keys <- names(functional)
-        for (i in 1:length(functional)) {
-          out$setMeta(key = keys[i], value = functional[[i]], type = 'f')
-        }
-      }
-      return(out)
-    },
 
     cloneDocument = function(x, name = NULL) {
 
@@ -64,7 +41,7 @@ Clone <- R6::R6Class(
       out <- out$setMeta(key = 'name', value = name)
 
       out$content <- x$content
-      event <- paste0("Cloned from '", x$getName(), "'.")
+      event <- paste0("CloneCorpusd from '", x$getName(), "'.")
       out$message(event = event)
       return(out)
     },
@@ -86,7 +63,7 @@ Clone <- R6::R6Class(
         out <<- out$addDocument(doc)
       })
 
-      event <- paste0("Cloned from '", x$getName(), "'.")
+      event <- paste0("CloneCorpusd from '", x$getName(), "'.")
       out$message(event = event)
       return(out)
     }

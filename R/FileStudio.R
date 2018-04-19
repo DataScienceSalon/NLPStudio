@@ -1,32 +1,32 @@
 #==============================================================================#
-#                               TextStudio                                     #
+#                               FileStudio                                     #
 #==============================================================================#
-#' TextStudio
+#' FileStudio
 #'
-#' \code{TextStudio} Class for performing text cleaning and preprocessing
+#' \code{FileStudio} Class for performing file cleaning and preprocessing
 #'
-#' @template textStudioClasses
+#' @template fileStudioClasses
 #'
-#' @section TextStudio methods:
+#' @section FileStudio methods:
 #' \strong{Core Methods:}
 #'  \itemize{
-#'   \item{\code{new()}}{Method for instantiating a TextStudio.}
-#'   \item{\code{addCommand()}}{Method that adds a text processing command to the queue. }
+#'   \item{\code{new()}}{Method for instantiating a FileStudio.}
+#'   \item{\code{addCommand()}}{Method that adds a file processing command to the queue. }
 #'   \item{\code{removeCommand()}}{Method that removes a command from the queue.}
 #'   \item{\code{execute()}}{Method that executes the job queue. }
 #'   \item{\code{getResult()}}{Method that returns the object following execution of the job queue. }
 #'  }
 #'
 #' @section Parameters:
-#' @param object The object to be processed.
-#' @param queue The job queue containing text processing commands.
+#' @param x The object to be processed.
+#' @param queue The job queue containing file processing commands.
 #'
 #' @docType class
 #' @author John James, \email{jjames@@datasciencesalon.org}
-#' @family TextStudio classes
+#' @family FileStudio classes
 #' @export
-TextStudio <- R6::R6Class(
-  classname = "TextStudio",
+FileStudio <- R6::R6Class(
+  classname = "FileStudio",
   lock_objects = FALSE,
   lock_class = FALSE,
   inherit = Super,
@@ -43,7 +43,7 @@ TextStudio <- R6::R6Class(
       private$..params <- list()
       private$..params$classes$name <- list("x")
       private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list(c("Corpus", "Document"))
+      private$..params$classes$valid <- list(c("FileCollection", "File"))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize',
@@ -51,11 +51,11 @@ TextStudio <- R6::R6Class(
         stop()
       }
 
-      if (class(x)[1] == 'Corpus') private$..x <- Clone$new()$corpus(x = x)
-      if (class(x)[1] == 'Document') private$..x <- Clone$new()$document(x = x)
+      if (class(x)[1] == 'FileCollection') private$..x <- CloneFile$new()$collection(x = x)
+      if (class(x)[1] == 'File') private$..x <- CloneFile$new()$file(x = x)
 
       # Create log entry
-      event <- paste0("TextStudio object instantiated.")
+      event <- paste0("FileStudio object instantiated.")
       private$logR$log(method = 'initialize', event = event)
 
       invisible(self)
@@ -66,9 +66,9 @@ TextStudio <- R6::R6Class(
     #-------------------------------------------------------------------------#
     add = function(cmd) {
 
-      if (!c("TextStudio0") %in% class(cmd)) {
-        event <- paste0("Invalid TextStudio object. Object must be ",
-                                  "of the TextStudio0 classes.  See ?TextStudio0",
+      if (!c("FileStudio0") %in% class(cmd)) {
+        event <- paste0("Invalid FileStudio object. Object must be ",
+                                  "of the FileStudio0 classes.  See ?FileStudio0",
                                   " for further assistance.")
         private$logR$log(method = 'add', event = event, level = "Error")
         stop()
@@ -107,13 +107,13 @@ TextStudio <- R6::R6Class(
           private$..x <- private$..jobQueue[[i]]$execute(private$..x)
         }
 
-        event <- paste0("Executed TextStudio commands on ",
+        event <- paste0("Executed FileStudio commands on ",
                                   private$..x$getName(), "." )
         private$logR$log(method = 'execute', event = event)
 
         invisible(private$..x)
       } else {
-        event <- paste0("TextStudio job queue is empty.")
+        event <- paste0("FileStudio job queue is empty.")
         private$logR$log(method = 'execute', event = event, level = 'Error')
         stop()
       }
@@ -124,7 +124,7 @@ TextStudio <- R6::R6Class(
     #                           Visitor Methods                               #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$textStudio(self)
+      visitor$fileStudio(self)
     }
   )
 )

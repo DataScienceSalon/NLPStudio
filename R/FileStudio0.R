@@ -32,11 +32,11 @@ FileStudio0 <- R6::R6Class(
 
     execute = function() {
 
-      if ("Corpus" %in% class(private$..x)) {
-        private$..x <- private$processCorpus()
+      if ("Collection" %in% class(private$..x)) {
+        private$..x <- private$processCollection()
 
       } else {
-        private$..x <- private$processDocument(private$..x)
+        private$..x <- private$processFile(private$..x)
       }
 
       # Log it

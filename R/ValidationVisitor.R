@@ -85,14 +85,18 @@ ValidationVisitor <- R6::R6Class(
       return(private$validate(object))
     },
 
-    #-------------------------------------------------------------------------#
-    #                      Corpus Sourcing Classes                            #
-    #-------------------------------------------------------------------------#
-    csourceVector = function(object) {
+    fileCollection = function(object) {
       return(private$validate(object))
     },
 
-    csourceDir = function(object) {
+    #-------------------------------------------------------------------------#
+    #                      Corpus Sourcing Classes                            #
+    #-------------------------------------------------------------------------#
+    fcsourceVector = function(object) {
+      return(private$validate(object))
+    },
+
+    fcsourceDir = function(object) {
       return(private$validate(object))
     },
 
@@ -173,7 +177,7 @@ ValidationVisitor <- R6::R6Class(
       return(private$validate(object))
     },
 
-    cloneDocument = function(object) {
+    cloneFiles = function(object) {
       return(private$validate(object))
     }
   )

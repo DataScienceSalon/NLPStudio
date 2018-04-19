@@ -40,7 +40,7 @@ FileCollection <- R6::R6Class(
   inherit = Collection0,
 
   private = list(
-    ..files = list()
+    ..documents = list()
   ),
 
   public = list(
@@ -57,7 +57,6 @@ FileCollection <- R6::R6Class(
                                                     basename(path),
                                                     name),
                        type = 'descriptive')
-      private$meta$set(key = 'directory', value = dirname(path), type = 'f')
 
       private$..path <- path
       private$logR$log(method = 'initialize',
@@ -68,6 +67,7 @@ FileCollection <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Document Management                           #
     #-------------------------------------------------------------------------#
+    getFiles = function() { private$..documents },
     addFile = function(x) {
 
       # Validate class of object.
@@ -114,54 +114,6 @@ FileCollection <- R6::R6Class(
       }
       invisible(self)
     },
-
-    #-------------------------------------------------------------------------#
-    #                              Move/Copy                                  #
-    #-------------------------------------------------------------------------#
-    move = function(path, overwrite = FALSE) {
-
-      # Validation
-      if (dir.exists(path) & overwrite == FALSE) {
-        event <- "Directory already exists and overwrite is FALSE."
-        private$logR$log(method = 'move', event = event, level = 'error')
-        stop()
-      }
-
-      # Move filea
-      lapply(private$..files, function(f) {
-        f$move(path = path, overwrite = overwrite)
-      })
-
-      # Log
-      event <- paste0("FileCollection, ", self$getName(), ", moved from ",
-                      self$getPath(), " to ", path, ".")
-      private$logR$log(method = 'move', event = event)
-
-      private$meta$set(key = 'path', value = path, type = 'functional')
-      invisible(self)
-    },
-
-    copy = function(path, overwrite = FALSE) {
-      # Validation
-      if (dir.exists(path) & overwrite == FALSE) {
-        event <- "Directory already exists and overwrite is FALSE."
-        private$logR$log(method = 'move', event = event, level = 'error')
-        stop()
-      }
-
-      # Move filea
-      lapply(private$..files, function(f) {
-        f$copy(path = path, overwrite = overwrite)
-      })
-
-      # Log
-      event <- paste0("FileCollection, ", self$getName(), ", copied from ",
-                      self$getPath(), " to ", path, ".")
-      private$logR$log(method = 'move', event = event)
-
-      invisible(self)
-    },
-
 
     #-------------------------------------------------------------------------#
     #                           Visitor Methods                               #

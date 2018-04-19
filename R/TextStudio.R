@@ -51,8 +51,8 @@ TextStudio <- R6::R6Class(
         stop()
       }
 
-      if (class(x)[1] == 'Corpus') private$..x <- Clone$new()$corpus(x = x)
-      if (class(x)[1] == 'Document') private$..x <- Clone$new()$document(x = x)
+      if (class(x)[1] == 'Corpus') private$..x <- CloneCorpus$new()$corpus(x = x)
+      if (class(x)[1] == 'Document') private$..x <- CloneCorpus$new()$document(x = x)
 
       # Create log entry
       event <- paste0("TextStudio object instantiated.")
