@@ -1,23 +1,15 @@
-#' CSourceVector
+#' CSourceFileCollection
 #'
-#' \code{CSourceVector} Sources a Corpus object from a character vector or vectors.
-#'
-#' Sources a Corpus object from a character vector or vectors. Each vector element
-#' is treated as a separate document unless the collapse paramter is set to TRUE.
-#' If a list is encountered, each list element is treated as a separate document
-#' and the vectors are collapsed into a single document within the list
-#' structure.
+#' \code{CSourceFileCollection} Sources a Corpus object from a FileCollection object.
 #'
 #' @section Methods:
 #'  \itemize{
-#'   \item{\code{new(x, name = NULL)}}{Initializes an object of the CSourceVector class.}
-#'   \item{\code{execute()}}{Executes the process of sourcing the Corpus object.}
+#'   \item{\code{new(x, name = NULL)}}{Initializes an object of the CSourceFileCollection class.}
+#'   \item{\code{source()}}{Executes the process of sourcing the Corpus object.}
 #'  }
 #'
 #' @param name Optional character vector indicating name for Corpus object.
 #' @param x Character vector or a list of character vectors containing text.
-#' @param collapse Logical. If true, collapse the character vectors into
-#' a single document.
 #'
 #' @examples
 #' text <- c("The firm possesses unparalleled leverage in Washington,
@@ -36,8 +28,8 @@
 #' @author John James, \email{jjames@@datasciencesalon.org}
 #' @family Corpus Source Classes
 #' @export
-CSourceVector <- R6::R6Class(
-  classname = "CSourceVector",
+CSourceFileCollection <- R6::R6Class(
+  classname = "CSourceFileCollection",
   lock_objects = FALSE,
   lock_class = FALSE,
   inherit = CSource0,
@@ -63,7 +55,7 @@ CSourceVector <- R6::R6Class(
       private$..params <- list()
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list(c('character', 'list'))
+      private$..params$classes$valid <- list(c('FileCollection'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'source',
@@ -71,21 +63,20 @@ CSourceVector <- R6::R6Class(
         stop()
       }
 
+      if (!is.null(name)) name <- x$getName()
       corpus <- Corpus$new(name = name)
 
-      # Create Documents and add to Corpus
-      docNames <- names(x)
-      if (is.null(docNames)) {
-        docNames <- paste0("Document-", seq(1,length(x)))
+      # Obtain Files objects, create Document objects and add to Corpus
+      files <- x$getFiles()
+      for (i in 1:length(files)) {
+        content <- f$read()
+        name <- f$getName()
+        doc <- Document$new(x = content, name = name)
+        corpus$addDocument(doc)
       }
 
-      for (i in 1:length(x)) {
-        doc <- Document$new(x = x[[i]], name = docNames[i])
-        corpus$addDocument(x = doc)
-      }
-
-      event <- paste0("Corpus", corpus$getName(), " instantiated from ",
-                      "a vector source.")
+      event <- paste0("Corpus", corpus$getName(), " sourced from ",
+                      "FileCollection object ", x$getName(), ".")
       corpus$message(event = event)
 
       return(corpus)
@@ -94,7 +85,7 @@ CSourceVector <- R6::R6Class(
     #                           Visitor Methods                               #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$csourceVector(self)
+      visitor$csourceFileCollection(self)
     }
   )
 )
