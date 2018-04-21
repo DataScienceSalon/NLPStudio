@@ -41,7 +41,7 @@ ConverterQuanteda <- R6::R6Class(
       corpusMeta <- corpusMeta$descriptive
       vars <- names(corpusMeta)
       for (i in 1:length(vars)) {
-          metacorpus(qCorpus, vars[i]) <- corpusMeta[[i]]
+          quanteda::metacorpus(qCorpus, vars[i]) <- corpusMeta[[i]]
       }
 
       # Assign docvars
@@ -49,7 +49,7 @@ ConverterQuanteda <- R6::R6Class(
       if (nrow(docVars) > 0) {
         vars <- names(docVars)
         for (i in 1:length(vars)) {
-          docvars(x = qCorpus, field = vars[i]) <- docVars[,i]
+          quanteda::docvars(x = qCorpus, field = vars[i]) <- docVars[,i]
         }
       }
 
@@ -72,25 +72,33 @@ ConverterQuanteda <- R6::R6Class(
       corpus <- Corpus$new()
 
       # Obtain and transfer corpus metadata
-      descriptive <- metacorpus(x)[!names(metacorpus(x)) %in% c('source', 'created')]
+      descriptive <- quanteda::metacorpus(x)[!names(quanteda::metacorpus(x)) %in% c('source', 'created')]
       vars <- names(descriptive)
-      corpus$setMeta(key = vars, value = descriptive, type = 'd')
-      corpus$setMeta(key = 'source', value = metacorpus(x)['source'][1], type = 'f')
+      if (length(descriptive) > 0)  corpus$setMeta(key = vars, value = descriptive, type = 'd')
+      corpus$setMeta(key = 'source', value = quanteda::metacorpus(x)['source'][1], type = 'f')
 
       # Create Document Objects from quanteda corpus text and add to corpus
-      docNames <- docnames(x)
+      docNames <- quanteda::docnames(x)
       for (i in 1:length(x$documents$texts)) {
         doc <- Document$new(x = x$documents$texts[i], name = docNames[i])
+        doc$setMeta(key = 'source',
+                    value = paste0('Quanteda Corpus, ', docNames[i], ", Text."),
+                    type = 'f')
         corpus$addDocument(doc)
       }
 
       # Add document descriptive metadata
-      corpus$setDocMeta(docMeta = docvars(x), classname = 'Document',
-                        type = 'd')
+      if (ncol(quanteda::docvars(x)) > 0) {
+        corpus$setDocMeta(docMeta = quanteda::docvars(x), classname = 'Document',
+                          type = 'd')
+      }
 
       # Add document functional metadata
-      corpus$setDocMeta(docMeta = metadoc(x), classname = 'Document',
-                        type = 'f')
+      if (ncol(quanteda::metadoc(x)) > 0) {
+        corpus$setDocMeta(docMeta = quanteda::metadoc(x), classname = 'Document',
+                          type = 'f')
+      }
+
       return(corpus)
     }
   ),

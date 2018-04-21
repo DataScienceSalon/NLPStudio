@@ -45,7 +45,7 @@ for a Document object.
 }
 
 \seealso{
-Other POS Classes: \code{\link{POSCollection}}
+Other POS Classes: \code{\link{POSSet}}
 }
 \author{
 John James, \email{jjames@datasciencesalon.org}

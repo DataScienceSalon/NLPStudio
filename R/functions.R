@@ -31,3 +31,24 @@ printHeading <- function(text, symbol = "=", newlines = 1) {
                strrep(" ", rightPad) , "#", collapse = ""))
   cat(paste0("\n#", strrep(symbol, 78), "#", collapse = ""),"\n")
 }
+
+#------------------------------------------------------------------------------#
+#                                  listFiles                                   #
+#------------------------------------------------------------------------------#
+#' listFiles
+#'
+#' \code{listFiles} Returns the list of files associated with a directory or a glob
+#' @author John James, \email{jjames@@DataScienceSalon.org}
+#' @family Internal Functions
+#' @export
+listFiles = function(x) {
+
+  if (isDirectory(x)) {
+    paths <- list.files(x, full.names = TRUE)
+  } else {
+    glob <- basename(x)
+    dir <- dirname(x)
+    paths <- list.files(dir, pattern = glob2rx(glob), full.names = TRUE)
+  }
+  return(paths)
+}

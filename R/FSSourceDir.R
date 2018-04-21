@@ -1,29 +1,29 @@
-#' FCSourceDir
+#' FSSourceDir
 #'
-#' \code{FCSourceDir} Sources a FileCollection object from a directory source.
+#' \code{FSSourceDir} Sources a FileSet object from a directory source.
 #'
-#' Sources a FileCollection object from a directory source. Each file yields a single Document
+#' Sources a FileSet object from a directory source. Each file yields a single Document
 #' object and a single associated Text object.
 #'
 #' @section Methods:
 #'  \itemize{
-#'   \item{\code{new(X, name = NULL)}}{Initializes an object of the FCSourceDir class.}
-#'   \item{\code{execute()}}{Executes the process of sourcing the FileCollection object.}
+#'   \item{\code{new(X, name = NULL)}}{Initializes an object of the FSSourceDir class.}
+#'   \item{\code{execute()}}{Executes the process of sourcing the FileSet object.}
 #'  }
 #'
-#' @param name Optional character vector indicating name for FileCollection object.
-#' @param x Character string containing the directory from which the FileCollection
+#' @param name Optional character vector indicating name for FileSet object.
+#' @param x Character string containing the directory from which the FileSet
 #' object will be source.
 #'
 #' @docType class
 #' @author John James, \email{jjames@@datasciencesalon.org}
-#' @family File Collection Source Classes
+#' @family File Set Source Classes
 #' @export
-FCSourceDir <- R6::R6Class(
-  classname = "FCSourceDir",
+FSSourceDir <- R6::R6Class(
+  classname = "FSSourceDir",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = FCSource0,
+  inherit = FSSource0,
 
   private = list(
     ..x = character(),
@@ -55,7 +55,7 @@ FCSourceDir <- R6::R6Class(
       private$..name <- name
       private$..docNames <- docNames
 
-      private$..fileCollection <- FileCollection$new(path = x, name = name)
+      private$..fileSet <- FileSet$new(path = x, name = name)
       invisible(self)
     },
 
@@ -65,29 +65,23 @@ FCSourceDir <- R6::R6Class(
     #-------------------------------------------------------------------------#
     source = function() {
 
-      if (isDirectory(private$..x)) {
-        paths <- list.files(private$..x, full.names = TRUE)
-      } else {
-        glob <- basename(private$..x)
-        dir <- dirname(private$..x)
-        paths <- list.files(dir, pattern = glob2rx(glob), full.names = TRUE)
-      }
+      files <- NLPStudio::listFiles(private$..x)
 
-      lapply(paths, function(p) {
+      lapply(files, function(f) {
 
         # Instantiate File and Document objects
         if (private$..docNames) {
-          name <- tools::file_path_sans_ext(basename(p))
-          file <- File$new(path = p, name = name)
+          name <- tools::file_path_sans_ext(basename(f))
+          file <- File$new(path = f, name = name)
         } else {
-          file <- File$new(path = p)
+          file <- File$new(path = f)
         }
 
-        # Add content and File to FileCollection
-        private$..fileCollection$addFile(x = file)
+        # Add content and File to FileSet
+        private$..fileSet$addFile(x = file)
       })
 
-      return(private$..fileCollection)
+      return(private$..fileSet)
     },
     #-------------------------------------------------------------------------#
     #                           Visitor Methods                               #

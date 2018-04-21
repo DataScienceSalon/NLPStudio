@@ -3,7 +3,7 @@
 #------------------------------------------------------------------------------#
 #' RemoveNonPrintableApp
 #'
-#' \code{RemoveNonPrintableApp}  Removes non-printable characters from a File or FileCollection
+#' \code{RemoveNonPrintableApp}  Removes non-printable characters from a File or FileSet
 #'
 #' @template textStudioParams
 #' @param codes Vector of integers representing the decimal code for control
@@ -61,7 +61,7 @@ RemoveNonPrintableApp <- R6::R6Class(
       return(file)
     },
 
-    processCollection = function() {
+    processSet = function() {
       files <- private$..out$getFiles()
       for (i in 1:length(files)) {
         file <- private$processFile(files[[i]])
@@ -79,7 +79,7 @@ RemoveNonPrintableApp <- R6::R6Class(
       # Validate parameters
       private$..params$classes$name <- list('x', 'codes')
       private$..params$classes$objects <- list(x, codes)
-      private$..params$classes$valid <- list(c('File', 'FileCollection'), c("numeric", "integer"))
+      private$..params$classes$valid <- list(c('File', 'FileSet'), c("numeric", "integer"))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize',

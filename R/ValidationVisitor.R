@@ -85,18 +85,34 @@ ValidationVisitor <- R6::R6Class(
       return(private$validate(object))
     },
 
-    fileCollection = function(object) {
+    fileSet = function(object) {
       return(private$validate(object))
     },
 
     #-------------------------------------------------------------------------#
-    #                      Corpus Sourcing Classes                            #
+    #                      File and Corpus Sourcing Classes                   #
     #-------------------------------------------------------------------------#
-    fcsourceVector = function(object) {
-      return(private$validate(object))
-    },
-
     fcsourceDir = function(object) {
+      return(private$validate(object))
+    },
+
+    csourceDir = function(object) {
+      return(private$validate(object))
+    },
+
+    csourceFileSet = function(object) {
+      return(private$validate(object))
+    },
+
+    csourceQuanteda = function(object) {
+      return(private$validate(object))
+    },
+
+    csourceTM = function(object) {
+      return(private$validate(object))
+    },
+
+    csourceVector = function(object) {
       return(private$validate(object))
     },
 
@@ -115,7 +131,7 @@ ValidationVisitor <- R6::R6Class(
       return(private$validate(object))
     },
 
-    tokensCollection = function(object) {
+    tokensSet = function(object) {
       return(private$validate(object))
     },
 
@@ -123,7 +139,7 @@ ValidationVisitor <- R6::R6Class(
       return(private$validate(object))
     },
 
-    posCollection = function(object) {
+    posSet = function(object) {
       return(private$validate(object))
     },
 

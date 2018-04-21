@@ -112,9 +112,9 @@ Clone <- R6::R6Class(
       }
 
       x$copy(path)
-      out <- FCSource$new()$dir(x = path, name = name)
+      out <- FSSource$new()$dir(x = path, name = name)
 
-      event <- paste0("FileCollection ", x$getName()," cloned and stored at ", path, ".")
+      event <- paste0("FileSet ", x$getName()," cloned and stored at ", path, ".")
       x$message(event = event)
       out$message(event = event)
       return(out)
@@ -140,7 +140,7 @@ Clone <- R6::R6Class(
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
       private$..params$classes$valid <- list(c('Corpus','Document',
-                                               "FileCollection", "File"))
+                                               "FileSet", "File"))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'this',
@@ -152,7 +152,7 @@ Clone <- R6::R6Class(
       out <- switch(classname,
                     Corpus = private$cloneCorpus(x, name = name),
                     Document = private$cloneDocument(x, name = name),
-                    FileCollection = private$cloneFiles(x, path = path, name = name),
+                    FileSet = private$cloneFiles(x, path = path, name = name),
                     File = private$cloneFile(x, path = path, name = name))
       return(out)
     },

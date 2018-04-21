@@ -39,7 +39,7 @@ and repair methods.
 }
 
 \seealso{
-Other File Classes: \code{\link{FileCollection}},
+Other File Classes: \code{\link{FileSet}},
   \code{\link{FileStudio}}
 }
 \author{

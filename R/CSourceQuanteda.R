@@ -64,6 +64,10 @@ CSourceQuanteda <- R6::R6Class(
       }
 
       corpus <- ConverterQuanteda$new()$convert(x)
+      if (!is.null(name))  corpus$setName(name = name)
+      corpus$setMeta(key = 'source', value = 'Quanteda Corpus',
+                     type = 'f')
+      corpus <- private$sumQuant(corpus)
 
       return(corpus)
     },

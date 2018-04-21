@@ -48,7 +48,7 @@ FileStudio <- R6::R6Class(
       private$..params <- list()
       private$..params$classes$name <- list("x")
       private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list(c("FileCollection", "File"))
+      private$..params$classes$valid <- list(c("FileSet", "File"))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize',

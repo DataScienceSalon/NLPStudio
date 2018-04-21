@@ -34,8 +34,8 @@ FileStudio0 <- R6::R6Class(
 
     execute = function() {
 
-      if ("FileCollection" %in% class(private$..out)) {
-        private$..out <- private$processCollection()
+      if ("FileSet" %in% class(private$..out)) {
+        private$..out <- private$processSet()
 
       } else {
         private$..out <- private$processFile(private$..out)

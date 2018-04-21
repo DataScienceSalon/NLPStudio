@@ -1,10 +1,10 @@
-#' CSourceFileCollection
+#' CSourceFileSet
 #'
-#' \code{CSourceFileCollection} Sources a Corpus object from a FileCollection object.
+#' \code{CSourceFileSet} Sources a Corpus object from a FileSet object.
 #'
 #' @section Methods:
 #'  \itemize{
-#'   \item{\code{new(x, name = NULL)}}{Initializes an object of the CSourceFileCollection class.}
+#'   \item{\code{new(x, name = NULL)}}{Initializes an object of the CSourceFileSet class.}
 #'   \item{\code{source()}}{Executes the process of sourcing the Corpus object.}
 #'  }
 #'
@@ -28,8 +28,8 @@
 #' @author John James, \email{jjames@@datasciencesalon.org}
 #' @family Corpus Source Classes
 #' @export
-CSourceFileCollection <- R6::R6Class(
-  classname = "CSourceFileCollection",
+CSourceFileSet <- R6::R6Class(
+  classname = "CSourceFileSet",
   lock_objects = FALSE,
   lock_class = FALSE,
   inherit = CSource0,
@@ -55,7 +55,7 @@ CSourceFileCollection <- R6::R6Class(
       private$..params <- list()
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list(c('FileCollection'))
+      private$..params$classes$valid <- list(c('FileSet'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'source',
@@ -76,7 +76,7 @@ CSourceFileCollection <- R6::R6Class(
       }
 
       event <- paste0("Corpus", corpus$getName(), " sourced from ",
-                      "FileCollection object ", x$getName(), ".")
+                      "FileSet object ", x$getName(), ".")
       corpus$message(event = event)
 
       return(corpus)
@@ -85,7 +85,7 @@ CSourceFileCollection <- R6::R6Class(
     #                           Visitor Methods                               #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$csourceFileCollection(self)
+      visitor$csourceFileSet(self)
     }
   )
 )

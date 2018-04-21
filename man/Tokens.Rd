@@ -44,7 +44,7 @@ Class containing the tokenized representation of a Document object.
 }
 
 \seealso{
-Other Tokens Classes: \code{\link{TokensCollection}}
+Other Tokens Classes: \code{\link{TokensSet}}
 }
 \author{
 John James, \email{jjames@datasciencesalon.org}

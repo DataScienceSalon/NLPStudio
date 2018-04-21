@@ -1,14 +1,14 @@
-#' TokensCollection
+#' TokensSet
 #'
-#' \code{TokensCollection} Class containing a collection of Tokens objects
+#' \code{TokensSet} Class containing a collection of Tokens objects
 #'
 #' Class contains Tokens objects
 #'
-#' @usage skiReport <- TokensCollection$new(name = "skiReport", purpose = 'Train')
+#' @usage skiReport <- TokensSet$new(name = "skiReport", purpose = 'Train')
 #'
 #' @section Core Methods:
 #'  \itemize{
-#'   \item{\code{new(name = NULL)}}{Initializes an object of the TokensCollection class.}
+#'   \item{\code{new(name = NULL)}}{Initializes an object of the TokensSet class.}
 #'   \item{\code{word()}}{Creates word tokens.}
 #'   \item{\code{sentence()}}{Creates sentence tokens.}
 #'   \item{\code{char()}}{Creates character tokens.}
@@ -16,25 +16,25 @@
 #'   \item{\code{getText()}}{Returns the original text.}
 #'  }
 #'
-#' @param name Character string containing the name for the TokensCollection object.
+#' @param name Character string containing the name for the TokensSet object.
 #' @param purpose Character string used to indicate how the document will be used, e.g. 'train', 'test'.
 #' @param note Character string containing a comment associated with a call to the
-#' text method. The texts of the note variable are written to the TokensCollections
+#' text method. The texts of the note variable are written to the TokensSets
 #' log. This is used to track changes to the text, perhaps made during preprocessing.
 #' @template metadataParams
 #'
-#' @return TokensCollection object, containing the TokensCollection text, the metadata and
+#' @return TokensSet object, containing the TokensSet text, the metadata and
 #' the methods to manage both.
 #'
 #' @docType class
 #' @author John James, \email{jjames@@datasciencesalon.org}
 #' @family Tokens Classes
 #' @export
-TokensCollection <- R6::R6Class(
-  classname = "TokensCollection",
+TokensSet <- R6::R6Class(
+  classname = "TokensSet",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = Collection0,
+  inherit = Set0,
 
   private = list(
 
@@ -215,7 +215,7 @@ TokensCollection <- R6::R6Class(
     #                           Visitor Methods                               #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$tokensCollection(self)
+      visitor$tokensSet(self)
     }
   )
 )

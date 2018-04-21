@@ -47,7 +47,7 @@ Corpus <- R6::R6Class(
   classname = "Corpus",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = Collection0,
+  inherit = Set0,
 
   private = list(
 
@@ -111,8 +111,8 @@ Corpus <- R6::R6Class(
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
       private$..params$classes$valid <- list(c('Document', 'File', 'TermFreq',
-                                             'Tokens', 'POS', 'TokensCollection',
-                                             'POSCollection'))
+                                             'Tokens', 'POS', 'TokensSet',
+                                             'POSSet'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'addDocument',

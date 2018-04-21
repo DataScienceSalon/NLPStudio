@@ -57,8 +57,11 @@ CSourceDir <- R6::R6Class(
         stop()
       }
 
+      # Instantiate Corpus
       corpus <- Corpus$new(name = name)
+      corpus$setMeta(key = 'source', value = x, type = 'f')
 
+      # Get paths for individual documents
       if (isDirectory(x)) {
         paths <- list.files(x, full.names = TRUE)
       } else {
@@ -76,14 +79,23 @@ CSourceDir <- R6::R6Class(
         if (docNames) {
           name <- tools::file_path_sans_ext(basename(p))
           doc <- Document$new(x = content, name = name)
+          doc$setMeta(key = 'source', value = p, type = 'f')
+
         } else {
           file <- File$new(path = p)
           doc <- Document$new(x = content)
+          doc$setMeta(key = 'source', value = p, type = 'f')
         }
 
         # Add content and File to Corpus
         corpus$addDocument(x = doc)
       })
+
+      corpus <- private$sumQuant(corpus)
+
+      event <- paste0("Corpus", corpus$getName(), " instantiated from ",
+                      "a director source.")
+      corpus$message(event = event)
 
       return(corpus)
     },

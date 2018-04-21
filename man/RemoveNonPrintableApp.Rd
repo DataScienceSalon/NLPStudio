@@ -15,7 +15,7 @@ RemoveNonPrintableApp
 characters to be removed from the file.}
 }
 \description{
-\code{RemoveNonPrintableApp}  Removes non-printable characters from a File or FileCollection
+\code{RemoveNonPrintableApp}  Removes non-printable characters from a File or FileSet
 }
 \section{Methods}{
 

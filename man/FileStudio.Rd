@@ -55,7 +55,7 @@ of a command class object, supported by support class objects.
 }
 
 \seealso{
-Other File Classes: \code{\link{FileCollection}},
+Other File Classes: \code{\link{FileSet}},
   \code{\link{File}}
 }
 \author{

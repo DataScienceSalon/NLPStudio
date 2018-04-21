@@ -72,17 +72,24 @@ CSourceVector <- R6::R6Class(
       }
 
       corpus <- Corpus$new(name = name)
+      corpus$setMeta(key = 'source', value = 'Vector Source', type = 'f')
 
       # Create Documents and add to Corpus
       docNames <- names(x)
       if (is.null(docNames)) {
         docNames <- paste0("Document-", seq(1,length(x)))
       }
-
       for (i in 1:length(x)) {
         doc <- Document$new(x = x[[i]], name = docNames[i])
+          if (!is.null(names(x))) {
+            sourceVec <- paste0("Sourced from vector ", docNames[i])
+            doc$setMeta(key = 'source', value = sourceVec, type = 'f')
+          }
         corpus$addDocument(x = doc)
       }
+
+
+      corpus <- private$sumQuant(corpus)
 
       event <- paste0("Corpus", corpus$getName(), " instantiated from ",
                       "a vector source.")

@@ -24,7 +24,18 @@ CSource0 <- R6::R6Class(
   inherit = Super,
 
   private = list(
-    ..corpus = character()
+    ..corpus = character(),
+
+    sumQuant = function(corpus) {
+      # Update quantitative metadata
+      quant <- corpus$getDocMeta(type = 'q')[[1]]
+      if (!is.null(quant)) {
+        keys <- names(quant)
+        values <- colSums(quant)
+        corpus$setMeta(key = keys, value = values, type = 'q')
+      }
+      return(corpus)
+    }
   ),
 
   public = list(

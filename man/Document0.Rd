@@ -25,8 +25,8 @@ Corpus, Document, TermFreq, POS, NGram, and Tokens objects.
 }
 
 \seealso{
-Other Document Classes: \code{\link{Collection0}},
-  \code{\link{Corpus}}, \code{\link{Document}}
+Other Document Classes: \code{\link{Corpus}},
+  \code{\link{Document}}, \code{\link{Set0}}
 }
 \author{
 John James, \email{jjames@datasciencesalon.org}

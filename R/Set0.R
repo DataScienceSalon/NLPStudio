@@ -1,22 +1,22 @@
 #------------------------------------------------------------------------------#
-#                               Collection0                                    #
+#                               Set0                                    #
 #------------------------------------------------------------------------------#
-#' Collection0
+#' Set0
 #'
-#' \code{Collection0} Abstract class for all Collection classes
+#' \code{Set0} Abstract class for all Set classes
 #'
 #' This abstract class defines members and methods common to the Corpus and
 #' Document collection / composite objects.
 #'
-#' @section Collection0 methods:
+#' @section Set0 methods:
 #'  \itemize{
 #'   \item{\code{new(name = NULL, purpose = NULL)}}{Not implemented.}
 #'   \item{\code{getDocuments(key, value)}}{Returns the document or documents that
 #'   match the key/value pair(s). }
-#'   \item{\code{addDocument(x)}}{Adds a document to the Collection object.}
-#'   \item{\code{removeDocument(x)}}{Removes a document from the Collection
+#'   \item{\code{addDocument(x)}}{Adds a document to the Set object.}
+#'   \item{\code{removeDocument(x)}}{Removes a document from the Set
 #'   object.}
-#'   \item{\code{summary(x)}}{Summarizes a Collection document.}
+#'   \item{\code{summary(x)}}{Summarizes a Set document.}
 #'  }
 #'
 #'  @param x Object or list of objects to be attached
@@ -30,8 +30,8 @@
 #' @author John James, \email{jjames@@datasciencesalon.org}
 #' @family Document Classes
 #' @export
-Collection0 <- R6::R6Class(
-  classname = "Collection0",
+Set0 <- R6::R6Class(
+  classname = "Set0",
   lock_objects = FALSE,
   lock_class = FALSE,
   inherit = Document0,

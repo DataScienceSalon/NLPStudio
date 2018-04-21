@@ -78,7 +78,6 @@ File <- R6::R6Class(
       io <- IOFactory$new()$strategy(path = path)
       content <- io$read(path = path)
       event <- paste0("Read performed on ", self$getName())
-      private$meta$accessed(event = event)
       return(content)
     },
 

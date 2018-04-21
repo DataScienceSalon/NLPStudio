@@ -1,43 +1,43 @@
-#' FileCollection
+#' FileSet
 #'
-#' \code{FileCollection} Class representation of a collection of files.
+#' \code{FileSet} Class representation of a collection of files.
 #'
-#' Class representing a collection of files. FileCollections are created from
+#' Class representing a collection of files. FileSets are created from
 #' raw text and undergo treatments to address anamolies at the file level
 #' before Corpus creation and preprocessing.
 #'
-#' @usage rawFiles <- FileCollection$new(name = 'rawCollection', path = './raw')
+#' @usage rawFiles <- FileSet$new(name = 'rawSet', path = './raw')
 #'
 #' @section Core Methods:
 #'  \itemize{
-#'   \item{\code{new(name = NULL)}}{Initializes an object of the FileCollection class.}
+#'   \item{\code{new(name = NULL)}}{Initializes an object of the FileSet class.}
 #'   \item{\code{text(x, note = NULL)}}{Method for obtaining/adding/updating text. If no
 #'   parameters are presented, the current text is returned.  Otherwise, the text
 #'   is updated with the texts of the character vector 'x'. Sentence, word, token, type,
 #'   sentence and word length statistics are also computed and the metadata is updated
 #'   accordingly.}
-#'   \item{\code{summary()}}{Summarizes the FileCollection object.}
+#'   \item{\code{summary()}}{Summarizes the FileSet object.}
 #'  }
 #'
-#' @param name Character string containing the name for the FileCollection object.
+#' @param name Character string containing the name for the FileSet object.
 #' @param purpose Character string used to indicate how the document will be used, e.g. 'train', 'test'.
 #' @param note Character string containing a comment associated with a call to the
-#' text method. The texts of the note variable are written to the FileCollections
+#' text method. The texts of the note variable are written to the FileSets
 #' log. This is used to track changes to the text, perhaps made during preprocessing.
 #' @template metadataParams
 #'
-#' @return FileCollection object, containing the FileCollection text, the metadata and
+#' @return FileSet object, containing the FileSet text, the metadata and
 #' the methods to manage both.
 #'
 #' @docType class
 #' @author John James, \email{jjames@@datasciencesalon.org}
 #' @family File Classes
 #' @export
-FileCollection <- R6::R6Class(
-  classname = "FileCollection",
+FileSet <- R6::R6Class(
+  classname = "FileSet",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = Collection0,
+  inherit = Set0,
 
   public = list(
 
@@ -94,28 +94,32 @@ FileCollection <- R6::R6Class(
     #                           Move/Copy Methods                             #
     #-------------------------------------------------------------------------#
     move = function(path, overwrite = FALSE) {
-      for (i in 1:length(private$..documents)) {
-        filePath <- file.path(path, private$..documents[[i]]$getFileName())
-        private$..documents[[i]]$move(path = filePath, overwrite = overwrite)
+      if (length(private$..documents) > 0) {
+        for (i in 1:length(private$..documents)) {
+          filePath <- file.path(path, private$..documents[[i]]$getFileName())
+          private$..documents[[i]]$move(path = filePath, overwrite = overwrite)
+        }
+        event <- paste0("Moved FileSet, ", self$getName(), ", from ",
+                        self$getPath(), " to ", path, ".")
+        private$meta$modified(event = event)
+        private$logR$log(method = 'move', event = event)
+        private$meta$set(key = 'path', value = path, type = 'f')
+        private$meta$set(key = 'directory', value = path, type = 'f')
       }
-      event <- paste0("Moved FileCollection, ", self$getName(), ", from ",
-                      self$getPath(), " to ", path, ".")
-      private$meta$modified(event = event)
-      private$logR$log(method = 'move', event = event)
-      private$meta$set(key = 'path', value = path, type = 'f')
-      private$meta$set(key = 'directory', value = path, type = 'f')
       invisible(self)
     },
 
     copy = function(path, overwrite = FALSE) {
-      for (i in 1:length(private$..documents)) {
-        filePath <- file.path(path, private$..documents[[i]]$getFileName())
-        private$..documents[[i]]$copy(path = filePath, overwrite = overwrite)
+
+      if (length(private$..documents) > 0) {
+        for (i in 1:length(private$..documents)) {
+          filePath <- file.path(path, private$..documents[[i]]$getFileName())
+          private$..documents[[i]]$copy(path = filePath, overwrite = overwrite)
+        }
+        event <- paste0("Copied FileSet, ", self$getName(), ", from ",
+                        self$getPath(), " to ", path, ".")
+        private$logR$log(method = 'copy', event = event)
       }
-      event <- paste0("Copied FileCollection, ", self$getName(), ", from ",
-                      self$getPath(), " to ", path, ".")
-      private$meta$accessed(event = event)
-      private$logR$log(method = 'copy', event = event)
       invisible(self)
     },
 
@@ -133,7 +137,7 @@ FileCollection <- R6::R6Class(
       if (length(x) != length(private$..documents)) {
         event <- paste0("Unable to write 'x' to files. The variable length ",
                         length(x), ", must match the number ",
-                        "of files in the FileCollection, which is ",
+                        "of files in the FileSet, which is ",
                         length(private$..documents), ". See ?", class(self)[1],
                         " for further assistance.")
         private$logR$log(method = 'write', event = event, level = 'Error')
@@ -150,7 +154,7 @@ FileCollection <- R6::R6Class(
     #                           Visitor Methods                               #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$fileCollection(self)
+      visitor$fileSet(self)
     }
   )
 )

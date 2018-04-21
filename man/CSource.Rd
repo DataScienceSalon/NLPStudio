@@ -51,9 +51,8 @@ corpus <- CSource$new()$xml(x)
 }
 \seealso{
 Other Corpus Source Classes: \code{\link{CSource0}},
-  \code{\link{CSourceDir}},
-  \code{\link{CSourceFileCollection}},
-  \code{\link{CSourceQuanteda}},
+  \code{\link{CSourceDir}}, \code{\link{CSourceFileSet}},
+  \code{\link{CSourceQuanteda}}, \code{\link{CSourceTM}},
   \code{\link{CSourceVector}}
 }
 \author{

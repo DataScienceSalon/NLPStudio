@@ -1,10 +1,10 @@
-#' CSourceQuanteda
+#' CSourceTM
 #'
-#' \code{CSourceQuanteda} Sources a Corpus object from a Quanteda object.
+#' \code{CSourceTM} Sources a Corpus object from a TM object.
 #'
 #' @section Methods:
 #'  \itemize{
-#'   \item{\code{new(x, name = NULL)}}{Initializes an object of the CSourceQuanteda class.}
+#'   \item{\code{new(x, name = NULL)}}{Initializes an object of the CSourceTM class.}
 #'   \item{\code{source()}}{Executes the process of sourcing the Corpus object.}
 #'  }
 #'
@@ -28,8 +28,8 @@
 #' @author John James, \email{jjames@@datasciencesalon.org}
 #' @family Corpus Source Classes
 #' @export
-CSourceQuanteda <- R6::R6Class(
-  classname = "CSourceQuanteda",
+CSourceTM <- R6::R6Class(
+  classname = "CSourceTM",
   lock_objects = FALSE,
   lock_class = FALSE,
   inherit = CSource0,
@@ -71,7 +71,7 @@ CSourceQuanteda <- R6::R6Class(
     #                           Visitor Methods                               #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$csourceQuanteda(self)
+      visitor$csourceTM(self)
     }
   )
 )
