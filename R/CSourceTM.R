@@ -64,6 +64,13 @@ CSourceTM <- R6::R6Class(
       }
 
       corpus <- ConverterTM$new()$convert(x)
+      if (!is.null(name))  corpus$setName(name = name)
+      corpus$setMeta(key = 'source', value = 'tm Corpus', type = 'f')
+      corpus <- private$sumQuant(corpus)
+
+      event <- paste0("Corpus ", corpus$getName(), " sourced from ",
+                      "a tm VCorpus object.")
+      corpus$message(event = event)
 
       return(corpus)
     },

@@ -69,6 +69,10 @@ CSourceQuanteda <- R6::R6Class(
                      type = 'f')
       corpus <- private$sumQuant(corpus)
 
+      event <- paste0("Corpus ", corpus$getName(), " sourced from ",
+                      "a quanteda corpus object.")
+      corpus$message(event = event)
+
       return(corpus)
     },
     #-------------------------------------------------------------------------#

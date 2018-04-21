@@ -93,7 +93,7 @@ CSourceDir <- R6::R6Class(
 
       corpus <- private$sumQuant(corpus)
 
-      event <- paste0("Corpus", corpus$getName(), " instantiated from ",
+      event <- paste0("Corpus ", corpus$getName(), " sourced from ",
                       "a director source.")
       corpus$message(event = event)
 

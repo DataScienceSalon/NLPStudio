@@ -66,6 +66,7 @@ ConverterTM <- R6::R6Class(
       docs <- lapply(seq_along(text), function(t) { Document$new(x = text[[t]], name = docNames[t]) })
 
       for (i in 1:length(docNames)) {
+        docs[[i]]$setMeta(key = 'source', value = "tm VCorpus text.", type = 'f')
         varnames <- names(dMeta)
         for (j in 1:length(varnames)) {
           if (length(dMeta[i,j]) > 0) {
