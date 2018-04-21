@@ -129,7 +129,7 @@ Corpus <- R6::R6Class(
     #                             Text Method                                 #
     #-------------------------------------------------------------------------#
     text = function(x = NULL, note = NULL) {
-      docs <- self$getDocument()
+      docs <- self$getDocuments()
       if (is.null(x)) {
         return(as.character(lapply(docs, function(d) { d$text() })))
       } else {

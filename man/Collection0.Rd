@@ -19,7 +19,7 @@ Document collection / composite objects.
 
  \itemize{
   \item{\code{new(name = NULL, purpose = NULL)}}{Not implemented.}
-  \item{\code{getDocument(key, value)}}{Returns the document or documents that
+  \item{\code{getDocuments(key, value)}}{Returns the document or documents that
   match the key/value pair(s). }
   \item{\code{addDocument(x)}}{Adds a document to the Collection object.}
   \item{\code{removeDocument(x)}}{Removes a document from the Collection

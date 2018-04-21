@@ -40,30 +40,46 @@ RemoveNonPrintableApp <- R6::R6Class(
       ioTxt <- IOText$new()
 
       content <- ioBin$read(path = path)
-
       for (i in 1:length(private$..codes)) {
-        content[content == as.raw(private$..codes[i])] = as.raw(32)
+        content[content == as.raw(private$..codes[i])] = as.raw(0x20)
       }
 
       # Save to temp file, re-read, then rewrite to original file location
       d <- tempfile(fileext = '.txt')
       ioBin$write(path = d, content = content)
       content <- ioTxt$read(path = d)
+      unlink(d)
+      Encoding(content) <- "latin1"
+      content <- enc2utf8(content)
+      content <- gsub("â€™", "'", content)
+      content <- gsub("â€˜", "'", content)
+      content <- gsub("â€¦", "", content)
+      content <- gsub("â€", "-", content)
+      content <- iconv(content, "UTF-8", "ASCII", sub = "")
       file$write(content)
 
       return(file)
+    },
+
+    processCollection = function() {
+      files <- private$..out$getFiles()
+      for (i in 1:length(files)) {
+        file <- private$processFile(files[[i]])
+        private$..out$addFile(file)
+      }
+      return(private$..out)
     }
   ),
 
   public = list(
-    initialize = function(x, codes = setdiff(seq(0,31), 12)) {
+    initialize = function(x, codes = c(0,26)) {
 
       private$loadDependencies()
 
       # Validate parameters
       private$..params$classes$name <- list('x', 'codes')
       private$..params$classes$objects <- list(x, codes)
-      private$..params$classes$valid <- list(c('File', 'FileCollection'), c("numeric"))
+      private$..params$classes$valid <- list(c('File', 'FileCollection'), c("numeric", "integer"))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize',
@@ -71,7 +87,7 @@ RemoveNonPrintableApp <- R6::R6Class(
         stop()
       }
 
-      private$..x <- x
+      private$..out <- x
       private$..codes <- codes
 
       invisible(self)

@@ -51,7 +51,7 @@ FileCollection <- FCSource$new()$xml(x)
 }
 \seealso{
 Other File Collection Source Classes: \code{\link{FCSource0}},
-  \code{\link{FCSourceDir}}, \code{\link{FCSourceVector}}
+  \code{\link{FCSourceDir}}
 }
 \author{
 John James, \email{jjames@datasciencesalon.org}

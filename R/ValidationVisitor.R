@@ -158,6 +158,10 @@ ValidationVisitor <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                             Studio Classes                              #
     #-------------------------------------------------------------------------#
+    fileStudio0 = function(object) {
+      return(private$validate(object))
+    },
+
     fileStudio = function(object) {
       return(private$validate(object))
     },
@@ -173,11 +177,7 @@ ValidationVisitor <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                             Misc Classes                                #
     #-------------------------------------------------------------------------#
-    cloneCorpus = function(object) {
-      return(private$validate(object))
-    },
-
-    cloneFiles = function(object) {
+    koln = function(object) {
       return(private$validate(object))
     }
   )

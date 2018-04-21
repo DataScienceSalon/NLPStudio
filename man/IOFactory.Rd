@@ -24,7 +24,7 @@ Class creates IO objects based upon the file type
 
 \describe{
  \item{\code{new()}}{Instantiates the factory.}
- \item{\code{getFileStrategy(fileName)}}{Instantiates and returns the appropriate File Strategy object.}
+ \item{\code{getFilesStrategy(fileName)}}{Instantiates and returns the appropriate File Strategy object.}
 }
 }
 

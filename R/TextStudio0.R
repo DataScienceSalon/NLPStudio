@@ -49,7 +49,7 @@ TextStudio0 <- R6::R6Class(
     },
 
     processCorpus = function() {
-      docs <- private$..x$getDocument(key = 'classname', value = "Document")
+      docs <- private$..x$getDocuments(key = 'classname', value = "Document")
       for (i in 1:length(docs)) {
         private$..x$removeDocument(docs[[i]])
         doc <- private$processDocument(docs[[i]])

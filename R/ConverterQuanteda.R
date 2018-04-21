@@ -29,7 +29,7 @@ ConverterQuanteda <- R6::R6Class(
 
       # Obtain corpus text and text names
       text <- x$text()
-      docs <- x$getDocument()
+      docs <- x$getDocuments()
       docNames <- unlist(lapply(docs, function(d) {
         d$getName()
       }))

@@ -83,7 +83,7 @@ File <- R6::R6Class(
     },
 
     write = function(x) {
-      path <- self$getPath
+      path <- self$getPath()
       io <- IOFactory$new()$strategy(path = path)
       io$write(path = path, content = x)
       event <- paste0("Write performed on ", self$getName())
@@ -105,7 +105,7 @@ File <- R6::R6Class(
 
       # Move file
       if(!dir.exists(dirname(path))) dir.create(dirname(path), recursive = TRUE)
-      file.rename(private$..path, path)
+      file.rename(self$getPath(), path)
 
       # Log
       event <- paste0("File, ", self$getName(), ", moved from ",
@@ -113,6 +113,7 @@ File <- R6::R6Class(
       private$logR$log(method = 'move', event = event)
 
       private$meta$set(key = 'path', value = path, type = 'functional')
+      private$meta$set(key = 'directory', value = dirname(path), type = 'functional')
       invisible(self)
     },
 
@@ -121,13 +122,13 @@ File <- R6::R6Class(
       # Validation
       if (file.exists(path) & overwrite == FALSE) {
         event <- "File already exists and overwrite is FALSE."
-        private$LogR$log(method = 'move', event = event, level = 'error')
+        private$logR$log(method = 'move', event = event, level = 'error')
         stop()
       }
 
       # Copy file
       if(!dir.exists(dirname(path))) dir.create(dirname(path), recursive = TRUE)
-      file.copy(private$..path, path)
+      file.copy(self$getPath(), path)
 
       # Log
       event <- paste0("File, ", self$getName(), ", copied from ",

@@ -27,7 +27,7 @@ from which the FileCollection object will be sourced.}
 
 \seealso{
 Other File Collection Source Classes: \code{\link{FCSourceDir}},
-  \code{\link{FCSourceVector}}, \code{\link{FCSource}}
+  \code{\link{FCSource}}
 }
 \author{
 John James, \email{jjames@datasciencesalon.org}

@@ -43,7 +43,8 @@ text cleaning algorithms to be selected and exchagned at runtime.
 }
 
 \seealso{
-Other FileStudio Classes: \code{\link{FileStudio0}}
+Other FileStudio Classes: \code{\link{FileStudio0}},
+  \code{\link{RemoveNonPrintable}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

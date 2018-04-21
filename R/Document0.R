@@ -36,12 +36,14 @@ Document0 <- R6::R6Class(
     summarizeIdMeta = function() {
 
       identity <- private$meta$get(type = 'identity')
+      name <- self$getName()
       NLPStudio::printHeading(text = paste0(identity$classname, ": ",
                                             self$getName(), " Summary"),
                               symbol = "=",
                               newlines = 2)
       cat(paste0("\nObject Class : ", identity$classname))
       cat(paste0("\nObject Id    : ", identity$id))
+      cat(paste0("\nObject Name  : ", name))
       return(identity)
 
     },

@@ -10,7 +10,7 @@
 #' @section IOFactory methods:
 #' \describe{
 #'  \item{\code{new()}}{Instantiates the factory.}
-#'  \item{\code{getFileStrategy(fileName)}}{Instantiates and returns the appropriate File Strategy object.}
+#'  \item{\code{getFilesStrategy(fileName)}}{Instantiates and returns the appropriate File Strategy object.}
 #' }
 #'
 #' @param path Character string containing the path for file

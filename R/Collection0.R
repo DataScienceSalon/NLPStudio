@@ -11,7 +11,7 @@
 #' @section Collection0 methods:
 #'  \itemize{
 #'   \item{\code{new(name = NULL, purpose = NULL)}}{Not implemented.}
-#'   \item{\code{getDocument(key, value)}}{Returns the document or documents that
+#'   \item{\code{getDocuments(key, value)}}{Returns the document or documents that
 #'   match the key/value pair(s). }
 #'   \item{\code{addDocument(x)}}{Adds a document to the Collection object.}
 #'   \item{\code{removeDocument(x)}}{Removes a document from the Collection
@@ -73,6 +73,27 @@ Collection0 <- R6::R6Class(
       private$logR$log(method = 'addDocument', event = event)
     },
 
+    detach = function(x) {
+
+      identifier <- x$getId()
+
+      if (!is.null(private$..documents[[identifier]])) {
+        private$..documents[[identifier]] <- NULL
+        private$..inventory <- private$..inventory %>%
+          dplyr::filter(id != identifier)
+        event <- paste0("Removed ", x$getName(), " from ",
+                        self$getName(), ".")
+        private$meta$modified(event = event)
+        private$logR$log(method = 'detach',
+                         event = event)
+      } else {
+        event <- paste0("Object is not attached to ",
+                        self$getName(), ". ")
+        private$logR$log( method = 'detach',
+                          event = event, level = "Warn")
+      }
+    },
+
     #-------------------------------------------------------------------------#
     #                     Summary Documents Method                            #
     #-------------------------------------------------------------------------#
@@ -118,7 +139,7 @@ Collection0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                         Document Management                             #
     #-------------------------------------------------------------------------#
-    getDocument = function(classname = "Document", key = NULL, value = NULL) {
+    getDocuments = function(classname = "Document", key = NULL, value = NULL) {
 
       key <- c(key, "classname")
       value <- c(value, classname)
@@ -129,7 +150,7 @@ Collection0 <- R6::R6Class(
       private$..params$kv$value <- value
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
-        private$logR$log( method = 'getDocument',
+        private$logR$log( method = 'getDocuments',
                           event = v$msg, level = "Error")
         stop()
       }
@@ -145,24 +166,7 @@ Collection0 <- R6::R6Class(
     addDocument = function(x) { stop("Not implemented for this abstract class.") },
 
     removeDocument = function(x) {
-
-      identifier <- x$getId()
-
-      if (!is.null(private$..documents[[identifier]])) {
-        private$..documents[[identifier]] <- NULL
-        private$..inventory <- private$..inventory %>%
-          dplyr::filter(id != identifier)
-        event <- paste0("Removed ", x$getName(), " from ",
-                                  self$getName(), ".")
-        private$meta$modified(event = event)
-        private$logR$log(method = 'removeDocument',
-                         event = event)
-      } else {
-        event <- paste0("Object is not attached to ",
-                        self$getName(), ". ")
-        private$logR$log( method = 'removeDocument',
-                         event = event, level = "Warn")
-      }
+      private$detach(x)
       invisible(self)
     },
 
@@ -282,7 +286,7 @@ Collection0 <- R6::R6Class(
         stop()
       }
 
-      docs <- self$getDocument(key = 'classname', value = classname)
+      docs <- self$getDocuments(key = 'classname', value = classname)
 
       if (nrow(docMeta) != length(docs)) {
         event <- paste0("The docMeta variable must be a data.frame or ",

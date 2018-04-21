@@ -40,7 +40,7 @@ POSCollection <- R6::R6Class(
     #                           Tokenize Methods                              #
     #-------------------------------------------------------------------------#
     tagCorpus = function() {
-      docs <- private$..x$getDocument()
+      docs <- private$..x$getDocuments()
 
       # Process Document corpus text combined into a single document.
       if (private$..collapse) {

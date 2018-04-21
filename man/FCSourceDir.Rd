@@ -31,7 +31,7 @@ object and a single associated Text object.
 
 \seealso{
 Other File Collection Source Classes: \code{\link{FCSource0}},
-  \code{\link{FCSourceVector}}, \code{\link{FCSource}}
+  \code{\link{FCSource}}
 }
 \author{
 John James, \email{jjames@datasciencesalon.org}

@@ -23,8 +23,10 @@ FileStudio0 <- R6::R6Class(
   lock_class = FALSE,
   inherit = Super,
 
+
   private = list(
-    ..x = character()
+    ..in = character(),
+    ..out = character()
   ),
 
   public = list(
@@ -32,20 +34,20 @@ FileStudio0 <- R6::R6Class(
 
     execute = function() {
 
-      if ("Collection" %in% class(private$..x)) {
-        private$..x <- private$processCollection()
+      if ("FileCollection" %in% class(private$..out)) {
+        private$..out <- private$processCollection()
 
       } else {
-        private$..x <- private$processFile(private$..x)
+        private$..out <- private$processFile(private$..out)
       }
 
       # Log it
       event <- paste0("Executed ", class(self)[1], " on ",
-                                private$..x$getName(), ". ")
-      private$..x$message(event)
+                                private$..out$getName(), ". ")
+      private$..out$message(event)
       private$logR$log(method = 'execute', event = event)
 
-      return(private$..x)
+      return(private$..out)
     },
 
     #-------------------------------------------------------------------------#

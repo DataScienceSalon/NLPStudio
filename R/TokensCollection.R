@@ -42,7 +42,7 @@ TokensCollection <- R6::R6Class(
     #                           Tokenize Methods                              #
     #-------------------------------------------------------------------------#
     tokenize = function(tokenType = 'word') {
-      docs <- private$..x$getDocument()
+      docs <- private$..x$getDocuments()
       ntokens <- 0
 
       # Process Document corpus text combined into a single document.

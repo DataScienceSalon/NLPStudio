@@ -31,12 +31,17 @@ FileStudio <- R6::R6Class(
   lock_class = FALSE,
   inherit = Super,
 
+  private = list(
+    ..in = character(),
+    ..out = character()
+  ),
+
   public = list(
 
     #-------------------------------------------------------------------------#
     #                           Core Methods                                  #
     #-------------------------------------------------------------------------#
-    initialize = function(x) {
+    initialize = function(x, path, name = NULL) {
 
       private$loadDependencies()
 
@@ -51,14 +56,16 @@ FileStudio <- R6::R6Class(
         stop()
       }
 
-      if (class(x)[1] == 'FileCollection') private$..x <- CloneFile$new()$collection(x = x)
-      if (class(x)[1] == 'File') private$..x <- CloneFile$new()$file(x = x)
+      private$..in <- x
+      private$..out <- Clone$new()$this(x = x, path = path, name = name)
 
       # Create log entry
       event <- paste0("FileStudio object instantiated.")
       private$logR$log(method = 'initialize', event = event)
 
-      invisible(self)
+      return(private$..out)
+
+      #invisible(self)
     },
 
     #-------------------------------------------------------------------------#
@@ -77,7 +84,7 @@ FileStudio <- R6::R6Class(
       name <- class(cmd)[1]
       private$..jobQueue[[name]] <- cmd
 
-      event <- paste0("Added ", name, " to ", private$..x$getName(),
+      event <- paste0("Added ", name, " to ", private$..out$getName(),
                                 " job queue." )
       private$logR$log(method = 'add', event = event)
 
@@ -89,7 +96,7 @@ FileStudio <- R6::R6Class(
       name <- class(cmd)[1]
       private$..jobQueue[[name]] <- NULL
 
-      event <- paste0("Removed ", name, " from ", private$..x$getName(),
+      event <- paste0("Removed ", name, " from ", private$..out$getName(),
                                 " job queue." )
       private$logR$log(method = 'remove', event = event)
       invisible(self)
@@ -104,14 +111,14 @@ FileStudio <- R6::R6Class(
       if (length(private$..jobQueue) > 0) {
 
         for (i in 1:length(private$..jobQueue)) {
-          private$..x <- private$..jobQueue[[i]]$execute(private$..x)
+          private$..out <- private$..jobQueue[[i]]$execute(private$..out)
         }
 
         event <- paste0("Executed FileStudio commands on ",
-                                  private$..x$getName(), "." )
+                                  private$..out$getName(), "." )
         private$logR$log(method = 'execute', event = event)
 
-        invisible(private$..x)
+        invisible(private$..out)
       } else {
         event <- paste0("FileStudio job queue is empty.")
         private$logR$log(method = 'execute', event = event, level = 'Error')

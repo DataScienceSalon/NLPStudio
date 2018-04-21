@@ -39,10 +39,6 @@ FileCollection <- R6::R6Class(
   lock_class = FALSE,
   inherit = Collection0,
 
-  private = list(
-    ..documents = list()
-  ),
-
   public = list(
 
     #-------------------------------------------------------------------------#
@@ -52,13 +48,14 @@ FileCollection <- R6::R6Class(
 
       private$loadDependencies()
       private$meta <- Meta$new(x = self, name = name)
-      private$meta$set(key = 'path', value = path, type = 'functional')
       private$meta$set(key = 'name', value = ifelse(is.null(name),
                                                     basename(path),
                                                     name),
                        type = 'descriptive')
 
-      private$..path <- path
+      private$meta$set(key = 'path', value = path, type = 'functional')
+      private$meta$set(key = 'directory', value = path, type = 'functional')
+
       private$logR$log(method = 'initialize',
                        event = "Initialization complete.")
       invisible(self)
@@ -68,6 +65,8 @@ FileCollection <- R6::R6Class(
     #                           Document Management                           #
     #-------------------------------------------------------------------------#
     getFiles = function() { private$..documents },
+    getPath = function() {private$meta$get(key = 'path')},
+    getDirectory = function() {private$meta$get(key = 'directory')},
     addFile = function(x) {
 
       # Validate class of object.
@@ -86,30 +85,62 @@ FileCollection <- R6::R6Class(
       invisible(self)
 
     },
-    getPath = function() {private$meta$get(key = 'path')},
+    removeFile = function(x) {
+      private$detach(x)
+      invisible(self)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                           Move/Copy Methods                             #
+    #-------------------------------------------------------------------------#
+    move = function(path, overwrite = FALSE) {
+      for (i in 1:length(private$..documents)) {
+        filePath <- file.path(path, private$..documents[[i]]$getFileName())
+        private$..documents[[i]]$move(path = filePath, overwrite = overwrite)
+      }
+      event <- paste0("Moved FileCollection, ", self$getName(), ", from ",
+                      self$getPath(), " to ", path, ".")
+      private$meta$modified(event = event)
+      private$logR$log(method = 'move', event = event)
+      private$meta$set(key = 'path', value = path, type = 'f')
+      private$meta$set(key = 'directory', value = path, type = 'f')
+      invisible(self)
+    },
+
+    copy = function(path, overwrite = FALSE) {
+      for (i in 1:length(private$..documents)) {
+        filePath <- file.path(path, private$..documents[[i]]$getFileName())
+        private$..documents[[i]]$copy(path = filePath, overwrite = overwrite)
+      }
+      event <- paste0("Copied FileCollection, ", self$getName(), ", from ",
+                      self$getPath(), " to ", path, ".")
+      private$meta$accessed(event = event)
+      private$logR$log(method = 'copy', event = event)
+      invisible(self)
+    },
 
     #-------------------------------------------------------------------------#
     #                              IO Methods                                 #
     #-------------------------------------------------------------------------#
     read = function() {
-      content <- lapply(private$..files, function(f) {
+      content <- lapply(private$..documents, function(f) {
         f$read()
       })
       return(content)
     },
 
     write = function(x) {
-      if (length(x) != length(private$..files)) {
+      if (length(x) != length(private$..documents)) {
         event <- paste0("Unable to write 'x' to files. The variable length ",
                         length(x), ", must match the number ",
                         "of files in the FileCollection, which is ",
-                        length(private$..files), ". See ?", class(self)[1],
+                        length(private$..documents), ". See ?", class(self)[1],
                         " for further assistance.")
         private$logR$log(method = 'write', event = event, level = 'Error')
         stop()
       } else {
-        for (i in 1:length(private$..files)) {
-          private$..files[[i]]$write(x)
+        for (i in 1:length(private$..documents)) {
+          private$..documents[[i]]$write(x[[1]])
         }
       }
       invisible(self)
