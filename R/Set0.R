@@ -140,35 +140,12 @@ Set0 <- R6::R6Class(
     #                         Document Management                             #
     #-------------------------------------------------------------------------#
     getDocuments = function(classname = "Document", key = NULL, value = NULL) {
-
-      key <- c(key, "classname")
-      value <- c(value, classname)
-
-      # Validate key/value pair
-      private$..params <- list()
-      private$..params$kv$key <- key
-      private$..params$kv$value <- value
-      v <- private$validator$validate(self)
-      if (v$code == FALSE) {
-        private$logR$log( method = 'getDocuments',
-                          event = v$msg, level = "Error")
-        stop()
-      }
-
-      # Search for documents that match the metadata and return
-      listCondition <- private$search(key, value)
-      result <- private$..documents[listCondition]
-      if (length(result) == 1) result <- result[[1]]
-
-      return(result)
+      stop("This method not implemented for this abstract class.")
     },
 
     addDocument = function(x) { stop("Not implemented for this abstract class.") },
 
-    removeDocument = function(x) {
-      private$detach(x)
-      invisible(self)
-    },
+    removeDocument = function(x) { stop("Not implemented for this abstract class.") },
 
     #-------------------------------------------------------------------------#
     #                           Document Metadata                             #

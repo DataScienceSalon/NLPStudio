@@ -60,11 +60,9 @@ CSource <- R6::R6Class(
       return(corpus)
     },
 
-    dir = function(x, name = NULL, encoding = NULL, replaceCtrl = FALSE,
-                   docNames = TRUE, codes = NULL) {
+    dir = function(x, name = NULL,  docNames = TRUE) {
       corpus <- CSourceDir$new()$source(x = x, name = name,
-                                        encoding, replaceCtrl,
-                                        docNames, codes)
+                                        docNames)
       return(corpus)
     },
 

@@ -59,13 +59,14 @@ Corpus <- R6::R6Class(
       }))
 
       documents <- nrow(quant)
+      vectors <- sum(quant$vectors)
       sentences <- sum(quant$sentences)
       types <- sum(quant$types)
       words <- sum(quant$words)
       characters <- sum(quant$characters)
 
-      k <- c("documents", "sentences", "words", "types", "characters")
-      v <- c(documents, sentences, words, types, characters)
+      k <- c("documents","vectors", "sentences", "words", "types", "characters")
+      v <- c(documents, vectors, sentences, words, types, characters)
       private$meta$set(key = k, value = v, type = 'quant')
       return(TRUE)
     },
@@ -73,7 +74,7 @@ Corpus <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Summary Methods                               #
     #-------------------------------------------------------------------------#
-    summarizeQuant = function(verbose = TRUE) {
+    summarizeQuantMeta = function(verbose = TRUE) {
       private$setQuant()
       quant <- private$meta$get(type = 'quant')
       if (verbose) {
@@ -104,15 +105,37 @@ Corpus <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Document Management                           #
     #-------------------------------------------------------------------------#
+    getDocuments = function(classname = "Document", key = NULL, value = NULL) {
+
+      key <- c(key, "classname")
+      value <- c(value, classname)
+
+      # Validate key/value pair
+      private$..params <- list()
+      private$..params$kv$key <- key
+      private$..params$kv$value <- value
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log( method = 'getDocuments',
+                          event = v$msg, level = "Error")
+        stop()
+      }
+
+      # Search for documents that match the metadata and return
+      listCondition <- private$search(key, value)
+      result <- private$..documents[listCondition]
+      if (length(result) == 1) result <- result[[1]]
+
+      return(result)
+    },
+
     addDocument = function(x) {
 
       # Validate class of object.
       private$..params <- list()
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list(c('Document', 'File', 'TermFreq',
-                                             'Tokens', 'POS', 'TokensSet',
-                                             'POSSet'))
+      private$..params$classes$valid <- list(c('Document'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'addDocument',
@@ -123,6 +146,11 @@ Corpus <- R6::R6Class(
 
       invisible(self)
 
+    },
+
+    removeDocument = function(x) {
+      private$detach(x)
+      invisible(self)
     },
 
     #-------------------------------------------------------------------------#
@@ -141,7 +169,7 @@ Corpus <- R6::R6Class(
         } else {
           event <- paste0("The 'x' parameter must be a list of texts with ",
                           "length equal to the number of Text documents ",
-                          "in the Corpus. See?", class(self)[1],
+                          "in the Corpus See?", class(self)[1],
                           " for further assistance.")
           private$logR$log(method = 'text', event = event, level = "Error")
           stop()

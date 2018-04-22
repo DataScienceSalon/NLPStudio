@@ -53,7 +53,7 @@ Clone <- R6::R6Class(
       }
       return(out)
     },
-    cloneDocument = function(x, name = NULL) {
+    cloneDocument = function(x, name = NULL, content) {
 
       if (is.null(name)) {
         name <- x$getName()
@@ -63,13 +63,13 @@ Clone <- R6::R6Class(
       out <- private$cloneMeta(x, out)
       out <- out$setMeta(key = 'name', value = name)
 
-      out$content <- x$content
+      if (content) out$content <- x$content
       event <- paste0("Document cloned from '", x$getName(), "'.")
       out$message(event = event)
       return(out)
     },
 
-    cloneCorpus = function(x, name = NULL) {
+    cloneCorpus = function(x, name = NULL, content) {
 
       if (is.null(name)) {
         name <- x$getName()
@@ -82,7 +82,7 @@ Clone <- R6::R6Class(
       # Process Document objects
       docs <- x$getDocuments(key = 'classname', value = 'Document')
       lapply(docs, function(d) {
-        doc <- private$cloneDocument(x = d)
+        doc <- private$cloneDocument(x = d, content)
         out <<- out$addDocument(doc)
       })
 
@@ -133,7 +133,7 @@ Clone <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                            Factory Method                               #
     #-------------------------------------------------------------------------#
-    this = function(x, path = NULL, name = NULL) {
+    this = function(x, path = NULL, name = NULL, content = TRUE) {
 
       # Validate class of object.
       private$..params <- list()
@@ -141,6 +141,8 @@ Clone <- R6::R6Class(
       private$..params$classes$objects <- list(x)
       private$..params$classes$valid <- list(c('Corpus','Document',
                                                "FileSet", "File"))
+      private$..params$logicals$variables <- c('content')
+      private$..params$logicals$values <- c(content)
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'this',
@@ -150,8 +152,8 @@ Clone <- R6::R6Class(
 
       classname <- class(x)[1]
       out <- switch(classname,
-                    Corpus = private$cloneCorpus(x, name = name),
-                    Document = private$cloneDocument(x, name = name),
+                    Corpus = private$cloneCorpus(x, name = name, content = content),
+                    Document = private$cloneDocument(x, name = name, content = content),
                     FileSet = private$cloneFiles(x, path = path, name = name),
                     File = private$cloneFile(x, path = path, name = name))
       return(out)

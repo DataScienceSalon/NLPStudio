@@ -117,6 +117,25 @@ ValidationVisitor <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
+    #                      Cross-Validation Classes                           #
+    #-------------------------------------------------------------------------#
+    cv = function(object) {
+      return(private$validate(object))
+    },
+
+    cvSet = function(object) {
+      return(private$validate(object))
+    },
+
+    cvFactoryHoldOut = function(object) {
+      return(private$validate(object))
+    },
+
+    cvFactoryKFold = function(object) {
+      return(private$validate(object))
+    },
+
+    #-------------------------------------------------------------------------#
     #                     Validate Metadata Classes                           #
     #-------------------------------------------------------------------------#
 

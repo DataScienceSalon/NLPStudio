@@ -61,12 +61,13 @@ Document <- R6::R6Class(
     },
 
     setQuant = function(x) {
+      vectors = length(x)
       sentences <- sum(quanteda::nsentence(x))
       words <- sum(quanteda::ntoken(x))
       types <- sum(quanteda::ntype(x))
       characters <- sum(nchar(x))
-      k <- c("sentences", "words", "types", "characters")
-      v <- c(sentences, words, types, characters)
+      k <- c("vectors", "sentences", "words", "types", "characters")
+      v <- c(vectors, sentences, words, types, characters)
       private$meta$set(key = k, value = v, type = 'quant')
       return(TRUE)
     },

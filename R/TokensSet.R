@@ -90,7 +90,7 @@ TokensSet <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Summary Methods                               #
     #-------------------------------------------------------------------------#
-    summarizeQuant = function(verbose = TRUE) {
+    summarizeQuantMeta = function(verbose = TRUE) {
       private$setQuant()
       quant <- private$meta$get(type = 'quant')
       if (verbose) {
