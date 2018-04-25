@@ -33,59 +33,12 @@ CVFactory0 <- R6::R6Class(
   lock_class = FALSE,
   inherit = Super,
 
-  private = list(
-    splitDocument = function(x, proportions, seed) {
-
-      if (length(proportions) == 2) {
-        sets <- c("Training", "Test")
-      } else if (length(proportions) == 3) {
-        sets <- c("Training", "Validation", "Test")
-      } else {
-        sets <- paste0("Fold-", seq(1:length(proportions)))
-      }
-
-      set.seed(seed)
-      splits <- list()
-      text <- x$text()
-      idx <- sample(sets, size = length(text), replace = TRUE,
-                    prob = proportions)
-      for (i in 1:length(proportions)) {
-        name <- paste(x$getName(), sets[i], "Set")
-        splits[[i]] <- Clone$new()$this(x = x, name = name)
-        splits[[i]]$content <- text[idx == sets[i]]
-      }
-
-      return(splits)
-    }
-  ),
-
   public = list(
 
     #-------------------------------------------------------------------------#
     #                             Constructor                                 #
     #-------------------------------------------------------------------------#
     initialize = function() {stop("Method not implemented for this abstract class")},
-    build = function(x, unit = "vector", stratify = TRUE, proportions = c(.8,.2),
-                     k = 0, seed = 1) {
-      # Validate parameters
-      private$..params$classes$name <- list('x','k', 'seed', 'proportions')
-      private$..params$classes$objects <- list(x, k, seed, proportions)
-      private$..params$classes$valid <- list(c('Corpus'), c('integer', 'numeric'),
-                                             c('integer', 'numeric'), c("numeric"))
-      private$..params$discrete$variables <- c('unit')
-      private$..params$discrete$values <- c(unit)
-      private$..params$discrete$valid <- list(c("vector", "sentence", "v", "s"))
-      private$..params$logicals$variables <- c('stratify')
-      private$..params$logicals$values <- c(stratify)
-      v <- private$validator$validate(self)
-      if (v$code == FALSE) {
-        private$logR$log(method = 'build',
-                         event = v$msg, level = "Error")
-        stop()
-      }
-
-      if (k > 0) proportions <- rep(1/k, k)
-
-    }
+    build = function() {stop("Method not implemented for this abstract class")}
   )
 )

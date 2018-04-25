@@ -36,7 +36,7 @@ CVFactoryHoldOut <- R6::R6Class(
   inherit = CVFactory0,
 
   private = list(
-    splitDocument = function(x, sets, unit, proportions, seed) {
+    splitDocument = function(x, corpora, unit, proportions, seed) {
 
       set.seed(seed)
       splits <- list()
@@ -49,12 +49,12 @@ CVFactoryHoldOut <- R6::R6Class(
       }
 
       # Create indices and create splits
-      idx <- sample(sets, size = length(text), replace = TRUE,
+      idx <- sample(corpora, size = length(text), replace = TRUE,
                     prob = proportions)
       for (i in 1:length(proportions)) {
-        name <- paste(x$getName(), sets[i], "Set")
-        splits[[sets[i]]] <- Clone$new()$this(x = x, name = name)
-        splits[[sets[i]]]$content <- text[idx == sets[i]]
+        name <- paste(x$getName(), corpora[i], "Set")
+        splits[[corpora[i]]] <- Clone$new()$this(x = x, name = name)
+        splits[[corpora[i]]]$content <- text[idx == corpora[i]]
       }
 
       return(splits)
@@ -75,7 +75,7 @@ CVFactoryHoldOut <- R6::R6Class(
     #                             Build Method                                #
     #-------------------------------------------------------------------------#
     build = function(x, unit = "vector", stratify = TRUE, proportions = c(.8,.2),
-                     seed = 1) {
+                     seed = 1, name = NULL) {
       # --------------------Validate parameters-------------------------------#
       private$..params$classes$name <- list('x','seed', 'proportions')
       private$..params$classes$objects <- list(x, seed, proportions)
@@ -101,11 +101,11 @@ CVFactoryHoldOut <- R6::R6Class(
         stop()
       }
       # ----------------------------------------------------------------------#
-      # Set CV Set types
+      # Set Corpora types
       if (length(proportions) == 2) {
-        sets <- c("Training", "Test")
+        corpora <- c("Training", "Test")
       } else {
-        sets <- c("Training", "Validation", "Test")
+        corpora <- c("Training", "Validation", "Test")
       }
 
       docs <- x$getDocuments()
@@ -119,19 +119,22 @@ CVFactoryHoldOut <- R6::R6Class(
 
       # Split Documents
       docSplits <- lapply(docs, function(d) {
-        private$splitDocument(d, sets, unit, proportions, seed)
+        private$splitDocument(d, corpora, unit, proportions, seed)
       })
 
-      # Create CVSet and CV Objects
-      cv <- CV$new(name = paste(x$getName(), "Cross-Validation Sets"))
-      for (i in 1:length(sets)) {
-        cvSet <- CVSet$new(name = paste(x$getName(), sets[i], "Set"))
+      # Create CV, CVSet, and Corpora objects
+      if (!is.null(name)) name <- x$getName()
+      cv <- CV$new(name = paste(name, "Cross-Validation Sets"))
+      cvSet <- CVSet$new(name = paste(name, "Hold-Out Cross-Validation Set"))
+      for (i in 1:length(corpora)) {
+        corpus <- Corpus$new(name = paste(name, corpora[i], "Set"))
         for (j in 1:length(docSplits)) {
-          cvSet$addDocument(docSplits[[j]][[sets[i]]])
+          corpus$addDocument(docSplits[[j]][[corpora[i]]])
         }
-        cvSet$setMeta(key = 'cv', value = sets[i], type = 'f')
-        cv$addCVSet(cvSet)
+        corpus$setMeta(key = 'cv', value = corpora[i], type = 'f')
+        cvSet$addCorpus(corpus)
       }
+      cv$addCVSet(cvSet)
 
       return(cv)
     },

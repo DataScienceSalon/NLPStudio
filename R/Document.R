@@ -61,7 +61,7 @@ Document <- R6::R6Class(
     },
 
     setQuant = function(x) {
-      vectors = length(x)
+      vectors <- length(x)
       sentences <- sum(quanteda::nsentence(x))
       words <- sum(quanteda::ntoken(x))
       types <- sum(quanteda::ntype(x))

@@ -34,12 +34,12 @@ CVSet <- R6::R6Class(
   classname = "CVSet",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = Corpus,
+  inherit = Set0,
 
   public = list(
 
     #-------------------------------------------------------------------------#
-    #                           Core Methods                                  #
+    #                           Constructor                                   #
     #-------------------------------------------------------------------------#
     initialize = function(name = NULL) {
 
@@ -51,27 +51,59 @@ CVSet <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                             Text Method                                 #
+    #                           Corpora Management                            #
     #-------------------------------------------------------------------------#
-    text = function(x = NULL, note = NULL) {
-      docs <- self$getDocuments()
-      if (is.null(x)) {
-        return(as.character(lapply(docs, function(d) { d$text() })))
-      } else {
-        if (length(docs) == length(x)) {
-          if (length(note) == 1) note <- rep(note, length(docs))
-          for (i in 1:length(docs)) {
-            docs[[i]]$text(x = x[i], note = note[i])
-          }
-        } else {
-          event <- paste0("The 'x' parameter must be a list of texts with ",
-                          "length equal to the number of Text documents ",
-                          "in the CVSet. See?", class(self)[1],
-                          " for further assistance.")
-          private$logR$log(method = 'text', event = event, level = "Error")
+    getCorpus = function(what = NULL) {
+
+      # Validate key/value pair
+      if (!is.null(what)) {
+        private$..params <- list()
+        private$..params$discrete$variables <- c('cv')
+        private$..params$discrete$values <- list(what)
+        private$..params$discrete$valid <- list(c('train', 'validation', 'test'))
+        v <- private$validator$validate(self)
+        if (v$code == FALSE) {
+          private$logR$log( method = 'get',
+                            event = v$msg, level = "Error")
           stop()
         }
       }
+
+      # Search for documents that match the metadata and return
+      if (!is.null(what)) {
+        key <- 'cv'
+        value <- what
+        listCondition <- private$search(key, value)
+        result <- private$..documents[listCondition]
+      } else {
+        result <- private$..documents
+      }
+
+      return(result)
+    },
+
+    addCorpus = function(x) {
+
+      # Validate class of object.
+      private$..params <- list()
+      private$..params$classes$name <- list('x')
+      private$..params$classes$objects <- list(x)
+      private$..params$classes$valid <- list(c('Corpus'))
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = 'addCorpus',
+                         event = v$msg, level = "Error")
+        stop()
+      }
+      private$attach(x)
+
+      invisible(self)
+
+    },
+
+    removeCorpus = function(x) {
+      private$detach(x)
+      invisible(self)
     },
 
     #-------------------------------------------------------------------------#

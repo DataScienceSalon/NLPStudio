@@ -58,10 +58,8 @@ CVFactoryKFold <- R6::R6Class(
       splits <- list()
       for (i in 1:length(folds)) {
         name <- paste(x$getName(), sets[i])
-        splits[[sets[i]]]$training <- Clone$new()$this(x = x, name = paste(name, "Training Set"),
-                                                       content = FALSE)
-        splits[[sets[i]]]$validation <- Clone$new()$this(x = x, name = paste(name, "Validation Set"),
-                                                         content = FALSE)
+        splits[[sets[i]]]$training <- Clone$new()$this(x = x, name = paste(name, "Training Set"))
+        splits[[sets[i]]]$validation <- Clone$new()$this(x = x, name = paste(name, "Validation Set"))
         splits[[sets[i]]]$training$content <- unlist(folds[-i])
         splits[[sets[i]]]$validation$content <- unlist(folds[i])
       }
@@ -115,18 +113,29 @@ CVFactoryKFold <- R6::R6Class(
         docs <- list(Document$new(x = content, name = paste(x$getName(), "Text Document")))
       }
 
-      # Create CVSet and CV Objects
-      cv <- CV$new(name = paste(x$getName(), "Cross-Validation Sets"))
+      # Split Documents
       docSplits <- lapply(docs, function(d) {
-        cvSet <- CVSet$new(name = paste(d$getName(), "Cross-Validation Sets"))
         splits <- private$splitDocument(d, k, sets, unit, proportions, seed)
-        lapply(splits, function(s) {
-          cvSet$addDocument(s$training)
-          cvSet$addDocument(s$validation)
-        })
-        cv$addCVSet(cvSet)
       })
 
+      # Create CV, CVSet and corpora
+      cv <- CV$new(name = paste(x$getName(), "Cross-Validation Sets"))
+      for (i in 1:length(sets)) {
+
+        # Create CVSet and training and validation corpora
+        cvSet <- CVSet$new(name = paste0(x$getName(), " K-Fold CV Set-", i))
+        train <- Clone$new()$this(x = x, name = paste0(x$getName(), " K-Fold CV Set-", i,  " Training Set"))
+        train$setMeta(key = 'cv', value = 'Training')
+        validation <- Clone$new()$this(x = x, name = paste0(x$getName(), " K-Fold CV Set-", i,  " Validation Set"))
+        validation$setMeta(key = 'cv', value = 'Validation')
+        for (j in 1:length(docSplits)) {
+          train$addDocument(docSplits[[j]][[i]]$training)
+          validation$addDocument(docSplits[[j]][[i]]$validation)
+        }
+        cvSet$addCorpus(x = train)
+        cvSet$addCorpus(x = validation)
+        cv$addCVSet(cvSet)
+      }
       return(cv)
     },
     #-------------------------------------------------------------------------#
