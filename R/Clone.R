@@ -54,38 +54,55 @@ Clone <- R6::R6Class(
       return(out)
     },
 
-    cloneCorpus = function(x, name) {
+    cloneCorpus = function(x, reference) {
       out <- Corpus$new()
       out <- private$cloneMeta(x, out)
-      if (!is.null(name)) out$setName(name)
-      event <- paste0("Corpus, ", out$getName(), ", cloned from ", x$getName(), ".")
+      if (reference) {
+        docs <- x$getDocuments()
+        for (i in 1:length(docs)) {
+          doc <- private$cloneDocument(docs[[i]])
+          out$addDocument(doc)
+        }
+      }
+      event <- paste0("Corpus, ", out$getName(), ", cloned.")
       out$message(event = event)
       return(out)
     },
 
-    cloneDocument = function(x, name) {
+    cloneDocument = function(x) {
       out <- Document$new()
       out <- private$cloneMeta(x, out)
-      if (!is.null(name)) out$setName(name)
-      event <- paste0("Document, ", out$getName(), ", cloned from ", x$getName(), ".")
+      event <- paste0("Document, ", out$getName(), ", cloned.")
       out$message(event = event)
       return(out)
     },
 
-    cloneFileSet = function(x, path) {
-      out <- FileSet$new()
+    cloneFileSet = function(x, reference, path) {
+      out <- FileSet$new(path)
       out <- private$cloneMeta(x, out)
-      if (!is.null(path)) out$setMeta(key = 'path', value = path)
-      event <- paste0("FileSet, ", out$getName(), ", cloned from ", x$getName(), ".")
+      out$setMeta(key = 'path', value = path) # Overwritten by above statement
+      if (reference) {
+        files <- x$getFiles()
+        if (length(files) > 0) {
+          for (i in 1:length(files)) {
+            filename <- basename(files[[i]]$getPath())
+            filepath <- file.path(path, filename)
+            file <- private$cloneFile(files[[i]], filepath)
+            out$addFile(file)
+          }
+        }
+      }
+      event <- paste0("FileSet, ", out$getName(), ", cloned.")
       out$message(event = event)
       return(out)
     },
 
     cloneFile = function(x, path) {
-      out <- File$new()
+      out <- File$new(path)
       out <- private$cloneMeta(x, out)
-      if (!is.null(path)) out$setMeta(key = 'path', value = path)
-      event <- paste0("File, ", out$getName(), ", cloned from ", x$getName(), ".")
+      out$setMeta(key = 'path', value = path) # Overwritten by above statement
+      x$copy(path)
+      event <- paste0("File, ", out$getName(), ", cloned.")
       out$message(event = event)
       return(out)
     }
@@ -103,10 +120,12 @@ Clone <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                            Factory Method                               #
     #-------------------------------------------------------------------------#
-    this = function(x, path = NULL, name = NULL) {
+    this = function(x, reference = TRUE, path = NULL) {
 
       # Validate class of object.
       private$..params <- list()
+      private$..params$logical$variables = list('reference')
+      private$..params$logical$values = list(reference)
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
       private$..params$classes$valid <- list(c('Corpus','Document',
@@ -118,12 +137,20 @@ Clone <- R6::R6Class(
         stop()
       }
 
+      if (class(x)[[1]] %in% c("FileSet", "File") & is.null(path)) {
+        event <- paste0("The path variable must be provided for FileSet and ",
+                        "File objects.")
+        private$logR$log(method = 'this',
+                         event = event, level = "Error")
+        stop()
+      }
+
       classname <- class(x)[1]
       out <- switch(classname,
-                    Corpus = private$cloneCorpus(x, name = name),
-                    Document = private$cloneDocument(x, name = name),
-                    FileSet = private$cloneFileSet(x, path = path),
-                    File = private$cloneFile(x, path = path))
+                    Corpus = private$cloneCorpus(x, reference),
+                    Document = private$cloneDocument(x),
+                    FileSet = private$cloneFileSet(x, reference, path),
+                    File = private$cloneFile(x, path))
       return(out)
     },
 

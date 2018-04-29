@@ -173,23 +173,9 @@ Meta0 <- R6::R6Class(
       }
 
       for (i in 1:length(key)) {
-        if (private$checkNames(key[i], type = type))  {
-          private$..meta[[type]][[key[i]]] <- value[[i]]
-        } else {
-          j <- 1
-          newVar <- paste0(key[i], "_", j)
-          while(private$checkNames(newVar, type = type) == FALSE) {
-            j <- j + 1
-            newVar <- paste0(key[i], "_", j)
-          }
-          private$..meta[[type]][[newVar]] <- value[i]
-          event <- paste0("Duplicate metadata variable names are not ",
-                          "permitted. Variable named ", key[[i]],
-                          " was changed to ", newVar, ".")
-          private$logR$log(method = "set", event = event,
-                           level = "Warn")
-        }
+        private$..meta[[type]][[key[i]]] <-  value[[i]]
       }
+
       invisible(self)
     },
 

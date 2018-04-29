@@ -56,8 +56,13 @@ FileStudio <- R6::R6Class(
         stop()
       }
 
+      # Initialize objects
       private$..in <- x
-      private$..out <- Clone$new()$this(x = x, path = path, name = name)
+      private$..out <- Clone$new()$this(x = x, path = path)
+      if (is.null(name)) name <- paste0(x$getName(), " (clone)")
+      private$..out$setName(name)
+      private$..out$setMeta(key = 'path', value = path)
+
 
       # Create log entry
       event <- paste0("FileStudio object instantiated.")

@@ -58,8 +58,10 @@ CVFactoryKFold <- R6::R6Class(
       splits <- list()
       for (i in 1:length(folds)) {
         name <- paste(x$getName(), sets[i])
-        splits[[sets[i]]]$training <- Clone$new()$this(x = x, name = paste(name, "Training Set"))
-        splits[[sets[i]]]$validation <- Clone$new()$this(x = x, name = paste(name, "Validation Set"))
+        splits[[sets[i]]]$training <- Clone$new()$this(x = x, reference = FALSE)
+        splits[[sets[i]]]$validation <- Clone$new()$this(x = x, reference = FALSE)
+        splits[[sets[i]]]$training$setName(name = paste(name, "Training Set"))
+        splits[[sets[i]]]$validation$setName(name = paste(name, "Validation Set"))
         splits[[sets[i]]]$training$content <- unlist(folds[-i])
         splits[[sets[i]]]$validation$content <- unlist(folds[i])
       }
@@ -124,9 +126,11 @@ CVFactoryKFold <- R6::R6Class(
 
         # Create CVSet and training and validation corpora
         cvSet <- CVSet$new(name = paste0(x$getName(), " K-Fold CV Set-", i))
-        train <- Clone$new()$this(x = x, name = paste0(x$getName(), " K-Fold CV Set-", i,  " Training Set"))
+        train <- Clone$new()$this(x = x, reference = FALSE)
+        train$setName(name = paste0(x$getName(), " K-Fold CV Set-", i,  " Training Set"))
         train$setMeta(key = 'cv', value = 'Training')
-        validation <- Clone$new()$this(x = x, name = paste0(x$getName(), " K-Fold CV Set-", i,  " Validation Set"))
+        validation <- Clone$new()$this(x = x, reference = FALSE)
+        validation$setName(name = paste0(x$getName(), " K-Fold CV Set-", i,  " Validation Set"))
         validation$setMeta(key = 'cv', value = 'Validation')
         for (j in 1:length(docSplits)) {
           train$addDocument(docSplits[[j]][[i]]$training)

@@ -53,7 +53,8 @@ CVFactoryHoldOut <- R6::R6Class(
                     prob = proportions)
       for (i in 1:length(proportions)) {
         name <- paste(x$getName(), corpora[i], "Set")
-        splits[[corpora[i]]] <- Clone$new()$this(x = x, name = name)
+        splits[[corpora[i]]] <- Clone$new()$this(x = x)
+        splits[[corpora[i]]]$setName(name)
         splits[[corpora[i]]]$content <- text[idx == corpora[i]]
       }
 
@@ -127,7 +128,8 @@ CVFactoryHoldOut <- R6::R6Class(
       cv <- CV$new(name = paste(name, "Cross-Validation Sets"))
       cvSet <- CVSet$new(name = paste(name, "Hold-Out Cross-Validation Set"))
       for (i in 1:length(corpora)) {
-        corpus <- Corpus$new(name = paste(name, corpora[i], "Set"))
+        corpus <- Clone$new()$this(x, reference = FALSE)
+        corpus$setName(name = paste(name, corpora[i], "Set"))
         for (j in 1:length(docSplits)) {
           corpus$addDocument(docSplits[[j]][[corpora[i]]])
         }

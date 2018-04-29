@@ -96,11 +96,13 @@ POSSet <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Get Methods                                   #
     #-------------------------------------------------------------------------#
+    getCorpus = function() { private$..x },
+    getDocuments = function() { private$..x$getDocuments() },
+    getPOS = function() { private$..documents },
     getTags = function() {
       pos <- lapply(private$..documents, function(d) {
         d$getTags()
       })
-      if (length(pos) == 1) pos <- pos[[1]]
       return(pos)
     },
 
@@ -108,12 +110,11 @@ POSSet <- R6::R6Class(
       pos <- lapply(private$..documents, function(d) {
         d$getDistribution()
       })
-      if (length(pos) == 1) pos <- pos[[1]]
       return(pos)
     },
 
     #-------------------------------------------------------------------------#
-    #                         Tag Set                                  #
+    #                                 Tag Set                                 #
     #-------------------------------------------------------------------------#
     tag = function() {
 

@@ -47,7 +47,7 @@ POS <- R6::R6Class(
       a3 <- NLP::annotate(s, pa, a2)
       a3w <- subset(a3, type == "word")
       private$..pos$tags <- sapply(a3w$features, `[[`, "POS")
-      private$..pos$distribution <- table(tags)
+      private$..pos$distribution <- table(private$..pos$tag)
 
       return(TRUE)
     }
@@ -75,7 +75,8 @@ POS <- R6::R6Class(
       }
 
       private$..x <- x
-      private$meta <- Meta$new(x = self)
+      name = paste(x$getName(), "POS Tags")
+      private$meta <- Meta$new(x = self, name = name)
       private$logR$log(method = 'initialize', event = "Initialization complete.")
       invisible(self)
     },

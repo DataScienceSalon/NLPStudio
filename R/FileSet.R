@@ -62,11 +62,10 @@ FileSet <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                           Document Management                           #
+    #                           File Management                               #
     #-------------------------------------------------------------------------#
     getFiles = function() { private$..documents },
     getPath = function() {private$meta$get(key = 'path')},
-    getDirectory = function() {private$meta$get(key = 'directory')},
     addFile = function(x) {
 
       # Validate class of object.
@@ -104,7 +103,6 @@ FileSet <- R6::R6Class(
         private$meta$modified(event = event)
         private$logR$log(method = 'move', event = event)
         private$meta$set(key = 'path', value = path, type = 'f')
-        private$meta$set(key = 'directory', value = path, type = 'f')
       }
       invisible(self)
     },

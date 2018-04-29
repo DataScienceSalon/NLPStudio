@@ -121,9 +121,12 @@ Corpus <- R6::R6Class(
         stop()
       }
 
+      result <- list()
       # Search for documents that match the metadata and return
-      listCondition <- private$search(key, value)
-      result <- private$..documents[listCondition]
+      if (length(private$..documents) > 0) {
+        listCondition <- private$search(key, value)
+        result <- private$..documents[listCondition]
+      }
 
       return(result)
     },
