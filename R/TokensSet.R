@@ -60,7 +60,7 @@ TokensSet <- R6::R6Class(
         tokens <- tokensObject$get()
 
         if (class(tokens)[1] == 'tokens') {
-          ntokens <- ntokens + ntoken(tokens)
+          ntokens <- ntokens + sum(ntoken(tokens))
         } else {
           ntokens <- ntokens + length(tokens)
         }
@@ -76,7 +76,7 @@ TokensSet <- R6::R6Class(
           tokens <- tokensObject$get()
 
           if (class(tokens)[1] == 'tokens') {
-            ntokens <- ntokens + ntoken(tokens)
+            ntokens <- ntokens + sum(ntoken(tokens))
           } else {
             ntokens <- ntokens + length(tokens)
           }
@@ -135,9 +135,9 @@ TokensSet <- R6::R6Class(
     },
 
     get = function() {
-      tokens <- lapply(private$..documents, function(d) {
-        d$get()
-      })
+      name <- sapply(private$..x, function(d) { d$getName() })
+      tokens <- lapply(private$..documents, function(d) { d$get() })
+      names(tokens) <- name
       return(tokens)
     },
 
