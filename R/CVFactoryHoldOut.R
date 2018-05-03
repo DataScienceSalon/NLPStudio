@@ -45,7 +45,7 @@ CVFactoryHoldOut <- R6::R6Class(
       if (grepl("^s", unit, ignore.case = TRUE)) {
         text <- Tokens$new(x)$sentence()$get()
       } else  {
-        text <- x$text()
+        text <- x$text
       }
 
       # Create indices and create splits
@@ -55,7 +55,7 @@ CVFactoryHoldOut <- R6::R6Class(
         name <- paste(x$getName(), corpora[i], "Set")
         splits[[corpora[i]]] <- Clone$new()$this(x = x, reference = FALSE)
         splits[[corpora[i]]]$setName(name)
-        splits[[corpora[i]]]$content <- text[idx == corpora[i]]
+        splits[[corpora[i]]]$text <- text[idx == corpora[i]]
       }
 
       return(splits)

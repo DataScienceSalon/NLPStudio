@@ -39,7 +39,7 @@ ReplaceInternetSlangApp <- R6::R6Class(
     ..ignoreCase = logical(),
 
     processDocument = function(document) {
-      document$content <- textclean::replace_internet_slang(x = document$content,
+      document$text <- textclean::replace_internet_slang(x = document$text,
                                          slang = private$..slang,
                                          replacement = private$..replacement,
                                          ignore.case = private$..ignoreCase)

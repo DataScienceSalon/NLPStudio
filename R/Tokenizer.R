@@ -38,7 +38,7 @@ Tokenizer <- R6::R6Class(
       name <- paste0(x$getName(), " (", tokenType, " tokens)")
       tokens$setName(name)
 
-      content <- x$content
+      content <- x$text
 
       # Produce Tokenizer
       if (tokenType %in% c("sentence")) {

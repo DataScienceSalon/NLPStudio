@@ -47,7 +47,7 @@ ReplaceWordElongationApp <- R6::R6Class(
     ..impartMeaning = logical(),
 
     processDocument = function(document) {
-      document$content <- textclean::replace_word_elongation(x = document$content,
+      document$text <- textclean::replace_word_elongation(x = document$text,
                                            impart.meaning = private$..impartMeaning)
       private$logEvent(document)
       return(document)

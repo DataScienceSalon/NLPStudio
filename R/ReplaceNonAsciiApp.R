@@ -38,7 +38,7 @@ ReplaceNonAsciiApp <- R6::R6Class(
 
     processDocument = function(document) {
 
-      document$content <- textclean::replace_non_ascii(x = document$content,
+      document$text <- textclean::replace_non_ascii(x = document$text,
                                                        remove.nonconverted =
                                                          private$..removeNonConverted)
       private$logEvent(document)

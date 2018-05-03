@@ -37,7 +37,7 @@ ReplaceKernApp <- R6::R6Class(
   private = list(
 
     processDocument = function(document) {
-      document$content <- textclean::replace_kern(x = document$content)
+      document$text <- textclean::replace_kern(x = document$text)
       private$logEvent(document)
       return(document)
     }

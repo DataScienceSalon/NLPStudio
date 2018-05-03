@@ -29,11 +29,19 @@ ConverterTM <- R6::R6Class(
 
     to = function(x) {
 
-      # Obtain metadata and text
-      text <- x$text()
+      # Obtain metadata
       cMeta <- x$getMeta()$descriptive
       cMetaVars <- names(cMeta)
       docMeta <- x$getDocMeta(classname = 'Document')$Document
+
+      # Obtain documents
+      docs <- x$getDocuments()
+
+      # Convert list of text to character vectors
+      text = character()
+      for (i in 1:length(docs)) {
+        text[i] <- paste(docs[[i]]$text, collapse = ' ')
+      }
 
       # Format dataframe
       id <- data.frame(doc_id = docMeta$identity$id)
@@ -64,7 +72,7 @@ ConverterTM <- R6::R6Class(
       cMeta <- NLP::meta(x, type = "corpus")
       dMeta <- NLP::meta(x, type = "indexed")
       text <- lapply(seq_along(x), function(d) {
-        x[[d]]$content
+        x[[d]]$text
       })
       docNames <- names(x)
 

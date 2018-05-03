@@ -77,7 +77,7 @@ Counter <- R6::R6Class(
                           "be a quanteda dictionary object or a named list of ",
                           "character vector dictionary entries. See ?",
                           "quanteda::dictionary for further assistance.")
-          private$logR$log(cls = class(self)[1], event = event, level = "Error")
+          private$logR$log(method = 'dfm', event = event, level = "Error")
           stop()
         }
 

@@ -47,7 +47,7 @@ ReplaceSymbolApp <- R6::R6Class(
     ..with = logical(),
 
     processDocument = function(document) {
-      document$content <- textclean::replace_symbol(x = document$content,
+      document$text <- textclean::replace_symbol(x = document$text,
                                             dollar = private$..dollar,
                                            percent = private$..percent,
                                            pound = private$..pound,

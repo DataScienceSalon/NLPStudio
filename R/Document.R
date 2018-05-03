@@ -72,7 +72,7 @@ Document <- R6::R6Class(
       return(TRUE)
     },
 
-    processContent = function(x, note = NULL) {
+    processText = function(x, note = NULL) {
 
       # Validate text
       if (!is.null(x)) {
@@ -98,6 +98,9 @@ Document <- R6::R6Class(
 
   active = list(
 
+    content = function() { stop(paste("This method is not implemented for the Document class.",
+                                      "Use the 'text' method instead.")) },
+
     text = function(value) {
 
       if (missing(value)) {
@@ -107,7 +110,7 @@ Document <- R6::R6Class(
           return(NULL)
         }
       } else {
-        private$processContent(value)
+        private$processText(value)
       }
     }
   ),
@@ -134,7 +137,7 @@ Document <- R6::R6Class(
                            event = v$msg, level = "Error")
           stop()
         }
-        private$processContent(x, note = "Initialized text.")
+        private$processText(x, note = "Initialized text.")
       }
 
       private$logR$log(method = 'initialize',

@@ -66,7 +66,7 @@ Count <- R6::R6Class(
 
     get = function() { return(private$..content) },
     getType = function() { return(private$meta$get(key = 'type', type = 'f')) },
-    getDocument = function() { return(private$..x) },
+    getCorpus = function() { return(private$..x) },
 
     #-------------------------------------------------------------------------#
     #                           Visitor Methods                               #

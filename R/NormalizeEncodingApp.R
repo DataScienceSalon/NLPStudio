@@ -31,11 +31,11 @@ NormalizeEncodingApp <- R6::R6Class(
 
     processDocument = function(document) {
 
-      content <- document$content
+      content <- document$text
       Encoding(content) <- private$..encoding
       content <- enc2utf8(content)
       content <- iconv(content, "UTF-8", "ASCII", sub = "")
-      document$content <- content
+      document$text <- content
       private$logEvent(document)
       return(document)
     }

@@ -58,13 +58,13 @@ ReplaceContractionsApp <- R6::R6Class(
 
     processDocument = function(document) {
 
-      content <- document$content
+      content <- document$text
 
       if (is.null(private$..contractions)) {
-        document$content <- textclean::replace_contraction(x = content,
+        document$text <- textclean::replace_contraction(x = content,
                                                 ignore.case = TRUE)
       } else {
-        document$content <- textclean::mgsub(x = content,
+        document$text <- textclean::mgsub(x = content,
                                     pattern = private$..contractions,
                                     replacement = private$..replacement,
                                     leadspace = private$..leadspace,

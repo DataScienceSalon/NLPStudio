@@ -42,7 +42,7 @@ CVFactoryKFold <- R6::R6Class(
       if (grepl("^s", unit, ignore.case = TRUE)) {
         text <- Tokens$new(x)$sentence()$get()
       } else  {
-        text <- x$text()
+        text <- x$text
       }
 
       # Create text folds
@@ -62,8 +62,8 @@ CVFactoryKFold <- R6::R6Class(
         splits[[sets[i]]]$validation <- Clone$new()$this(x = x, reference = FALSE)
         splits[[sets[i]]]$training$setName(name = paste(name, "Training Set"))
         splits[[sets[i]]]$validation$setName(name = paste(name, "Validation Set"))
-        splits[[sets[i]]]$training$content <- unlist(folds[-i])
-        splits[[sets[i]]]$validation$content <- unlist(folds[i])
+        splits[[sets[i]]]$training$text <- unlist(folds[-i])
+        splits[[sets[i]]]$validation$text <- unlist(folds[i])
       }
 
       return(splits)

@@ -27,12 +27,17 @@ ConverterQuanteda <- R6::R6Class(
       corpusMeta <- x$getMeta()
       docMeta <- x$getDocMeta(classname = 'Document')
 
-      # Obtain corpus text and text names
-      text <- x$text()
+      # Obtain documents
       docs <- x$getDocuments()
-      docNames <- unlist(lapply(docs, function(d) {
-        d$getName()
-      }))
+
+      # Convert list of text to character vectors
+      text = character()
+      for (i in 1:length(docs)) {
+        text[i] <- paste(docs[[i]]$text, collapse = '')
+      }
+
+      #..and obtain text names
+      docNames <- unlist(lapply(docs, function(d) { d$getName() }))
 
       # Create quanteda corpus object
       qCorpus <- quanteda::corpus(text, docnames = docNames)

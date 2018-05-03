@@ -48,7 +48,7 @@ Tagger <- R6::R6Class(
       tags$setName(name)
 
       pos <- list()
-      content <- x$content
+      content <- x$text
       s <- paste(content, collapse = "")
       s <- NLP::as.String(s)
       pa <- openNLP::Maxent_POS_Tag_Annotator()

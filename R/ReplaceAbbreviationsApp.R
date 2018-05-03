@@ -35,10 +35,10 @@ ReplaceAbbreviationsApp <- R6::R6Class(
 
     processDocument = function(document) {
 
-      content <- document$content
+      content <- document$text
 
       if (is.null(private$..abbreviations)) {
-        document$content <- qdap::replace_abbreviation(text.var = content,
+        document$text <- qdap::replace_abbreviation(text.var = content,
                                               ignore.case = private$..ignoreCase)
 
       } else {
@@ -54,7 +54,7 @@ ReplaceAbbreviationsApp <- R6::R6Class(
           replacement <- private$..replacement
         }
 
-        document$content <- textclean::mgsub(x = content,  pattern = pattern,
+        document$text <- textclean::mgsub(x = content,  pattern = pattern,
                                     replacement = replacement,  fixed = FALSE,
                                     perl = TRUE)
       }

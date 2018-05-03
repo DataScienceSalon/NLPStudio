@@ -38,9 +38,9 @@ TextStudio0 <- R6::R6Class(
     },
 
     processDocument = function(document) {
-      document$content <- gsub(pattern = private$..pattern,
+      document$text <- gsub(pattern = private$..pattern,
                       replacement = private$..replacement,
-                      x = document$content,
+                      x = document$text,
                       ignore.case = private$..ignoreCase,
                       perl = private$..perl,
                       fixed = private$..fixed)

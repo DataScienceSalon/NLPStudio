@@ -33,9 +33,9 @@ ReplaceCurlyQuotesApp <- R6::R6Class(
   private = list(
 
     processDocument = function(document) {
-      content <- document$content
-      Encoding(document$content) <- "latin1"
-      document$content <- textclean::replace_curly_quote(x = content)
+      content <- document$text
+      Encoding(document$text) <- "latin1"
+      document$text <- textclean::replace_curly_quote(x = content)
       private$logEvent(document)
       return(document)
     }
