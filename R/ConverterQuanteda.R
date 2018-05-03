@@ -39,9 +39,11 @@ ConverterQuanteda <- R6::R6Class(
 
       # Assign corpus level metadata from descriptive metadata
       corpusMeta <- corpusMeta$descriptive
-      vars <- names(corpusMeta)
-      for (i in 1:length(vars)) {
-          quanteda::metacorpus(qCorpus, vars[i]) <- corpusMeta[[i]]
+      if (length(corpusMeta) > 0 ) {
+        vars <- names(corpusMeta)
+        for (i in 1:length(vars)) {
+            quanteda::metacorpus(qCorpus, vars[i]) <- corpusMeta[[i]]
+        }
       }
 
       # Assign docvars

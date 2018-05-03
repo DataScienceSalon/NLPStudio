@@ -53,7 +53,7 @@ CVFactoryHoldOut <- R6::R6Class(
                     prob = proportions)
       for (i in 1:length(proportions)) {
         name <- paste(x$getName(), corpora[i], "Set")
-        splits[[corpora[i]]] <- Clone$new()$this(x = x)
+        splits[[corpora[i]]] <- Clone$new()$this(x = x, reference = FALSE)
         splits[[corpora[i]]]$setName(name)
         splits[[corpora[i]]]$content <- text[idx == corpora[i]]
       }

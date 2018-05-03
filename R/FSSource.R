@@ -72,7 +72,7 @@ FSSource <- R6::R6Class(
     #                           Visitor Methods                               #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$fcsource(self)
+      visitor$fssource(self)
     }
   )
 )

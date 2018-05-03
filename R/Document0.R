@@ -36,14 +36,13 @@ Document0 <- R6::R6Class(
     summarizeIdMeta = function() {
 
       identity <- private$meta$get(type = 'identity')
-      name <- self$getName()
       NLPStudio::printHeading(text = paste0(identity$classname, ": ",
                                             self$getName(), " Summary"),
                               symbol = "=",
                               newlines = 2)
       cat(paste0("\nObject Class : ", identity$classname))
       cat(paste0("\nObject Id    : ", identity$id))
-      cat(paste0("\nObject Name  : ", name))
+      cat(paste0("\nObject Name  : ", identity$name))
       return(identity)
 
     },
@@ -131,7 +130,7 @@ Document0 <- R6::R6Class(
           private$logR$log(method = 'name', event = v$msg, level = "Error")
           stop()
         }
-        private$meta$set(key = 'name', value = value, type = 'descriptive')
+        private$meta$set(key = 'name', value = value, type = 'i')
         event <- paste0("Object name set to '", value, "' .")
         invisible(self)
       }
@@ -170,7 +169,7 @@ Document0 <- R6::R6Class(
       if (missing(value)) {
         return(private$..content)
       } else {
-        private$..content <- content
+        private$..content <- value
         invisible(self)
       }
     }
@@ -189,7 +188,7 @@ Document0 <- R6::R6Class(
     getName = function() { return(private$meta$get(key = 'name')) },
     setName = function(name) { return(private$meta$set(key = "name",
                                                        value = name,
-                                                       type = 'd'))},
+                                                       type = 'i'))},
 
     getMeta = function(key = NULL, type = NULL) {
       return(private$meta$get(key = key, type = type))

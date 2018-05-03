@@ -30,41 +30,13 @@ Tokens <- R6::R6Class(
   inherit = Document0,
 
   private = list(
-
-    ..x = character(),
-
-    tokenize = function(tokenType = 'word') {
-
-      content <- private$..x$content
-
-      # Produce tokens
-      if (tokenType %in% c("sentence")) {
-
-        # Use sentence token from openNLP and NLP packages
-        s <- paste(content, collapse = "")
-        s <- NLP::as.String(s)
-        sa <- openNLP::Maxent_Sent_Token_Annotator()
-        a <- NLP::annotate(s, sa)
-        private$..content <- s[a]
-        ntokens <- length(private$..content)
-
-      } else {
-        private$..content <- quanteda::tokens(x = content, what = tokenType)
-        ntokens <- length(private$..content[[1]])
-      }
-
-      # Update text, compute statistics and update admin information
-      private$meta$set(key = 'tokenType', value = tokenType)
-      private$meta$set(key = 'ntokens', value = ntokens)
-
-      return(TRUE)
-    }
+    ..x = character()
   ),
 
   public = list(
 
     #-------------------------------------------------------------------------#
-    #                           Core Methods                                  #
+    #                           Constructor                                   #
     #-------------------------------------------------------------------------#
     initialize = function(x) {
 
@@ -89,54 +61,10 @@ Tokens <- R6::R6Class(
     },
 
     get = function() { return(private$..content) },
-    getText = function() { return(private$..x$content) },
-
-    #-------------------------------------------------------------------------#
-    #                           Word Tokens                                   #
-    #-------------------------------------------------------------------------#
-    word = function() {
-
-      private$tokenize(tokenType = 'word')
-      event <- paste0("Created word token representation of ",
-                      private$..x$getName(), ".")
-      name <- paste0(private$..x$getName(), " (Word Tokens)")
-      self$setName(name = name)
-      private$meta$modified(event = event)
-      private$logR$log(method = 'word', event = event)
-
-      invisible(self)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                           Sentence Tokens                               #
-    #-------------------------------------------------------------------------#
-    sentence = function() {
-
-      private$..type <- "sentence"
-      private$tokenize(tokenType = 'sentence')
-      event <- paste0("Created sentence token representation of ",
-                      private$..x$getName(), ".")
-      name <- paste0(private$..x$getName(), " (Sentence Tokens)")
-      self$setName(name = name)
-      private$meta$modified(event = event)
-      private$logR$log(method = 'sentence', event = event)
-
-      invisible(self)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                       Character Tokens                                  #
-    #-------------------------------------------------------------------------#
-    char = function(x) {
-
-      private$tokenize(tokenType = 'character')
-      event <- paste0("Created character token representation of ",
-                      private$..x$getName(), ".")
-      name <- paste0(private$..x$getName(), " (Character Tokens)")
-      self$setName(name = name)
-      private$meta$modified(event = event)
-      private$logR$log(method = 'character', event = event)
-      invisible(self)
+    getDocument = function() { return(private$..x) },
+    nTokens = function() {
+      tokenType <- private$meta$get(key = 'type', type = 'f')
+      private$meta$get(key = paste0(tokenType, 's'), type = 'q')
     },
 
     #-------------------------------------------------------------------------#

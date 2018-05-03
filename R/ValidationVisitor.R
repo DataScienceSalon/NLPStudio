@@ -92,7 +92,7 @@ ValidationVisitor <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                      File and Corpus Sourcing Classes                   #
     #-------------------------------------------------------------------------#
-    fcsourceDir = function(object) {
+    fssourceDir = function(object) {
       return(private$validate(object))
     },
 
@@ -138,8 +138,22 @@ ValidationVisitor <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                     Validate Metadata Classes                           #
     #-------------------------------------------------------------------------#
-
     meta = function(object) {
+      return(private$validate(object))
+    },
+
+    #-------------------------------------------------------------------------#
+    #                    Validate Data Factory Classes                        #
+    #-------------------------------------------------------------------------#
+    tokenizer = function(object) {
+      return(private$validate(object))
+    },
+
+    tagger = function(object) {
+      return(private$validate(object))
+    },
+
+    counter = function(object) {
       return(private$validate(object))
     },
 
@@ -162,31 +176,7 @@ ValidationVisitor <- R6::R6Class(
       return(private$validate(object))
     },
 
-    termFreq = function(object) {
-      return(private$validate(object))
-    },
-
-    termFreqFactoryDfm = function(object) {
-      return(private$validate(object))
-    },
-
-    termFreqFactoryDtm = function(object) {
-      return(private$validate(object))
-    },
-
-    termFreqFactoryTdm = function(object) {
-      return(private$validate(object))
-    },
-
-    termFreqDfm = function(object) {
-      return(private$validate(object))
-    },
-
-    termFreqDtm = function(object) {
-      return(private$validate(object))
-    },
-
-    termFreqTdm = function(object) {
+    count = function(object) {
       return(private$validate(object))
     },
 
@@ -210,9 +200,13 @@ ValidationVisitor <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                             Misc Classes                                #
+    #                         Clone and Copy Classes                          #
     #-------------------------------------------------------------------------#
     koln = function(object) {
+      return(private$validate(object))
+    },
+
+    copy = function(object) {
       return(private$validate(object))
     }
   )

@@ -51,10 +51,9 @@ FileSet <- R6::R6Class(
       private$meta$set(key = 'name', value = ifelse(is.null(name),
                                                     basename(path),
                                                     name),
-                       type = 'descriptive')
+                       type = 'identity')
 
       private$meta$set(key = 'path', value = path, type = 'functional')
-      private$meta$set(key = 'directory', value = path, type = 'functional')
 
       private$logR$log(method = 'initialize',
                        event = "Initialization complete.")

@@ -87,7 +87,7 @@ FSSourceDir <- R6::R6Class(
     #                           Visitor Methods                               #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$fcsourceDir(self)
+      visitor$fssourceDir(self)
     }
   )
 )

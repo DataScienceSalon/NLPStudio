@@ -80,9 +80,9 @@ Meta0 <- R6::R6Class(
 
       # Setup Descriptive Metadata
       if (!is.null(name)) {
-        private$..meta$descriptive$name <- name
+        private$..meta$identity$name <- name
       } else {
-        private$..meta$descriptive$name <- private$..meta$identity$id
+        private$..meta$identity$name <- private$..meta$identity$id
       }
 
       # Setup Admin Metadata
@@ -154,10 +154,12 @@ Meta0 <- R6::R6Class(
         type <- 'functional'
       } else if (grepl("^q", type, ignore.case = TRUE)) {
         type <- 'quant'
+      } else if ((grepl("^i", type, ignore.case = TRUE)) &
+                 (key == 'name')) {
+        type <- 'identity'
       } else {
-        event <- paste0("Unable to set metadata of type ", type, ". Permitted ",
-                        "types include c('descriptive', 'functional').  See?",
-                        class(self)[1], " for further assistance.")
+        event <- paste0("Unable to set", key ," as a(n) ", type, " variable. ",
+                        "See?", class(self)[1], " for further assistance.")
         private$logR$log(method = 'set', event = event, level = "Error")
         stop()
       }

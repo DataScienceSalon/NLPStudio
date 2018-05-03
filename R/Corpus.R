@@ -156,30 +156,6 @@ Corpus <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                             Text Method                                 #
-    #-------------------------------------------------------------------------#
-    text = function(x = NULL, note = NULL) {
-      docs <- self$getDocuments()
-      if (is.null(x)) {
-        return(as.character(lapply(docs, function(d) { d$text() })))
-      } else {
-        if (length(docs) == length(x)) {
-          if (length(note) == 1) note <- rep(note, length(docs))
-          for (i in 1:length(docs)) {
-            docs[[i]]$text(x = x[i], note = note[i])
-          }
-        } else {
-          event <- paste0("The 'x' parameter must be a list of texts with ",
-                          "length equal to the number of Text documents ",
-                          "in the Corpus See?", class(self)[1],
-                          " for further assistance.")
-          private$logR$log(method = 'text', event = event, level = "Error")
-          stop()
-        }
-      }
-    },
-
-    #-------------------------------------------------------------------------#
     #                           Visitor Methods                               #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {

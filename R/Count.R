@@ -1,31 +1,30 @@
-#' POS
+#' Count
 #'
-#' \code{POS} Creates part-of-speech tagged documents.
+#' \code{Count} Class representing tokenized Document objects.
 #'
-#' Class containing the methods for creating and reporting part-of-speech tags
-#' for a Document object.
+#' Class containing the tokenized representation of a Document object.
 #'
-#' @usage pos <- POS$new()
+#' @usage tokens <- Count$new()
 #'
 #' @section Core Methods:
 #'  \itemize{
-#'   \item{\code{new(x)}}{Initializes an object of the POS class.}
-#'   \item{\code{content}}{Active binding used to set and retrieve POS content. POS
+#'   \item{\code{new(x)}}{Initializes an object of the Count class.}
+#'   \item{\code{content}}{Active binding used to set and retrieve Count content. Count
 #'   content may be changed via assignment. Referencing this method retrieves the current
-#'   POS content.}
+#'   Count content.}
 #'  }
 #'
 #' @param x The source Document object.
 #' @template metadataParams
 #'
-#' @return POS object, containing the tokens for a single Document object.
+#' @return Count object, containing the tokens for a single Document object.
 #'
 #' @docType class
 #' @author John James, \email{jjames@@datasciencesalon.org}
-#' @family POS Classes
+#' @family Count Classes
 #' @export
-POS <- R6::R6Class(
-  classname = "POS",
+Count <- R6::R6Class(
+  classname = "Count",
   lock_objects = FALSE,
   lock_class = FALSE,
   inherit = Document0,
@@ -37,18 +36,20 @@ POS <- R6::R6Class(
   public = list(
 
     #-------------------------------------------------------------------------#
-    #                           Core Methods                                  #
+    #                           Constructor                                   #
     #-------------------------------------------------------------------------#
-    initialize = function(x) {
+    initialize = function(x, type) {
 
       private$loadDependencies()
-
 
       # Validate Source Document
       private$..params <- list()
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list('Document')
+      private$..params$classes$valid <- list('Corpus')
+      private$..params$discrete$variables = list('type')
+      private$..params$discrete$values = list(type)
+      private$..params$discrete$valid = list(c('tdm', 'dfm', 'dtm'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize',
@@ -58,25 +59,20 @@ POS <- R6::R6Class(
 
       private$..x <- x
       private$meta <- Meta$new(x = self)
+      private$meta$set(key = 'type', value = type, type = 'f')
       private$logR$log(method = 'initialize', event = "Initialization complete.")
       invisible(self)
     },
 
-    get = function(distribution = FALSE) {
-
-      if (distribution) {
-        return(private$..content)
-      } else {
-        return(private$..content$tags)
-      }
-    },
+    get = function() { return(private$..content) },
+    getType = function() { return(private$meta$get(key = 'type', type = 'f')) },
     getDocument = function() { return(private$..x) },
 
     #-------------------------------------------------------------------------#
     #                           Visitor Methods                               #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$pos(self)
+      visitor$count(self)
     }
   )
 )

@@ -39,14 +39,20 @@ ConverterTM <- R6::R6Class(
       id <- data.frame(doc_id = docMeta$identity$id)
       descriptive <- docMeta$descriptive
       text <- as.data.frame(text)
-      docs <- cbind(id, descriptive, text)
+      if (length(descriptive) > 0) {
+        docs <- cbind(id, descriptive, text)
+      } else {
+        docs <- cbind(id, text)
+      }
 
       # Create tm corpus object
       tmCorpus <- tm::Corpus(tm::DataframeSource(docs))
 
       # Add corpus level metadata
-      for (i in 1:length(cMetaVars)) {
-        NLP::meta(tmCorpus, tag = cMetaVars[i], type = "corpus") <- cMeta[[i]]
+      if (length(cMetaVars) > 0) {
+        for (i in 1:length(cMetaVars)) {
+          NLP::meta(tmCorpus, tag = cMetaVars[i], type = "corpus") <- cMeta[[i]]
+        }
       }
 
       return(tmCorpus)

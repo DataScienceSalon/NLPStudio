@@ -37,71 +37,7 @@ TokensSet <- R6::R6Class(
   inherit = Set0,
 
   private = list(
-
-    #-------------------------------------------------------------------------#
-    #                           Tokenize Methods                              #
-    #-------------------------------------------------------------------------#
-    tokenize = function(tokenType = 'word') {
-      docs <- private$..x$getDocuments()
-      ntokens <- 0
-
-      # Process Document corpus text combined into a single document.
-      if (private$..collapse) {
-
-        corpusText <- paste(docs, lapply(docs, function(d) {
-          d$text()
-        }) , collapse = " ")
-        corpusDoc <- Document$new(x = corpusText, name = self$getName())
-        tokensObject <- switch(tokenType,
-                               word = Tokens$new(corpusDoc)$word(),
-                               sentence = Tokens$new(corpusDoc)$sentence(),
-                               character = Tokens$new(corpusDoc)$char())
-        self$addDocument(tokensObject)
-        tokens <- tokensObject$get()
-
-        if (class(tokens)[1] == 'tokens') {
-          ntokens <- ntokens + sum(ntoken(tokens))
-        } else {
-          ntokens <- ntokens + length(tokens)
-        }
-
-      # Process individual documents
-      } else {
-        for (i in 1:length(docs)) {
-          tokensObject <- switch(tokenType,
-                           word = Tokens$new(docs[[i]])$word(),
-                           sentence = Tokens$new(docs[[i]])$sentence(),
-                           character = Tokens$new(docs[[i]])$char())
-          self$addDocument(tokensObject)
-          tokens <- tokensObject$get()
-
-          if (class(tokens)[1] == 'tokens') {
-            ntokens <- ntokens + sum(ntoken(tokens))
-          } else {
-            ntokens <- ntokens + length(tokens)
-          }
-        }
-      }
-      private$meta$set(key = tokenType, value = ntokens, type = 'q')
-      return(TRUE)
-    },
-
-
-    #-------------------------------------------------------------------------#
-    #                           Summary Methods                               #
-    #-------------------------------------------------------------------------#
-    summarizeQuantMeta = function(verbose = TRUE) {
-      private$setQuant()
-      quant <- private$meta$get(type = 'quant')
-      if (verbose) {
-        if (!is.null(quant)) {
-          quantDf <- as.data.frame(quant, stringsAsFactors = FALSE, row.names = NULL)
-          cat("\n\nQuantitative:\n")
-          print(quantDf, row.names = FALSE)
-        }
-      }
-      return(quant)
-    }
+    ..x = character()
   ),
 
   public = list(
@@ -109,7 +45,7 @@ TokensSet <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Core Methods                                  #
     #-------------------------------------------------------------------------#
-    initialize = function(x, collapse = FALSE) {
+    initialize = function(x) {
 
       private$loadDependencies()
 
@@ -118,8 +54,6 @@ TokensSet <- R6::R6Class(
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
       private$..params$classes$valid <- list('Corpus')
-      private$..params$logicals$variables <- c("collapse")
-      private$..params$logicals$values <- c(collapse)
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize',
@@ -128,71 +62,22 @@ TokensSet <- R6::R6Class(
       }
 
       private$..x <- x
-      private$..collapse <- collapse
       private$meta <- Meta$new(x = self)
       private$logR$log(method = 'initialize', event = "Initialization complete.")
       invisible(self)
     },
 
-    get = function() {
-      name <- sapply(private$..x, function(d) { d$getName() })
-      tokens <- lapply(private$..documents, function(d) { d$get() })
-      names(tokens) <- name
-      return(tokens)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                           Word Tokens                                   #
-    #-------------------------------------------------------------------------#
-    word = function() {
-
-      private$tokenize(tokenType = 'word')
-      event <- paste0("Created word token representation of ",
-                      private$..x$getName(), ".")
-      name <- paste0(private$..x$getName(), " (Word Tokens)")
-      self$setName(name = name)
-      private$meta$modified(event = event)
-      private$logR$log(method = 'word', event = event)
-
-      invisible(self)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                           Sentence Tokens                               #
-    #-------------------------------------------------------------------------#
-    sentence = function() {
-
-      private$..type <- "sentence"
-      private$tokenize(tokenType = 'sentence')
-      event <- paste0("Created sentence token representation of ",
-                      private$..x$getName(), ".")
-      name <- paste0(private$..x$getName(), " (Sentence Tokens)")
-      self$setName(name = name)
-      private$meta$modified(event = event)
-      private$logR$log(method = 'sentence', event = event)
-
-      invisible(self)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                       Character Tokens                                  #
-    #-------------------------------------------------------------------------#
-    char = function(x) {
-
-      private$tokenize(tokenType = 'character')
-      event <- paste0("Created character token representation of ",
-                      private$..x$getName(), ".")
-      name <- paste0(private$..x$getName(), " (Character Tokens)")
-      self$setName(name = name)
-      private$meta$modified(event = event)
-      private$logR$log(method = 'character', event = event)
-      invisible(self)
+    get = function() { private$..documents },
+    getCorpus = function() { private$..x },
+    nTokens = function() {
+      tokenType <- private$meta$get(key = 'type', type = 'f')
+      private$meta$get(key = paste0(tokenType, 's'), type = 'q')
     },
 
     #-------------------------------------------------------------------------#
     #                          Composite Management                           #
     #-------------------------------------------------------------------------#
-    addDocument = function(x) {
+    addTokens = function(x) {
 
       # Validate class of object.
       private$..params <- list()
@@ -201,7 +86,7 @@ TokensSet <- R6::R6Class(
       private$..params$classes$valid <- list(c('Tokens'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
-        private$logR$log(method = 'addDocument',
+        private$logR$log(method = 'addTokens',
                          event = v$msg, level = "Error")
         stop()
       }

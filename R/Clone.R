@@ -34,6 +34,8 @@ Clone <- R6::R6Class(
 
     cloneMeta = function(x, out) {
 
+      out$setName(name = x$name)
+
       # Clone descriptive
       descriptive <- x$getMeta(type = 'd')
       if (length(descriptive) > 0){

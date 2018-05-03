@@ -51,7 +51,7 @@ File <- R6::R6Class(
       private$meta$set(key = 'name', value = ifelse(is.null(name),
                                                     tools::file_path_sans_ext(basename(path)),
                                                     name),
-                       type = 'descriptive')
+                       type = 'identity')
       private$meta$set(key = 'directory', value = dirname(path), type = 'f')
       private$meta$set(key = 'fileName', value = basename(path), type = 'f')
 
@@ -66,7 +66,6 @@ File <- R6::R6Class(
     #                           Getter Methods                                #
     #-------------------------------------------------------------------------#
     getFileName = function() {private$meta$get(key = 'fileName')},
-    getDirectory = function() {private$meta$get(key = 'directory')},
     getPath = function() {private$meta$get(key = 'path')},
 
 
@@ -112,7 +111,6 @@ File <- R6::R6Class(
       private$logR$log(method = 'move', event = event)
 
       private$meta$set(key = 'path', value = path, type = 'functional')
-      private$meta$set(key = 'directory', value = dirname(path), type = 'functional')
       invisible(self)
     },
 

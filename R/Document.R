@@ -98,7 +98,7 @@ Document <- R6::R6Class(
 
   active = list(
 
-    content = function(value) {
+    text = function(value) {
 
       if (missing(value)) {
         if (length(private$..content) > 0) {
@@ -140,20 +140,6 @@ Document <- R6::R6Class(
       private$logR$log(method = 'initialize',
                        event = "Initialization complete.")
 
-      invisible(self)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                           Content Method                                #
-    #-------------------------------------------------------------------------#
-    text = function(x = NULL, note = NULL) {
-
-      if (missing(x)) {
-        return(private$decompress(private$..content))
-
-      } else {
-        private$processContent(x, note = note)
-      }
       invisible(self)
     },
 

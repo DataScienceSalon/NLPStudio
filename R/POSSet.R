@@ -34,41 +34,12 @@ POSSet <- R6::R6Class(
   lock_class = FALSE,
   inherit = Set0,
 
-  private = list(
-
-    #-------------------------------------------------------------------------#
-    #                           Tokenize Methods                              #
-    #-------------------------------------------------------------------------#
-    tagCorpus = function() {
-      docs <- private$..x$getDocuments()
-
-      # Process Document corpus text combined into a single document.
-      if (private$..collapse) {
-
-        corpusText <- paste(docs, lapply(docs, function(d) {
-          d$text()
-        }) , collapse = " ")
-        corpusDoc <- Document$new(x = corpusText, name = self$getName())
-        posObject <- POS$new(corpusDoc)$tag()
-        self$addDocument(posObject)
-
-      # Process individual documents
-      } else {
-        for (i in 1:length(docs)) {
-          posObject <- POS$new(docs[[i]])$tag()
-          self$addDocument(posObject)
-        }
-      }
-      return(TRUE)
-    }
-  ),
-
   public = list(
 
     #-------------------------------------------------------------------------#
     #                           Constructor                                   #
     #-------------------------------------------------------------------------#
-    initialize = function(x, collapse = FALSE) {
+    initialize = function(x) {
 
       private$loadDependencies()
 
@@ -77,8 +48,6 @@ POSSet <- R6::R6Class(
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
       private$..params$classes$valid <- list('Corpus')
-      private$..params$logicals$variables <- c("collapse")
-      private$..params$logicals$values <- c(collapse)
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize',
@@ -87,7 +56,6 @@ POSSet <- R6::R6Class(
       }
 
       private$..x <- x
-      private$..collapse <- collapse
       private$meta <- Meta$new(x = self)
       private$logR$log(method = 'initialize', event = "Initialization complete.")
       invisible(self)
@@ -96,43 +64,13 @@ POSSet <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Get Methods                                   #
     #-------------------------------------------------------------------------#
+    get = function() { private$..documents },
     getCorpus = function() { private$..x },
-    getDocuments = function() { private$..x$getDocuments() },
-    getPOS = function() { private$..documents },
-    getTags = function() {
-      pos <- lapply(private$..documents, function(d) {
-        d$getTags()
-      })
-      return(pos)
-    },
-
-    getDistribution = function() {
-      pos <- lapply(private$..documents, function(d) {
-        d$getDistribution()
-      })
-      return(pos)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                                 Tag Set                                 #
-    #-------------------------------------------------------------------------#
-    tag = function() {
-
-      private$tagCorpus()
-      event <- paste0("POS tagged ",
-                      private$..x$getName(), ".")
-      name <- paste0(private$..x$getName(), " (POS)")
-      self$setName(name = name)
-      private$meta$modified(event = event)
-      private$logR$log(method = 'tag', event = event)
-
-      invisible(self)
-    },
 
     #-------------------------------------------------------------------------#
     #                          Composite Management                           #
     #-------------------------------------------------------------------------#
-    addDocument = function(x) {
+    addTags = function(x) {
 
       # Validate class of object.
       private$..params <- list()
@@ -141,7 +79,7 @@ POSSet <- R6::R6Class(
       private$..params$classes$valid <- list(c('POS'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
-        private$logR$log(method = 'addDocument',
+        private$logR$log(method = 'addTags',
                          event = v$msg, level = "Error")
         stop()
       }

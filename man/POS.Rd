@@ -45,7 +45,8 @@ for a Document object.
 }
 
 \seealso{
-Other POS Classes: \code{\link{POSSet}}
+Other POS Classes: \code{\link{POSSet}},
+  \code{\link{Tagger}}
 }
 \author{
 John James, \email{jjames@datasciencesalon.org}

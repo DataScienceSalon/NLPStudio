@@ -51,7 +51,7 @@ Class contains POS objects
 }
 
 \seealso{
-Other POS Classes: \code{\link{POS}}
+Other POS Classes: \code{\link{POS}}, \code{\link{Tagger}}
 }
 \author{
 John James, \email{jjames@datasciencesalon.org}
