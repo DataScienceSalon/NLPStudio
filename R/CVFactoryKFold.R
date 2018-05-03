@@ -40,7 +40,7 @@ CVFactoryKFold <- R6::R6Class(
 
       # Obtain text based upon unit
       if (grepl("^s", unit, ignore.case = TRUE)) {
-        text <- Tokens$new(x)$sentence()$get()
+        text <- Tokenizer$new()$this(x = x, type = 'sentence')$get()
       } else  {
         text <- x$text
       }
@@ -110,7 +110,7 @@ CVFactoryKFold <- R6::R6Class(
       # Create single Document object if stratify is FALSE
       if (stratify == FALSE) {
         content <- unlist(lapply(docs, function(d) {
-          d$text()
+          d$text
         }))
         docs <- list(Document$new(x = content, name = paste(x$getName(), "Text Document")))
       }

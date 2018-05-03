@@ -72,7 +72,7 @@ ConverterTM <- R6::R6Class(
       cMeta <- NLP::meta(x, type = "corpus")
       dMeta <- NLP::meta(x, type = "indexed")
       text <- lapply(seq_along(x), function(d) {
-        x[[d]]$text
+        x[[d]]$content
       })
       docNames <- names(x)
 
