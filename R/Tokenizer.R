@@ -38,23 +38,8 @@ Tokenizer <- R6::R6Class(
       name <- paste0(x$getName(), " (", tokenType, " tokens)")
       tokens$setName(name)
 
-      content <- x$text
-
-      # Produce Tokenizer
-      if (tokenType %in% c("sentence")) {
-
-        # Use sentence token from openNLP and NLP packages
-        s <- paste(content, collapse = "")
-        s <- NLP::as.String(s)
-        sa <- openNLP::Maxent_Sent_Token_Annotator()
-        a <- NLP::annotate(s, sa)
-        tokens$content <- s[a]
-        nTokens <- length(tokens$content)
-
-      } else {
-        tokens$content <- quanteda::tokens(x = content, what = tokenType)
-        nTokens <- length(tokens$content[[1]])
-      }
+      tokens$content <- NLPStudio::tokenize(x = x$text, tokenType = tokenType)
+      nTokens <- length(tokens$content)
 
       # Update text, compute statistics and update admin information
       tokens$setMeta(key = 'type', value = tokenType, type = 'f')

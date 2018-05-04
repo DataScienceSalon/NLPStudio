@@ -130,7 +130,7 @@ Document <- R6::R6Class(
         private$..params <- list()
         private$..params$classes$name <- list('x')
         private$..params$classes$objects <- list(x)
-        private$..params$classes$valid <- list('character')
+        private$..params$classes$valid <- list(c('character'))
         v <- private$validator$validate(self)
         if (v$code == FALSE) {
           private$logR$log(method = 'initialize',

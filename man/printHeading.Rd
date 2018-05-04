@@ -11,7 +11,8 @@ printHeading(text, symbol = "=", newlines = 1)
 }
 \seealso{
 Other Internal Functions: \code{\link{listFiles}},
-  \code{\link{proper}}
+  \code{\link{proper}}, \code{\link{slice}},
+  \code{\link{tokenize}}
 }
 \author{
 John James, \email{jjames@DataScienceSalon.org}

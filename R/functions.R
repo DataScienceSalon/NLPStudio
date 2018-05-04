@@ -1,4 +1,52 @@
 #------------------------------------------------------------------------------#
+#                                     slice                                    #
+#------------------------------------------------------------------------------#
+#' slice
+#'
+#' \code{tokenize} Slices a vector into chunks of the given size
+#' @param v Input vector to be split
+#' @param size Numeric indicating the number of elements per slice.
+#' @author John James, \email{jjames@@DataScienceSalon.org}
+#' @family Internal Functions
+#' @export
+slice = function(v, size) {
+    starts <- seq(1,length(v),size)
+    tt <- lapply(starts, function(y) v[y:(y+(size-1))])
+    lapply(tt, function(x) x[!is.na(x)])
+}
+
+
+#------------------------------------------------------------------------------#
+#                                  tokenize                                    #
+#------------------------------------------------------------------------------#
+#' tokenize
+#'
+#' \code{tokenize} Creates sentence, word and character tokens
+#' @author John James, \email{jjames@@DataScienceSalon.org}
+#' @family Internal Functions
+#' @export
+tokenize = function(x, tokenType = 'char') {
+
+  # Collapse into single vector
+  x <- paste(x, collapse = "")
+
+  # Produce Tokenizer
+  if (tokenType %in% c("sentence")) {
+
+    # Use sentence token from openNLP and NLP packages
+    s <- NLP::as.String(x)
+    sa <- openNLP::Maxent_Sent_Token_Annotator()
+    a <- NLP::annotate(s, sa)
+    tokens <- s[a]
+    nTokens <- length(tokens)
+
+  } else {
+    tokens <- quanteda::tokens(x = x, what = tokenType)$text1
+  }
+  return(tokens)
+}
+
+#------------------------------------------------------------------------------#
 #                                Proper                                        #
 #------------------------------------------------------------------------------#
 #' proper

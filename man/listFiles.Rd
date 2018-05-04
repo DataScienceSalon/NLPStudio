@@ -11,7 +11,8 @@ listFiles(x)
 }
 \seealso{
 Other Internal Functions: \code{\link{printHeading}},
-  \code{\link{proper}}
+  \code{\link{proper}}, \code{\link{slice}},
+  \code{\link{tokenize}}
 }
 \author{
 John James, \email{jjames@DataScienceSalon.org}
