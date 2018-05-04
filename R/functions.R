@@ -28,7 +28,7 @@ slice = function(v, size) {
 tokenize = function(x, tokenType = 'char') {
 
   # Collapse into single vector
-  x <- paste(x, collapse = "")
+  x <- paste(x, collapse = " ")
 
   # Produce Tokenizer
   if (tokenType %in% c("sentence")) {

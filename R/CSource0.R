@@ -30,8 +30,8 @@ CSource0 <- R6::R6Class(
       # Update quantitative metadata
       quant <- corpus$getDocMeta(type = 'q')[[1]]
       if (nrow(quant) > 0) {
-        keys <- names(quant)
-        values <- colSums(quant)
+        keys <- c(names(quant), 'documents')
+        values <- c(colSums(quant), nrow(quant))
         corpus$setMeta(key = keys, value = values, type = 'q')
       }
       return(corpus)

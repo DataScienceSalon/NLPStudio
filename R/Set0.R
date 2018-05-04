@@ -285,11 +285,11 @@ Set0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Summary Method                                #
     #-------------------------------------------------------------------------#
-    summary = function(select = NULL) {
+    summary = function(type = NULL) {
 
       private$..params <- list()
-      private$..params$discrete$variables <- 'select'
-      private$..params$discrete$values <- select
+      private$..params$discrete$variables <- 'type'
+      private$..params$discrete$values <- type
       private$..params$discrete$valid <- list(c('id', 'descriptive', 'functional',
                                                 'quant', 'documents', 'admin',
                                                 'tech'))
@@ -301,7 +301,7 @@ Set0 <- R6::R6Class(
 
       sd <- list()
 
-      if (is.null(select)) {
+      if (is.null(type)) {
         sd$id <- private$summarizeIdMeta()
         sd$descriptive <- private$summarizeDescriptiveMeta()
         sd$quant <- private$summarizeQuantMeta()
@@ -311,7 +311,7 @@ Set0 <- R6::R6Class(
         sd$tech <- private$summarizeTechMeta()
         invisible(sd)
       } else {
-        sd <- switch(select,
+        sd <- switch(type,
                      id = private$summarizeIdMeta(),
                      descriptive = private$summarizeDescriptiveMeta(),
                      functional = private$summarizeFunctionalMeta(),

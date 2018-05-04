@@ -31,7 +31,8 @@ Sample <- R6::R6Class(
 
   private = list(
 
-    validate = function(x, n, prob, unit, size, stratified, replace) {
+    validate = function(x, n, unit, size, stratify, replace) {
+
       # Validate Source Object
       private$..params <- list()
       private$..params$classes$name <- list('x')
@@ -41,23 +42,13 @@ Sample <- R6::R6Class(
       private$..params$discrete$values <- list(c(unit))
       private$..params$discrete$valid <- list(c('vector', 'sentence', 'word',
                                                 'v', 's', 'w'))
-      private$..params$logical$variables <- c('stratified', 'replace')
-      private$..params$logical$values <- c(stratified, replace)
+      private$..params$logicals$variables <- c('stratify', 'replace')
+      private$..params$logicals$values <- c(stratify, replace)
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'this',
                          event = v$msg, level = "Error")
         stop()
-      }
-
-      if (!is.null(prob)) {
-        if (sum(prob) == 0) {
-          event <- paste0("Probabilities must not be all zero. ",
-                          "See?", class(self)[1], " for further ",
-                          "assistance.")
-          private$logR$log(method = 'this', event = event, level = "Error")
-          stop()
-        }
       }
 
       if (grepl("^w", unit, ignore.case = TRUE)) {
@@ -74,22 +65,7 @@ Sample <- R6::R6Class(
         stop()
       }
 
-      if (is.null(prob) & is.null(n)) {
-        event <- paste0("Either the 'n' parameter or the 'prob' parameter must ",
-                        "be provided. See?", class(self)[1],
-                        " for further assistance.")
-        private$logR$log(method = 'this', event = event, level = "Error")
-        stop()
-      }
-
-      if (!is.null(prob) & !is.null(n)) {
-        event <- paste0("Probability and n (size) parameters were both provided. ",
-                        "The n parameter will be ignored. See?", class(self)[1],
-                        " for further assistance.")
-        private$logR$log(method = 'this', event = event, level = "Warn")
-      }
-
-      if (class(x)[1] == 'Corpus' & (stratified)) {
+      if (class(x)[1] == 'Corpus' & (stratify)) {
         nDocuments <- x$getMeta(key = 'documents')
         if (length(n) != 1 & length(n) != nDocuments) {
           event <- paste0("Invalid n parameter. Must be of length one, or ",
@@ -98,22 +74,6 @@ Sample <- R6::R6Class(
                           "assistance.")
           private$logR$log(method = 'this', event = event, level = "Error")
           stop()
-        }
-      } else {
-        if (!is.null(prob)) {
-          if (length(prob) > 1) {
-            event <- paste0("Probability vector should be of length one. Only the first ",
-                            "value will be used. See?", class(self)[1], " for further ",
-                            "assistance.")
-            private$logR$log(method = 'this', event = event, level = "Warn")
-          }
-        } else if (!is.null(n)) {
-          if (length(n) > 1) {
-            event <- paste0("The 'n' vector should be of length one. Only the first ",
-                            "value will be used. See?", class(self)[1], " for further ",
-                            "assistance.")
-            private$logR$log(method = 'this', event = event, level = "Warn")
-          }
         }
       }
     },
@@ -129,17 +89,24 @@ Sample <- R6::R6Class(
 
       # Create samples
       if (n <= 1) n <- floor(n * length(segments))
+      if (!is.null(seed)) set.seed(seed)
       idx <- sample(1:length(segments), size = n, replace = replace)
-      samples <- segments[idx]
+      samples <- paste(unlist(segments[idx]), collapse = ' ')
 
       # Create Document
       name <- paste0(x$getName(), " (sample)")
       doc <- Document$new(x = samples, name = name)
 
+      # Add parameters as functional metadata
+      doc$setMeta(key = 'nSamples', value = n, type = 'f')
+      doc$setMeta(key = 'samplingUnit', value = unit, type = 'f')
+      doc$setMeta(key = 'nUnitsPerSample', value = size, type = 'f')
+      doc$setMeta(key = 'sampleReplace', value = replace, type = 'f')
+
       return(doc)
     },
 
-    sampleCorpus = function(x, n, unit, size, name, stratified,
+    sampleCorpus = function(x, n, unit, size, name, stratify,
                             replace, seed) {
 
       # Create corpus
@@ -147,18 +114,16 @@ Sample <- R6::R6Class(
       if (is.null(name)) name <- paste0(x$getName(), " (sample)")
       corpus$setName(name)
 
-      # Extract and if stratified is false, combine documents
+      # Extract and if stratify is false, combine documents
       documents <- x$getDocuments()
-      if (!stratified) {
+      if (!stratify) {
         docText <- paste(unlist(lapply(documents, function(d) { d$text })), collapse = '')
         documents <- list()
-        documents[[1]] <- Document$new(x = docText, name = paste0("Corpus ", x$getName, " document"))
+        documents[[1]] <- Document$new(x = docText, name = paste0("Corpus ", x$getName(), " document"))
       }
 
-      # Format length one n / prob vectors
-      if ((by == 'n') & length(n) == 1) {
-        n = rep(n, length(documents))
-      }
+      # Format length one n vector
+      if (length(n) == 1)  n <- rep(n, length(documents))
 
       # Sample documents and add to corpus
       for (i in 1:length(documents)) {
@@ -182,16 +147,16 @@ Sample <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                            Sample                                    #
+    #                               Sample                                    #
     #-------------------------------------------------------------------------#
-    this = function(x, n, unit = 'word', size, name = NULL, stratified = TRUE,
+    this = function(x, n, unit = 'sentence', size, name = NULL, stratify = TRUE,
                     replace = FALSE, seed = NULL) {
 
-      private$validate(x, n, unit, size, stratified, replace)
+      private$validate(x, n, unit, size, stratify, replace)
 
 
       if (class(x)[1] == 'Corpus') {
-        sample <- private$sampleCorpus(x, n, unit, size, name, stratified,
+        sample <- private$sampleCorpus(x, n, unit, size, name, stratify,
                                        replace, seed)
       } else {
         sample <- private$sampleDocument(x, n, unit, size, replace, seed)

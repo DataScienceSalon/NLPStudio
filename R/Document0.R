@@ -48,10 +48,12 @@ Document0 <- R6::R6Class(
     },
 
     summarizeDescriptiveMeta = function() {
+      identity <- private$meta$get(type = 'identity')
+      id <- paste0(identity$classname, ": ", self$getName())
 
       descriptive <- private$meta$get(type = 'descriptive')
       if (length(descriptive) > 0) {
-        NLPStudio::printHeading(text = "Descriptive Metadata", symbol = "-")
+        NLPStudio::printHeading(text = paste0(id, " Descriptive Metadata"), symbol = "-")
         metaDf <- as.data.frame(descriptive, stringsAsFactors = FALSE,
                                 row.names = NULL)
         print(metaDf, row.names = FALSE)
@@ -62,9 +64,12 @@ Document0 <- R6::R6Class(
 
     summarizeQuantMeta = function() {
 
+      identity <- private$meta$get(type = 'identity')
+      id <- paste0(identity$classname, ": ", self$getName())
+
       quant <- private$meta$get(type = 'quant')
       if (length(quant > 0)) {
-        NLPStudio::printHeading(text = "Quantitative Metadata", symbol = "-")
+        NLPStudio::printHeading(text = paste0(id, " Quantitative Metadata"), symbol = "-")
         quantDf <- as.data.frame(quant, stringsAsFactors = FALSE,
                                  row.names = NULL)
         print(quantDf, row.names = FALSE)
@@ -75,9 +80,12 @@ Document0 <- R6::R6Class(
 
     summarizeFunctionalMeta = function() {
 
+      identity <- private$meta$get(type = 'identity')
+      id <- paste0(identity$classname, ": ", self$getName())
+
       functional <- private$meta$get(type = 'functional')
       if (length(functional) > 0) {
-        NLPStudio::printHeading(text = "Functional Metadata", symbol = "-")
+        NLPStudio::printHeading(text = paste0(id, " Functional Metadata"), symbol = "-")
         metaDf <- as.data.frame(functional, stringsAsFactors = FALSE,
                                 row.names = NULL)
         print(metaDf, row.names = FALSE)
@@ -89,7 +97,10 @@ Document0 <- R6::R6Class(
 
     summarizeAdminMeta = function() {
 
-      NLPStudio::printHeading(text = "Administrative Metadata", symbol = "-")
+      identity <- private$meta$get(type = 'identity')
+      id <- paste0(identity$classname, ": ", self$getName())
+
+      NLPStudio::printHeading(text = paste0(id, " Administrative Metadata"), symbol = "-")
       admin <- private$meta$get(type = 'admin')
       adminDf <- as.data.frame(admin, stringsAsFactors = FALSE, row.names = NULL)
       print(adminDf, row.names = FALSE)
@@ -98,8 +109,11 @@ Document0 <- R6::R6Class(
 
     summarizeTechMeta = function() {
 
+      identity <- private$meta$get(type = 'identity')
+      id <- paste0(identity$classname, ": ", self$getName())
+
       tech <- private$meta$get(type = 'tech')
-      NLPStudio::printHeading(text = "Technical Metadata", symbol = "-")
+      NLPStudio::printHeading(text = paste0(id, " Technical Metadata"), symbol = "-")
       techDf <- as.data.frame(tech, stringsAsFactors = FALSE, row.names = NULL)
       print(techDf, row.names = FALSE)
       return(tech)
@@ -216,11 +230,11 @@ Document0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Summary Method                                #
     #-------------------------------------------------------------------------#
-    summary = function(select = NULL) {
+    summary = function(type = NULL) {
 
       private$..params <- list()
-      private$..params$discrete$variables <- 'select'
-      private$..params$discrete$values <- select
+      private$..params$discrete$variables <- 'type'
+      private$..params$discrete$values <- type
       private$..params$discrete$valid <- list(c('id', 'descriptive', 'functional',
                                                 'quant', 'admin', 'tech'))
       v <- private$validator$validate(self)
@@ -231,7 +245,7 @@ Document0 <- R6::R6Class(
 
       sd <- list()
 
-      if (is.null(select)) {
+      if (is.null(type)) {
         sd$id <- private$summarizeIdMeta()
         sd$descriptive <- private$summarizeDescriptiveMeta()
         sd$quant <- private$summarizeQuantMeta()
@@ -240,7 +254,7 @@ Document0 <- R6::R6Class(
         sd$tech <- private$summarizeTechMeta()
         invisible(sd)
       } else {
-        sd <- switch(select,
+        sd <- switch(type,
                      id = private$summarizeIdMeta(),
                      descriptive = private$summarizeDescriptiveMeta(),
                      functional = private$summarizeFunctionalMeta(),

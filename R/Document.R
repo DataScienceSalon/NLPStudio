@@ -79,7 +79,7 @@ Document <- R6::R6Class(
         private$..params <- list()
         private$..params$classes$name <- list('x')
         private$..params$classes$objects <- list(x)
-        private$..params$classes$valid <- list('character')
+        private$..params$classes$valid <- list(c('character', 'list'))
         v <- private$validator$validate(self)
         if (v$code == FALSE) {
           private$logR$log(method = 'processContent',
@@ -88,7 +88,11 @@ Document <- R6::R6Class(
         }
 
         # Update text, compute statistics and update admin information
-        private$..content <- private$compress(x)
+        if (class(x)[1] == 'character') {
+          private$..content <- private$compress(x)
+        } else {
+          private$..content <- x
+        }
         private$setQuant(x)
         private$meta$modified(event = note)
       }
@@ -105,7 +109,11 @@ Document <- R6::R6Class(
 
       if (missing(value)) {
         if (length(private$..content) > 0) {
-          return(private$decompress(private$..content))
+          if (is.raw(private$..content)) {
+            return(private$decompress(private$..content))
+          } else {
+            return(private$..content)
+          }
         } else {
           return(NULL)
         }
@@ -130,7 +138,7 @@ Document <- R6::R6Class(
         private$..params <- list()
         private$..params$classes$name <- list('x')
         private$..params$classes$objects <- list(x)
-        private$..params$classes$valid <- list(c('character'))
+        private$..params$classes$valid <- list(c('character', 'list'))
         v <- private$validator$validate(self)
         if (v$code == FALSE) {
           private$logR$log(method = 'initialize',
