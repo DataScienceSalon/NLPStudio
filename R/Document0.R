@@ -230,40 +230,14 @@ Document0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Summary Method                                #
     #-------------------------------------------------------------------------#
-    summary = function(type = NULL) {
-
-      private$..params <- list()
-      private$..params$discrete$variables <- 'type'
-      private$..params$discrete$values <- type
-      private$..params$discrete$valid <- list(c('id', 'descriptive', 'functional',
-                                                'quant', 'admin', 'tech'))
-      v <- private$validator$validate(self)
-      if (v$code == FALSE) {
-        private$logR$log(method = 'summary',  event = v$msg, level = "Error")
-        stop()
-      }
-
+    summary = function() {
       sd <- list()
-
-      if (is.null(type)) {
-        sd$id <- private$summarizeIdMeta()
-        sd$descriptive <- private$summarizeDescriptiveMeta()
-        sd$quant <- private$summarizeQuantMeta()
-        sd$functional  <- private$summarizeFunctionalMeta()
-        sd$admin <- private$summarizeAdminMeta()
-        sd$tech <- private$summarizeTechMeta()
-        invisible(sd)
-      } else {
-        sd <- switch(type,
-                     id = private$summarizeIdMeta(),
-                     descriptive = private$summarizeDescriptiveMeta(),
-                     functional = private$summarizeFunctionalMeta(),
-                     quant = private$summarizeQuantMeta(),
-                     admin = private$summarizeAdminMeta(),
-                     tech = private$summarizeTechMeta()
-        )
-      }
-
+      sd$id <- private$summarizeIdMeta()
+      sd$descriptive <- private$summarizeDescriptiveMeta()
+      sd$quant <- private$summarizeQuantMeta()
+      sd$functional  <- private$summarizeFunctionalMeta()
+      sd$admin <- private$summarizeAdminMeta()
+      sd$tech <- private$summarizeTechMeta()
       invisible(sd)
     },
 

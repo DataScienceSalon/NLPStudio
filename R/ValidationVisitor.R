@@ -161,6 +161,10 @@ ValidationVisitor <- R6::R6Class(
       return(private$validate(object))
     },
 
+    nGrammer = function(object) {
+      return(private$validate(object))
+    },
+
     #-------------------------------------------------------------------------#
     #                 Validate Data Processing Classes                        #
     #-------------------------------------------------------------------------#
@@ -183,6 +187,15 @@ ValidationVisitor <- R6::R6Class(
     count = function(object) {
       return(private$validate(object))
     },
+
+    nGram = function(object) {
+      return(private$validate(object))
+    },
+
+    nGramSet = function(object) {
+      return(private$validate(object))
+    },
+
 
     #-------------------------------------------------------------------------#
     #                             Studio Classes                              #
