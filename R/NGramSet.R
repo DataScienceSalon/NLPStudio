@@ -86,6 +86,7 @@ NGramSet <- R6::R6Class(
 
 
     mergeNGrams = function() {
+      private$..content <- character()
       for (i in 1:length(private$..documents)) {
         private$..content <- c(private$..content,
                                private$..documents[[i]]$getNGrams())
@@ -119,6 +120,8 @@ NGramSet <- R6::R6Class(
                                           stringsAsFactors = FALSE,
                                           row.names = NULL)
       names(private$..spectrum) <- c("FreqClass", "Freq")
+
+      private$..spectrum$FreqClass <- as.numeric(private$..spectrum$FreqClass)
 
       # Note timestamp
       private$..timestamp <- Sys.Date()

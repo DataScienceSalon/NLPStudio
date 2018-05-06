@@ -95,9 +95,11 @@ NGram <- R6::R6Class(
 
       # Compute nGram Frequency Spectrum
       private$..spectrum <- as.data.frame(table(private$..counts$Freq),
-                                          stringsAsFactors = FALSE,
-                                          row.names = NULL)
+                                stringsAsFactors = FALSE,
+                                row.names = NULL)
       names(private$..spectrum) <- c("FreqClass", "Freq")
+
+      private$..spectrum$FreqClass <- as.numeric(private$..spectrum$FreqClass)
 
       # Note timestamp
       private$..timestamp <- Sys.Date()
