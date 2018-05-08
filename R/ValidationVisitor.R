@@ -225,6 +225,29 @@ ValidationVisitor <- R6::R6Class(
 
     copy = function(object) {
       return(private$validate(object))
+    },
+
+    #-------------------------------------------------------------------------#
+    #                  Validate Language Model Classes                        #
+    #-------------------------------------------------------------------------#
+    mkn = function(object) {
+      return(private$validate(object))
+    },
+
+    mknData = function(object) {
+      return(private$validate(object))
+    },
+
+    mknCounts = function(object) {
+      return(private$validate(object))
+    },
+
+    katz = function(object) {
+      return(private$validate(object))
+    },
+
+    sbo = function(object) {
+      return(private$validate(object))
     }
   )
 )

@@ -31,7 +31,7 @@ NGrammer <- R6::R6Class(
 
   private = list(
 
-    nGramDocument = function(x, n, nGramType) {
+    nGramDocument = function(x, n, nGramType, wordsOnly = FALSE) {
 
       # Create NGRam object and initialize with document metadata
       nGrams <- NGram$new(x)
@@ -40,8 +40,9 @@ NGrammer <- R6::R6Class(
       nGrams$setName(name)
 
       # Tokenize text and extract nGrams
-      tokens <- NLPStudio::tokenize(x = x$text, tokenType = 'word')
-      nGrams$content <- quanteda::tokens_ngrams(x = tokens, n = n, concatenator = " ")
+      nGrams$content <- NLPStudio::tokenize(x = x$text, tokenType = 'word',
+                                    wordsOnly = wordsOnly,
+                                    ngrams = n ,concatenator = " ")
 
       # Update metadata
       nGrams$setMeta(key = 'nGramType', value = nGramType, type = 'f')
@@ -51,7 +52,7 @@ NGrammer <- R6::R6Class(
       return(nGrams)
     },
 
-    nGramCorpus = function(x, n, nGramType) {
+    nGramCorpus = function(x, n, nGramType, wordsOnly = TRUE) {
 
       # Create NGramSet object and initialize with corpus metadata
       nGramSet <- NGramSet$new(x)
@@ -63,7 +64,7 @@ NGrammer <- R6::R6Class(
       nGrams <- character()
       docs <- x$getDocuments()
       for (i in 1:length(docs)) {
-        nGramObject <- private$nGramDocument(docs[[i]], n, nGramType)
+        nGramObject <- private$nGramDocument(docs[[i]], n, nGramType, wordsOnly)
         nGramSet$addNGram(nGramObject)
         nGrams <- c(nGrams, nGramObject$content)
       }
@@ -90,13 +91,15 @@ NGrammer <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                            NGrammer                                     #
     #-------------------------------------------------------------------------#
-    this = function(x, n) {
+    this = function(x, n, wordsOnly = FALSE) {
 
       # Validate Source Object
       private$..params <- list()
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
       private$..params$classes$valid <- list(c('Document', 'Corpus'))
+      private$..params$logicals$variables <- list('wordsOnly')
+      private$..params$logicals$values <- list(wordsOnly)
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'this',
@@ -112,9 +115,11 @@ NGrammer <- R6::R6Class(
                                                       paste0(n, "Gram"))))))
 
       if (class(x)[1] == 'Corpus') {
-        nGrams <- private$nGramCorpus(x, n = n, nGramType = nGramType)
+        nGrams <- private$nGramCorpus(x, n = n, nGramType = nGramType,
+                                      wordsOnly = wordsOnly)
       } else {
-        nGrams <- private$nGramDocument(x, n = n, nGramType = nGramType)
+        nGrams <- private$nGramDocument(x, n = n, nGramType = nGramType,
+                                        wordsOnly = wordsOnly)
       }
 
       event <- paste0("Created ", nGramType, " object from ", x$getName(), ".")

@@ -4,10 +4,32 @@
 \alias{tokenize}
 \title{tokenize}
 \usage{
-tokenize(x, tokenType = "char")
+tokenize(x, tokenType = "word", ngrams = 1, removeNumbers = FALSE,
+  removeTwitter = FALSE, removeSymbols = FALSE, removePunct = FALSE,
+  removeURL = FALSE, removeHyphens = FALSE, wordsOnly = FALSE,
+  concatenator = " ")
+}
+\arguments{
+\item{x}{Character vector containing texts}
+
+\item{tokenType}{Character taking the following values c('word', 'sentence', 'character')}
+
+\item{removeNumbers}{Logical. Tokens including only numbers are removed if TRUE}
+
+\item{removeTwitter}{Logical. Removes Twitter characters if set to TRUE}
+
+\item{removeSymbols}{Logical. If TRUE, remove all characters in the Unicode "Symbol" [S] class}
+
+\item{removePunct}{Logical. If TRUE, remove all characters in the Unicode "Punctuation" [P] class}
+
+\item{removeURL}{Logical. If TRUE, find and eliminate URLs beginning with http(s)}
+
+\item{removeHyphens}{Logical. If TRUE, split words that are connected by hyphenation and hyphenation-like characters in between words}
 }
 \description{
-\code{tokenize} Creates sentence, word and character tokens
+\code{tokenize} Creates sentence, word and character tokens. A wrapper for
+\code{\link[quanteda]{tokens}}
+Source \url{https://cran.r-project.org/web/packages/quanteda/quanteda.pdf}
 }
 \seealso{
 Other Internal Functions: \code{\link{listFiles}},

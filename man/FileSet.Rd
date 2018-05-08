@@ -56,8 +56,7 @@ before Corpus creation and preprocessing.
 }
 
 \seealso{
-Other File Classes: \code{\link{FileStudio}},
-  \code{\link{File}}
+Other File Classes: \code{\link{File}}
 }
 \author{
 John James, \email{jjames@datasciencesalon.org}

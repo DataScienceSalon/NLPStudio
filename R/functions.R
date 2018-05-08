@@ -21,11 +21,35 @@ slice = function(v, size) {
 #------------------------------------------------------------------------------#
 #' tokenize
 #'
-#' \code{tokenize} Creates sentence, word and character tokens
+#' \code{tokenize} Creates sentence, word and character tokens. A wrapper for
+#' \code{\link[quanteda]{tokens}}
+#' Source \url{https://cran.r-project.org/web/packages/quanteda/quanteda.pdf}
+#'
+#' @param x Character vector containing texts
+#' @param tokenType Character taking the following values c('word', 'sentence', 'character')
+#' @param removeNumbers Logical. Tokens including only numbers are removed if TRUE
+#' @param removeTwitter Logical. Removes Twitter characters if set to TRUE
+#' @param removeSymbols Logical. If TRUE, remove all characters in the Unicode "Symbol" [S] class
+#' @param removePunct Logical. If TRUE, remove all characters in the Unicode "Punctuation" [P] class
+#' @param removeURL Logical. If TRUE, find and eliminate URLs beginning with http(s)
+#' @param removeHyphens Logical. If TRUE, split words that are connected by hyphenation and hyphenation-like characters in between words
+#'
 #' @author John James, \email{jjames@@DataScienceSalon.org}
 #' @family Internal Functions
 #' @export
-tokenize = function(x, tokenType = 'char') {
+tokenize = function(x, tokenType = 'word', ngrams =  1, removeNumbers = FALSE,
+                    removeTwitter = FALSE, removeSymbols = FALSE,
+                    removePunct = FALSE, removeURL = FALSE,
+                    removeHyphens = FALSE, wordsOnly = FALSE,
+                    concatenator = " ") {
+
+  if (wordsOnly) {
+    removeNumbers <- TRUE
+    removeSymbols <- TRUE
+    removeTwitter <- TRUE
+    removeURL <- TRUE
+    removePunct <- TRUE
+  }
 
   # Collapse into single vector
   x <- paste(x, collapse = " ")
@@ -41,7 +65,14 @@ tokenize = function(x, tokenType = 'char') {
     nTokens <- length(tokens)
 
   } else {
-    tokens <- quanteda::tokens(x = x, what = tokenType)$text1
+    tokens <- quanteda::tokens(x = x, what = tokenType, ngrams = ngrams,
+                               remove_numbers = removeNumbers,
+                               remove_punct = removePunct,
+                               remove_symbols = removeSymbols,
+                               remove_twitter = removeTwitter,
+                               remove_hyphens = removeHyphens,
+                               remove_url = removeURL,
+                               concatenator = concatenator)$text1
   }
   return(tokens)
 }
