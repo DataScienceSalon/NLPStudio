@@ -234,7 +234,7 @@ ValidationVisitor <- R6::R6Class(
       return(private$validate(object))
     },
 
-    mknData = function(object) {
+    mknDocument = function(object) {
       return(private$validate(object))
     },
 

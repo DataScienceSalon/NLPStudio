@@ -41,14 +41,26 @@ LM0 <- R6::R6Class(
     #                           Setters / Getters                             #
     #-------------------------------------------------------------------------#
     getName = function() { return(private$meta$get(key = 'name'))},
+
     getCorpus = function() { return(private$..x) },
+
     getType = function() { return(private$meta$get(key = 'modelType')) },
+
     getSmoothing = function() { return(private$meta$get(key = 'smoothing')) },
+
     getSize = function() { return(private$meta$get(key = 'modelSize')) },
+
     is.openVocabulary = function() { return(private$meta$get(key = 'openVocabulary')) },
+
     getDocument = function() { return(private$..document) },
     setDocument = function(x) {
       private$..document <- x
+      invisible(self)
+    },
+
+    getTables = function() { return(private$..tables) },
+    setTables = function(x) {
+      private$..tables <- x
       invisible(self)
     }
   )

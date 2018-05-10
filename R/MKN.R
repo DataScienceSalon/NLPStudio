@@ -25,13 +25,6 @@ MKN <- R6::R6Class(
   lock_class = FALSE,
   inherit = LM0,
 
-  private = list(
-    ..x = character(),
-    ..size = numeric(),
-    ..open = logical()
-  ),
-
-
   public = list(
     #-------------------------------------------------------------------------#
     #                           Constructor                                   #

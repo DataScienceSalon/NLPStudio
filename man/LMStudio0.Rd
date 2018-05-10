@@ -19,7 +19,8 @@ This abstract class defines a common interface and methods of the LMStudio
 family of classes.
 }
 \seealso{
-Other LMStudio Classes: \code{\link{MKNData}},
+Other LMStudio Classes: \code{\link{MKNCounts}},
+  \code{\link{MKNDocument}}, \code{\link{MKNEstimate}},
   \code{\link{MKNStudio0}}, \code{\link{MKN}}
 }
 \author{

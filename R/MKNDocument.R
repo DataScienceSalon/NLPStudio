@@ -1,9 +1,9 @@
 #==============================================================================#
-#                               MKNData                                        #
+#                               MKNDocument                                    #
 #==============================================================================#
-#' MKNData
+#' MKNDocument
 #'
-#' \code{MKNData} Prepares text data for downstream processing.
+#' \code{MKNDocument} Prepares text data for downstream processing.
 #'
 #' Gathers text data, creates sentence tokens and, if open is TRUE, converts
 #' hapax legomenon to unknown tokens.
@@ -15,59 +15,59 @@
 #' @family MKNStudio Classes
 #' @family LMStudio Classes
 #' @export
-MKNData <- R6::R6Class(
-  classname = "MKNData",
+MKNDocument <- R6::R6Class(
+  classname = "MKNDocument",
   lock_objects = FALSE,
   lock_class = FALSE,
   inherit = MKNStudio0,
 
   private = list(
+    ..corpus = character(),
 
-    convert = function(corpus) {
+    convert = function() {
 
-      # Extract and collapse corpus text
-      documents <- corpus$getDocuments()
+      # Extract and collapse private$..corpus text
+      documents <- private$..corpus$getDocuments()
       text <- paste(unlist(lapply(documents, function(d) {
         d$text})), collapse = " ")
 
-      # Create new Document object and copy metadata from the Corpus object
-      document <- Document$new(x = text)
-      document <- Copy$new()$this(x = corpus, to = document)
+      # Create new Document object and copy metadata from the private$..corpus object
+      private$..document <- Document$new(x = text)
+      private$..document <- Copy$new()$this(x = private$..corpus, to = private$..document)
 
       # Set metadata
       name <- private$..lm$getName()
       name <- paste0(name, " Document")
-      document$setName(name)
-      document$setMeta(key = 'smoothing', value = "Modified Kneser-Ney",
+      private$..document$setName(name)
+      private$..document$setMeta(key = 'smoothing', value = "Modified Kneser-Ney",
                         type = 'f')
-      document$setMeta(key = 'modelType',
-                       value = private$..lm$getSize(),
+      private$..document$setMeta(key = 'modelType',
+                       value = private$..size,
                        type = 'f')
-      document$setMeta(key = 'openVocabulary',
+      private$..document$setMeta(key = 'openVocabulary',
                        value = private$..lm$is.openVocabulary(),
                        type = 'f')
-      document$setMeta(key = 'lm',
+      private$..document$setMeta(key = 'lm',
                        value = 'Modified Kneser-Ney',
                        type = 'f')
 
-      return(document)
+      return(TRUE)
     },
 
-    processOOV = function(document) {
+    processOOV = function() {
 
-      nGrams <- NGrammer$new()$this(document, n = 1, wordsOnly = TRUE)
+      nGrams <- NGrammer$new()$this(private$..document, n = 1, wordsOnly = TRUE)
       counts <- nGrams$getCounts()
       hapax  <- (counts %>% filter(Freq == 1) %>% select(Unigram))$Unigram
-      document$text <- textclean::replace_tokens(x = document$text, tokens = hapax,
+      private$..document$text <- textclean::replace_tokens(x = private$..document$text, tokens = hapax,
                                    replacement = 'UNK')
-      return(document)
+      return(TRUE)
     },
 
-
-    sentencify = function(document) {
+    sentencify = function() {
       tokenize <- Tokenizer$new()
-      document <- tokenize$this(x = document, type = 's')
-      return(document)
+      private$..document <- tokenize$this(x = private$..document, type = 's')
+      return(TRUE)
     }
   ),
 
@@ -91,23 +91,24 @@ MKNData <- R6::R6Class(
                          event = v$msg, level = "Error")
         stop()
       }
+
+      # Dock language model (extract members read/modified in class)
       private$..lm <- x
+      private$..open <- x$is.openVocabulary()
+      private$..corpus <- x$getCorpus()
+      private$..size <- x$getSize()
       invisible(self)
     },
 
     build = function() {
 
-      corpus <- private$..lm$getCorpus()
+      private$convert()
 
-      document <- private$convert(corpus)
+      if (private$..open)  private$processOOV()
 
-      if (private$..lm$is.openVocabulary()) {
-        corpus <- private$processOOV(document)
-      }
+      private$sentencify()
 
-      document <- private$sentencify(document)
-
-      private$..lm$setDocument(document)
+      private$..lm$setDocument(private$..document)
 
       #nextStage <- MKNCounts$new(x = private$..lm)
 
@@ -118,7 +119,7 @@ MKNData <- R6::R6Class(
     #                           Visitor Method                                #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$mknData(self)
+      visitor$mknDocument(self)
     }
   )
 )

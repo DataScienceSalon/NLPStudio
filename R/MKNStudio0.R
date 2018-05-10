@@ -21,6 +21,21 @@ MKNStudio0 <- R6::R6Class(
   lock_class = FALSE,
   inherit = LMStudio0,
 
+  private = list(
+    ..regex = list(
+      firstWord = "([A-Za-z]+).*|[[:punct:]]+",
+      context = list(
+        bigrams   = "^((\\S+\\s+){0}\\S+).*$",
+        trigrams  = "^((\\S+\\s+){1}\\S+).*$",
+        quadgrams = "^((\\S+\\s+){2}\\S+).*$"
+      ),
+      suffix = list(
+        bigrams = "^.*\\s+((?:\\S+\\s+){0}\\S+)$",
+        trigrams = "^.*\\s+((?:\\S+\\s+){1}\\S+)$",
+        quadgrams = "^.*\\s+((?:\\S+\\s+){2}\\S+)$"
+      )
+    )
+  ),
 
   public = list(
     initialize = function(x) { stop("Not implemented for this abstract/interface class.") },

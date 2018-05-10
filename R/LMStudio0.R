@@ -22,20 +22,10 @@ LMStudio0 <- R6::R6Class(
 
   private = list(
     ..lm = character(),
-    ..modelType = c('Unigram', 'Bigram', 'Trigram', 'Quadgram', 'Quintgram'),
-    ..regex = list(
-      context = list(
-        bigrams   = "^((\\S+\\s+){0}\\S+).*$",
-        trigrams  = "^((\\S+\\s+){1}\\S+).*$",
-        quadgrams = "^((\\S+\\s+){2}\\S+).*$"
-      ),
-      suffix = list(
-        bigrams = "^.*\\s+((?:\\S+\\s+){0}\\S+)$",
-        trigrams = "^.*\\s+((?:\\S+\\s+){1}\\S+)$",
-        quadgrams = "^.*\\s+((?:\\S+\\s+){2}\\S+)$"
-      )
-    )
-
+    ..document = character(),
+    ..tables = list(),
+    ..size = integer(),
+    ..modelType = c('Unigram', 'Bigram', 'Trigram', 'Quadgram', 'Quintgram')
   ),
 
   public = list(

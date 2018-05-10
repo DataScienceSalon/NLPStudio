@@ -26,7 +26,8 @@ Modified Kneser Ney language model object.
 }
 \seealso{
 Other LMStudio Classes: \code{\link{LMStudio0}},
-  \code{\link{MKNData}}, \code{\link{MKNStudio0}}
+  \code{\link{MKNCounts}}, \code{\link{MKNDocument}},
+  \code{\link{MKNEstimate}}, \code{\link{MKNStudio0}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}
