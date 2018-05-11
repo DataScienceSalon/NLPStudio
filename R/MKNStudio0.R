@@ -23,7 +23,6 @@ MKNStudio0 <- R6::R6Class(
 
   private = list(
     ..regex = list(
-      firstWord = "([A-Za-z]+).*|[[:punct:]]+",
       context = list(
         bigrams   = "^((\\S+\\s+){0}\\S+).*$",
         trigrams  = "^((\\S+\\s+){1}\\S+).*$",

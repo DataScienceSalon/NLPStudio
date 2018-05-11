@@ -22,9 +22,10 @@ Modified Kneser Ney language model state classes.
 Other MKNStudio Classes: \code{\link{MKNCounts}},
   \code{\link{MKNDocument}}, \code{\link{MKNEstimate}}
 
-Other LMStudio Classes: \code{\link{LMStudio0}},
-  \code{\link{MKNCounts}}, \code{\link{MKNDocument}},
-  \code{\link{MKNEstimate}}, \code{\link{MKN}}
+Other LMStudio Classes: \code{\link{KNCounts}},
+  \code{\link{LMStudio0}}, \code{\link{MKNCounts}},
+  \code{\link{MKNDocument}}, \code{\link{MKNEstimate}},
+  \code{\link{MKN}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

@@ -21,9 +21,10 @@ Computes Modified Kneser Ney estimates for all nGrams in the Model
 Other MKNStudio Classes: \code{\link{MKNCounts}},
   \code{\link{MKNDocument}}, \code{\link{MKNStudio0}}
 
-Other LMStudio Classes: \code{\link{LMStudio0}},
-  \code{\link{MKNCounts}}, \code{\link{MKNDocument}},
-  \code{\link{MKNStudio0}}, \code{\link{MKN}}
+Other LMStudio Classes: \code{\link{KNCounts}},
+  \code{\link{LMStudio0}}, \code{\link{MKNCounts}},
+  \code{\link{MKNDocument}}, \code{\link{MKNStudio0}},
+  \code{\link{MKN}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

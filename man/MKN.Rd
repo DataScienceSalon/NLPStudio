@@ -25,9 +25,10 @@ the training set. Default is TRUE.}
 Modified Kneser Ney language model object.
 }
 \seealso{
-Other LMStudio Classes: \code{\link{LMStudio0}},
-  \code{\link{MKNCounts}}, \code{\link{MKNDocument}},
-  \code{\link{MKNEstimate}}, \code{\link{MKNStudio0}}
+Other LMStudio Classes: \code{\link{KNCounts}},
+  \code{\link{LMStudio0}}, \code{\link{MKNCounts}},
+  \code{\link{MKNDocument}}, \code{\link{MKNEstimate}},
+  \code{\link{MKNStudio0}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}
