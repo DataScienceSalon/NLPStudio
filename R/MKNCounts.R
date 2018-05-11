@@ -24,10 +24,10 @@ MKNCounts <- R6::R6Class(
   private = list(
 
     discounts = function() {
-      private$..tables$discounts <- data.table::rbindlist(lapply(seq_along(private$..tables$nGrams), function(x) {
+      private$..discounts <- data.table::rbindlist(lapply(seq_along(private$..nGrams), function(x) {
 
         # Obtain frequency spectrum
-        spectrum <- as.data.frame(table(private$..tables$nGrams[[x]]$count), stringsAsFactors = FALSE)
+        spectrum <- as.data.frame(table(private$..nGrams[[x]]$count), stringsAsFactors = FALSE)
         names(spectrum) <- c('count', 'freq')
         spectrum$count <- as.numeric(spectrum$count)
         if (is.na(spectrum[4,]$freq))  {
@@ -50,7 +50,7 @@ MKNCounts <- R6::R6Class(
 
       for (n in 1:private$..size) {
         if (n > 1) {
-          private$..tables$nGrams[[n]][,.(nContexts = .N), by = context]
+          private$..nGrams[[n]][,.(nContexts = .N), by = context]
         }
       }
       return(TRUE)
@@ -60,7 +60,7 @@ MKNCounts <- R6::R6Class(
 
       for (i in 1:private$..size) {
         if (i > 1) {
-          private$..tables$nGrams[[i]][,.(histTypes = sum(length(unique(history))))]
+          private$..nGrams[[i]][,.(histTypes = sum(length(unique(history))))]
         }
       }
     },
@@ -69,11 +69,11 @@ MKNCounts <- R6::R6Class(
 
       for (n in 1:private$..size) {
 
-        current <- private$..tables$nGrams[[n]]
+        current <- private$..nGrams[[n]]
 
         if (n < private$..size) {
 
-          higher <- private$..tables$nGrams[[n+1]][,.(suffix)]
+          higher <- private$..nGrams[[n+1]][,.(suffix)]
           higher <- higher[,.(cKN = .N), by = .(suffix)]
           current <- merge(current, higher, by.x = 'nGram',
                            by.y = 'suffix', all.x = TRUE)
@@ -85,7 +85,7 @@ MKNCounts <- R6::R6Class(
           current <- current[,cKN := count]
         }
         current <- current[, discountLevel := ifelse(cKN > 3, 3, cKN)]
-        private$..tables$nGrams[[n]] <- current
+        private$..nGrams[[n]] <- current
       }
       return(TRUE)
     },
@@ -124,13 +124,13 @@ MKNCounts <- R6::R6Class(
 
     buildTables = function() {
 
-      private$..tables$nGrams <- lapply(seq(1:private$..size), function(n) {
+      private$..nGrams <- lapply(seq(1:private$..size), function(n) {
         text <- private$annotateText(n)
         ngrams <- private$createNGrams(text, tokenType = 'word', n = n)
         private$createTable(ngrams, n)
       })
 
-      names(private$..tables$nGrams) <- private$..modelType[1:private$..size]
+      names(private$..nGrams) <- private$..modelType[1:private$..size]
       return(TRUE)
     }
   ),

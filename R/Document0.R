@@ -230,14 +230,23 @@ Document0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Summary Method                                #
     #-------------------------------------------------------------------------#
-    summary = function() {
+    summary = function(section = NULL) {
       sd <- list()
-      sd$id <- private$summarizeIdMeta()
-      sd$descriptive <- private$summarizeDescriptiveMeta()
-      sd$quant <- private$summarizeQuantMeta()
-      sd$functional  <- private$summarizeFunctionalMeta()
-      sd$admin <- private$summarizeAdminMeta()
-      sd$tech <- private$summarizeTechMeta()
+
+      if (!is.null(section)) {
+        if ("i" %in% section)  sd$id <- private$summarizeIdMeta()
+        if ("d" %in% section)  sd$descriptive <- private$summarizeDescriptiveMeta()
+        if ("q" %in% section)  sd$quant <- private$summarizeQuantMeta()
+        if ("f" %in% section)  sd$functional  <- private$summarizeFunctionalMeta()
+        if ("a" %in% section)  sd$admin <- private$summarizeAdminMeta()
+      } else {
+        sd$id <- private$summarizeIdMeta()
+        sd$descriptive <- private$summarizeDescriptiveMeta()
+        sd$quant <- private$summarizeQuantMeta()
+        sd$functional  <- private$summarizeFunctionalMeta()
+        sd$admin <- private$summarizeAdminMeta()
+        sd$tech <- private$summarizeTechMeta()
+      }
       invisible(sd)
     },
 

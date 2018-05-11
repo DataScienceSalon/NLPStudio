@@ -30,20 +30,20 @@ MKNEstimate <- R6::R6Class(
 
         # Obtain nGram, context, continuation counts as well as discount for
         # the nGram level
-        current <- private$..tables$nGrams[[i]][,. (nGram, context, cKN)]
-        discount <- private$..tables$discounts[[i,2]]
+        current <- private$..nGrams[[i]][,. (nGram, context, cKN)]
+        discount <- private$..discounts[[i,2]]
 
         # For the unigram level alpha is the ratio of the continuation unigram
         # count and the number of bigram types.
         if (i == 1) {
-          nBigrams <- nrow(private$..tables$nGrams[[i+1]])
+          nBigrams <- nrow(private$..nGrams[[i+1]])
           current[,.(alpha =  ifelse(cKN - discount > 0,
                                      cKN - discount, 0)
                      / nBigrams)]
 
         # For the higher levels, alpha is computed as described above
         } else {
-          context <- private$..tables$nGrams[[i-1]][,.(nGram, cKN)]
+          context <- private$..nGrams[[i-1]][,.(nGram, cKN)]
           setnames(context, "cKN", "cKNContext")
           current <- merge(current, context, by.x = 'context',
                            by.y = 'nGram', all.x = TRUE)
@@ -55,7 +55,7 @@ MKNEstimate <- R6::R6Class(
                      / cKNContext)]
         }
         current <- current[,.(nGram, alpha, cKNContext)]
-        private$..tables$nGrams[[i]] <- merge(private$..tables$nGrams[[i]],
+        private$..nGrams[[i]] <- merge(private$..nGrams[[i]],
                                               current,  by = 'nGram',
                                               all.x = TRUE)
       }
@@ -65,14 +65,14 @@ MKNEstimate <- R6::R6Class(
 
       for (i in 1:private$..size) {
 
-        current <- private$..tables$nGrams[[i]][,. (nGram, cKN, cknContext)]
+        current <- private$..nGrams[[i]][,. (nGram, cKN, cknContext)]
 
         if (i > 1) {
 
         }
 
         if (i < private$..size) {
-          higher <- private$..tables$nGrams[[i+1]][,.(context)]
+          higher <- private$..nGrams[[i+1]][,.(context)]
           counts <- higher[,.(cKN = .N), by = .(context)]
 
         }

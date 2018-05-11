@@ -230,15 +230,15 @@ ValidationVisitor <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                  Validate Language Model Classes                        #
     #-------------------------------------------------------------------------#
-    mkn = function(object) {
+    kn = function(object) {
       return(private$validate(object))
     },
 
-    mknDocument = function(object) {
+    knDocument = function(object) {
       return(private$validate(object))
     },
 
-    mknCounts = function(object) {
+    knCounts = function(object) {
       return(private$validate(object))
     },
 

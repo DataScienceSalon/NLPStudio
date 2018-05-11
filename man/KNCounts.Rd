@@ -19,7 +19,11 @@ Computes counts used in the probability calculations for the Kneser Ney
 probabilities.
 }
 \seealso{
-Other LMStudio Classes: \code{\link{LMStudio0}},
+Other KNStudio Classes: \code{\link{KNDocument}},
+  \code{\link{KNStudio0}}
+
+Other LMStudio Classes: \code{\link{KNDocument}},
+  \code{\link{KNStudio0}}, \code{\link{LMStudio0}},
   \code{\link{MKNCounts}}, \code{\link{MKNDocument}},
   \code{\link{MKNEstimate}}, \code{\link{MKNStudio0}},
   \code{\link{MKN}}

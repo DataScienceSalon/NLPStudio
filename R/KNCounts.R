@@ -24,26 +24,26 @@ KNCounts <- R6::R6Class(
   private = list(
 
     discounts = function() {
-      private$..discount <- private$..tables$summary$n1 /
-        (private$..tables$summary$n1 + 2 * private$..tables$summary$n2)
+      private$..discount <- private$..totals$n1 /
+        (private$..totals$n1 + 2 * private$..totals$n2)
       return(TRUE)
     },
 
-    summmary = function() {
+    totals = function() {
 
-      private$..tables$summary <- data.table()
+      private$..totals <- data.table()
 
       for (i in 1:private$..size) {
 
         # Summarize counts and store in summary table
         nGram <- private$..modelType[i]
-        n <- nrow(private$..tables$nGrams[[i]])
-        nHist <- ifelse(i > 1,
-                        sum(length(unique(private$..tables$nGrams[[i]]$history))),
+        n <- nrow(private$..nGrams[[i]])
+        totalCkn <- ifelse(i > 1,
+                        sum(length(unique(private$..nGrams[[i]]$history))),
                         0)
 
         # Obtain frequency spectrum
-        spectrum <- as.data.frame(table(private$..tables$nGrams[[i]]$count), stringsAsFactors = FALSE)
+        spectrum <- as.data.frame(table(private$..nGrams[[i]]$count), stringsAsFactors = FALSE)
         names(spectrum) <- c('count', 'freq')
         spectrum$count <- as.numeric(spectrum$count)
         for (j in 1:4) {
@@ -52,32 +52,36 @@ KNCounts <- R6::R6Class(
           }
         }
 
-        dt_i <- data.table(nGram = nGram, n = n, nHist = nHist,
+        dt_i <- data.table(nGram = nGram, n = n, totalCkn = totalCkn,
                            n1 = spectrum$freq[1],
                            n2 = spectrum$freq[2],
                            n3 = spectrum$freq[3],
                            n4 = spectrum$freq[4])
-        private$..tables$summary <- rbind(private$..tables$summary, dt_i)
+        private$..totals <- rbind(private$..totals, dt_i)
       }
       return(TRUE)
     },
 
     hist = function(n) {
       if (n > 1) {
-        private$..tables$nGrams[[n]]$contextNHist <-
-          private$..tables$nGrams[[n]][,.(contextNHist = .N), by = .(context)]
+        contextNHist <-
+          private$..nGrams[[n]][,.(contextNHist = .N), by = .(context)]
+
+        private$..nGrams[[n]] <-
+          merge(private$..nGrams[[n]], contextNHist, by = 'context',
+                all.x = TRUE)
       }
     },
 
     ckn = function(n) {
 
       # Compute continuation counts
-      current <- private$..tables$nGrams[[n]]
+      current <- private$..nGrams[[n]]
 
       if (n < private$..size) {
 
-        higher <- private$..tables$nGrams[[n+1]][,.(suffix)]
-        higher <- higher[,.(cknNGram = .N), by = .(suffix)]
+        higher <- private$..nGrams[[n+1]][,.(suffix)]
+        higher <- higher[,.(cKN = .N), by = .(suffix)]
         current <- merge(current, higher, by.x = 'nGram',
                          by.y = 'suffix', all.x = TRUE)
 
@@ -85,15 +89,15 @@ KNCounts <- R6::R6Class(
           set(current, i=which(is.na(current[[i]])), j=i, value=0)
         }
       } else {
-        current <- current[,cknNGram := count]
+        current <- current[,cKN := count]
       }
-      private$..tables$nGrams[[n]] <- current
+      private$..nGrams[[n]] <- current
       return(TRUE)
     },
 
     counts = function() {
 
-      private$..tables$summary <- data.table()
+      private$..totals <- data.table()
 
       for (n in 1:private$..size) {
 
@@ -101,7 +105,7 @@ KNCounts <- R6::R6Class(
         private$hist(n)
 
       }
-      private$summary()
+      private$totals()
       return(TRUE)
     },
 
@@ -139,13 +143,14 @@ KNCounts <- R6::R6Class(
 
     buildTables = function() {
 
-      private$..tables$nGrams <- lapply(seq(1:private$..size), function(n) {
+      private$..nGrams <- lapply(seq(1:private$..size), function(n) {
         text <- private$annotateText(n)
         ngrams <- private$createNGrams(text, tokenType = 'word', n = n)
         private$createTable(ngrams, n)
       })
 
-      names(private$..tables$nGrams) <- private$..modelType[1:private$..size]
+      names(private$..nGrams) <- private$..modelType[1:private$..size]
+
       return(TRUE)
     }
   ),
@@ -185,13 +190,14 @@ KNCounts <- R6::R6Class(
 
       # Add context and continuation counts
       private$counts()
-      private$nHistAll()
-      private$nContexts()
 
       # Compute discounts
       private$discounts()
 
-      private$..lm$setTables(private$..tables)
+      # Update language model
+      private$..lm$setnGrams(private$..nGrams)
+      private$..lm$setDiscounts(private$..discount)
+      private$..lm$setTotals(private$..totals)
 
       return(private$..lm)
     },
@@ -200,7 +206,7 @@ KNCounts <- R6::R6Class(
     #                           Visitor Method                                #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$KNCounts(self)
+      visitor$knCounts(self)
     }
   )
 )
