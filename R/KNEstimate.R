@@ -28,70 +28,59 @@ KNEstimate <- R6::R6Class(
 
         if (i == 1) {
           private$..nGrams[[i]]$alpha <- private$..nGrams[[i]]$cKN /
-            private$..totals$types[2]
+            private$..totals$totalCkn[i+1]
 
         } else if (i < private$..size) {
           private$..nGrams[[i]]$alpha <-
-            max(private$..nGrams[[i]]$cKN - private$..discount,0) /
+            pmax(private$..nGrams[[i]]$cKN - private$..discounts[i],0) /
             private$..totals$totalCkn[i+1]
+
         } else {
           private$..nGrams[[i]]$alpha <-
-            max(private$..nGrams[[i]]$count - private$..discount,0) /
-            private$..totals$totalCkn[i+1]
+            pmax(private$..nGrams[[i]]$count - private$..discounts[i],0) /
+            private$..nGrams[[i]]$prefixCount
         }
-
-
-        # Obtain nGram, prefix, continuation counts as well as discount for
-        # the nGram level
-        current <- private$..nGrams[[i]][,. (nGram, prefix, cKN)]
-        discount <- private$..discounts[[i,2]]
-
-        # For the unigram level alpha is the ratio of the continuation unigram
-        # count and the number of bigram types.
-        if (i == 1) {
-          nBigrams <- nrow(private$..nGrams[[i+1]])
-          current[,.(alpha =  ifelse(cKN - discount > 0,
-                                     cKN - discount, 0)
-                     / nBigrams)]
-
-        # For the higher levels, alpha is computed as described above
-        } else {
-          prefix <- private$..nGrams[[i-1]][,.(nGram, cKN)]
-          setnames(prefix, "cKN", "cKNContext")
-          current <- merge(current, prefix, by.x = 'prefix',
-                           by.y = 'nGram', all.x = TRUE)
-          for (k in seq_along(current)) {
-            set(current, i=which(is.na(current[[k]])), j=k, value=0)
-          }
-          current[,.(alpha =  ifelse(cKN - discount > 0,
-                                     cKN - discount, 0)
-                     / cKNContext)]
-        }
-        current <- current[,.(nGram, alpha, cKNContext)]
-        private$..nGrams[[i]] <- merge(private$..nGrams[[i]],
-                                              current,  by = 'nGram',
-                                              all.x = TRUE)
       }
     },
 
     lambda = function() {
-
-      for (i in 1:private$..size) {
-
-        current <- private$..nGrams[[i]][,. (nGram, cKN, cknContext)]
-
-        if (i > 1) {
-
-        }
+      for (i in 2:private$..size) {
 
         if (i < private$..size) {
-          higher <- private$..nGrams[[i+1]][,.(prefix)]
-          counts <- higher[,.(cKN = .N), by = .(prefix)]
-
+          private$..nGrams[[i]]$lambda <-
+            private$..discounts[i] /
+            private$..totals$totalCkn[i+1] *
+            private$..nGrams[[i]]$prefixNHist
+        } else {
+          private$..nGrams[[i]]$lambda <-
+            private$..discounts[i] /
+            private$..nGrams[[i]]$prefixCount *
+            private$..nGrams[[i]]$prefixNHist
         }
+      }
+    },
 
+    pKN = function() {
+      for (i in 1:private$..size) {
 
+        if (i == 1) {
+          private$..nGrams[[i]]$pKN <- private$..nGrams[[i]]$alpha
 
+        } else {
+          lower <- private$..nGrams[[i-1]][,.(nGram, pKN)]
+          setnames(lower, "pKN", "pKNSuffix")
+          private$..nGrams[[i]] <-
+            merge(private$..nGrams[[i]], lower, by.x = 'suffix',
+                  by.y = 'nGram', all.x = TRUE)
+          for (j in seq_along(private$..nGrams[[i]])) {
+            set(private$..nGrams[[i]],
+                i=which(is.na(private$..nGrams[[i]][[j]])), j=j, value=0)
+          }
+          private$..nGrams[[i]]$pKN <-
+            private$..nGrams[[i]]$alpha +
+            private$..nGrams[[i]]$lambda *
+            private$..nGrams[[i]]$pKNSuffix
+        }
       }
     }
   ),
@@ -120,7 +109,7 @@ KNEstimate <- R6::R6Class(
       # Dock current lm (extract members read/updated within class)
       private$..lm <- x
       private$..nGrams <- x$getnGrams()
-      private$..discount <- x$getDiscounts()
+      private$..discounts <- x$getDiscounts()
       private$..totals <- x$getTotals()
       private$..size <- x$getSize()
       invisible(self)
@@ -132,7 +121,7 @@ KNEstimate <- R6::R6Class(
       private$lambda()
       private$pKN()
 
-      private$..lm$setTables(private$..nGrams)
+      private$..lm$setnGrams(private$..nGrams)
 
       return(private$..lm)
     },

@@ -30,7 +30,7 @@ KN <- R6::R6Class(
     ..document = character(),
     ..modelType = c('Unigram', 'Bigram', 'Trigram', 'Quadgram', 'Quintgram'),
     ..nGrams = list(),
-    ..discount = numeric(),
+    ..discounts = numeric(),
 
     #-------------------------------------------------------------------------#
     #                           Summary Methods                               #
@@ -153,9 +153,9 @@ KN <- R6::R6Class(
       invisible(self)
     },
 
-    getDiscounts = function() { return(private$..discount) },
+    getDiscounts = function() { return(private$..discounts) },
     setDiscounts = function(x) {
-      private$..discount <- x
+      private$..discounts <- x
       invisible(self)
     },
 

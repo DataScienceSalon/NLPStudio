@@ -24,7 +24,7 @@ KNCounts <- R6::R6Class(
   private = list(
 
     discounts = function() {
-      private$..discount <- private$..totals$n1 /
+      private$..discounts <- private$..totals$n1 /
         (private$..totals$n1 + 2 * private$..totals$n2)
       return(TRUE)
     },
@@ -222,7 +222,7 @@ KNCounts <- R6::R6Class(
 
       # Update language model
       private$..lm$setnGrams(private$..nGrams)
-      private$..lm$setDiscounts(private$..discount)
+      private$..lm$setDiscounts(private$..discounts)
       private$..lm$setTotals(private$..totals)
 
       return(private$..lm)
