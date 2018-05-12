@@ -36,8 +36,9 @@ KNCounts <- R6::R6Class(
       for (i in 1:private$..size) {
 
         # Summarize counts and store in summary table
+        n <- i
         nGram <- private$..modelType[i]
-        n <- nrow(private$..nGrams[[i]])
+        types <- nrow(private$..nGrams[[i]])
         totalCkn <- ifelse(i > 1,
                         sum(length(unique(private$..nGrams[[i]]$history))),
                         0)
@@ -52,7 +53,8 @@ KNCounts <- R6::R6Class(
           }
         }
 
-        dt_i <- data.table(nGram = nGram, n = n, totalCkn = totalCkn,
+        dt_i <- data.table(n = n, nGram = nGram, types = types,
+                           totalCkn = totalCkn,
                            n1 = spectrum$freq[1],
                            n2 = spectrum$freq[2],
                            n3 = spectrum$freq[3],
@@ -62,36 +64,59 @@ KNCounts <- R6::R6Class(
       return(TRUE)
     },
 
+
+    prefix = function(n) {
+      # Compute the number of times a prefix occurs in the corpus
+      lower <- private$..nGrams[[n-1]][,.(nGram, count)]
+      setnames(lower, "count", "prefixCount")
+      private$..nGrams[[n]] <- merge(private$..nGrams[[n]],
+                                     lower, by.x = 'prefix',
+                       by.y = 'nGram', all.x = TRUE)
+
+      for (i in seq_along(private$..nGrams[[n]])) {
+        set(private$..nGrams[[n]],
+            i=which(is.na(private$..nGrams[[n]][[i]])), j=i, value=0)
+      }
+    },
+
+
     hist = function(n) {
+      # Compute the number of histories in which the prefix of an
+      # nGram occurs, e.g, the number of unique words that follow
+      # an nGram prefix.  This computed for all levels except
+      # the unigram level, which does not have a prefix.
       if (n > 1) {
-        contextNHist <-
-          private$..nGrams[[n]][,.(contextNHist = .N), by = .(context)]
+        prefixNHist <-
+          private$..nGrams[[n]][,.(prefixNHist = .N), by = .(prefix)]
 
         private$..nGrams[[n]] <-
-          merge(private$..nGrams[[n]], contextNHist, by = 'context',
+          merge(private$..nGrams[[n]], prefixNHist, by = 'prefix',
                 all.x = TRUE)
       }
     },
 
     ckn = function(n) {
-
-      # Compute continuation counts
-      current <- private$..nGrams[[n]]
+      # Compute continuation counts e.g. the number of words that
+      # precede an nGram.  This is compute for all levels except
+      # the highest.
 
       if (n < private$..size) {
 
         higher <- private$..nGrams[[n+1]][,.(suffix)]
         higher <- higher[,.(cKN = .N), by = .(suffix)]
-        current <- merge(current, higher, by.x = 'nGram',
-                         by.y = 'suffix', all.x = TRUE)
+        private$..nGrams[[n]] <-
+          merge(private$..nGrams[[n]], higher, by.x = 'nGram',
+                by.y = 'suffix', all.x = TRUE)
 
-        for (i in seq_along(current)) {
-          set(current, i=which(is.na(current[[i]])), j=i, value=0)
+        for (i in seq_along(private$..nGrams[[n]])) {
+          set(private$..nGrams[[n]],
+              i=which(is.na(private$..nGrams[[n]][[i]])), j=i, value=0)
         }
       } else {
-        current <- current[,cKN := count]
+        private$..nGrams[[n]]$cKN <- private$..nGrams[[n]]$count
       }
-      private$..nGrams[[n]] <- current
+
+
       return(TRUE)
     },
 
@@ -101,8 +126,9 @@ KNCounts <- R6::R6Class(
 
       for (n in 1:private$..size) {
 
+        if (n > 1) private$hist(n)
         private$ckn(n)
-        private$hist(n)
+        if (n == private$..size) private$prefix(n)
 
       }
       private$totals()
@@ -115,7 +141,7 @@ KNCounts <- R6::R6Class(
                        count = ngrams[,2])
       if (n > 1) {
         dt$history <- gsub( " .*$", "", dt$nGram)
-        dt$context <- gsub(private$..regex$context[[n-1]], "\\1", dt$nGram, perl = TRUE)
+        dt$prefix <- gsub(private$..regex$prefix[[n-1]], "\\1", dt$nGram, perl = TRUE)
         dt$suffix  <- gsub(private$..regex$suffix[[n-1]], "\\1", dt$nGram, perl = TRUE)
 
       }
@@ -188,7 +214,7 @@ KNCounts <- R6::R6Class(
       # Build ngram tables with raw frequency counts
       private$buildTables()
 
-      # Add context and continuation counts
+      # Add prefix and continuation counts
       private$counts()
 
       # Compute discounts

@@ -23,7 +23,7 @@ MKNStudio0 <- R6::R6Class(
 
   private = list(
     ..regex = list(
-      context = list(
+      prefix = list(
         bigrams   = "^((\\S+\\s+){0}\\S+).*$",
         trigrams  = "^((\\S+\\s+){1}\\S+).*$",
         quadgrams = "^((\\S+\\s+){2}\\S+).*$"

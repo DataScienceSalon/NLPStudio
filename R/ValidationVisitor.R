@@ -242,6 +242,10 @@ ValidationVisitor <- R6::R6Class(
       return(private$validate(object))
     },
 
+    knEstimate = function(object) {
+      return(private$validate(object))
+    },
+
     katz = function(object) {
       return(private$validate(object))
     },

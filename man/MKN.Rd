@@ -26,10 +26,10 @@ Modified Kneser Ney language model object.
 }
 \seealso{
 Other LMStudio Classes: \code{\link{KNCounts}},
-  \code{\link{KNDocument}}, \code{\link{KNStudio0}},
-  \code{\link{LMStudio0}}, \code{\link{MKNCounts}},
-  \code{\link{MKNDocument}}, \code{\link{MKNEstimate}},
-  \code{\link{MKNStudio0}}
+  \code{\link{KNDocument}}, \code{\link{KNEstimate}},
+  \code{\link{KNStudio0}}, \code{\link{LMStudio0}},
+  \code{\link{MKNCounts}}, \code{\link{MKNDocument}},
+  \code{\link{MKNEstimate}}, \code{\link{MKNStudio0}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

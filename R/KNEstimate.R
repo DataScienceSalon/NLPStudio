@@ -1,9 +1,9 @@
 #==============================================================================#
-#                               MKNEstimate                                    #
+#                               KNEstimate                                    #
 #==============================================================================#
-#' MKNEstimate
+#' KNEstimate
 #'
-#' \code{MKNEstimate} Computes Modified Kneser Ney estimates
+#' \code{KNEstimate} Computes Modified Kneser Ney estimates
 #'
 #' Computes Modified Kneser Ney estimates for all nGrams in the Model
 #'
@@ -11,22 +11,35 @@
 #'
 #' @docType class
 #' @author John James, \email{jjames@@dataScienceSalon.org}
-#' @family MKNStudio Classes
+#' @family KNStudio Classes
 #' @family LMStudio Classes
 #' @export
-MKNEstimate <- R6::R6Class(
-  classname = "MKNEstimate",
+KNEstimate <- R6::R6Class(
+  classname = "KNEstimate",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = MKNStudio0,
+  inherit = KNStudio0,
 
   private = list(
 
     alpha = function() {
-      # Computes alpha = (max(cKN(nGram) -D,0) / cKN(nGramContext))
-      #TODO: 1.Add discount level to data table.
-      #TODO: 2. Update discount to compute based upon col index min(discount level,3)
+
       for (i in 1:private$..size) {
+
+        if (i == 1) {
+          private$..nGrams[[i]]$alpha <- private$..nGrams[[i]]$cKN /
+            private$..totals$types[2]
+
+        } else if (i < private$..size) {
+          private$..nGrams[[i]]$alpha <-
+            max(private$..nGrams[[i]]$cKN - private$..discount,0) /
+            private$..totals$totalCkn[i+1]
+        } else {
+          private$..nGrams[[i]]$alpha <-
+            max(private$..nGrams[[i]]$count - private$..discount,0) /
+            private$..totals$totalCkn[i+1]
+        }
+
 
         # Obtain nGram, prefix, continuation counts as well as discount for
         # the nGram level
@@ -81,7 +94,6 @@ MKNEstimate <- R6::R6Class(
 
       }
     }
-
   ),
 
 
@@ -97,7 +109,7 @@ MKNEstimate <- R6::R6Class(
       private$..params <- list()
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list(c('MKN', 'Katz', 'SBO'))
+      private$..params$classes$valid <- list(c('KN', 'KN', 'Katz', 'SBO'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize',
@@ -107,7 +119,9 @@ MKNEstimate <- R6::R6Class(
 
       # Dock current lm (extract members read/updated within class)
       private$..lm <- x
-      private$..nGrams <- x$getTables()
+      private$..nGrams <- x$getnGrams()
+      private$..discount <- x$getDiscounts()
+      private$..totals <- x$getTotals()
       private$..size <- x$getSize()
       invisible(self)
     },
@@ -115,11 +129,8 @@ MKNEstimate <- R6::R6Class(
     build = function() {
 
       private$alpha()
-
       private$lambda()
-
-      private$pmkn()
-
+      private$pKN()
 
       private$..lm$setTables(private$..nGrams)
 
@@ -130,7 +141,7 @@ MKNEstimate <- R6::R6Class(
     #                           Visitor Method                                #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$mknEstimate(self)
+      visitor$knEstimate(self)
     }
   )
 )

@@ -50,7 +50,7 @@ MKNCounts <- R6::R6Class(
 
       for (n in 1:private$..size) {
         if (n > 1) {
-          private$..nGrams[[n]][,.(nContexts = .N), by = context]
+          private$..nGrams[[n]][,.(nContexts = .N), by = prefix]
         }
       }
       return(TRUE)
@@ -96,7 +96,7 @@ MKNCounts <- R6::R6Class(
                        count = ngrams[,2])
       if (n > 1) {
         dt$history <- gsub( " .*$", "", dt$nGram)
-        dt$context <- gsub(private$..regex$context[[n-1]], "\\1", dt$nGram, perl = TRUE)
+        dt$prefix <- gsub(private$..regex$prefix[[n-1]], "\\1", dt$nGram, perl = TRUE)
         dt$suffix  <- gsub(private$..regex$suffix[[n-1]], "\\1", dt$nGram, perl = TRUE)
 
       }
@@ -168,7 +168,7 @@ MKNCounts <- R6::R6Class(
       # Build ngram tables with raw frequency counts
       private$buildTables()
 
-      # Add context and continuation counts
+      # Add prefix and continuation counts
       private$cKN()
       private$nHistAll()
       private$nContexts()
@@ -176,7 +176,7 @@ MKNCounts <- R6::R6Class(
       # Compute discounts
       private$discounts()
 
-      private$..lm$setTables(private$..tables)
+      private$..lm$setTables(private$..nGrams)
 
       return(private$..lm)
     },
