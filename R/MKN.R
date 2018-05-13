@@ -17,17 +17,35 @@
 #'
 #' @docType class
 #' @author John James, \email{jjames@@dataScienceSalon.org}
-#' @family LMStudio Classes
+#' @family Language Model Classes
 #' @export
 MKN <- R6::R6Class(
   classname = "MKN",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = LM0,
+  inherit = KN,
+
+  private = list(
+    #-------------------------------------------------------------------------#
+    #                           Summary Methods                               #
+    #-------------------------------------------------------------------------#
+    nGramDetail = function() {
+
+      for (i in 1:private$meta$get(key = 'modelSize')) {
+        meta <- private$meta$get()
+        NLPStudio::printHeading(text = paste0(meta$functional$smoothing, ": ",
+                                              private$..modelType[i], " Summary"),
+                                symbol = "-",
+                                newlines = 2)
+        print(private$..nGrams[[i]][, tail(.SD, 10), by=cMKN_nGram])
+      }
+      return(TRUE)
+    }
+  ),
 
   public = list(
     #-------------------------------------------------------------------------#
-    #                           Constructor                                   #
+    #                           Core Methods                                  #
     #-------------------------------------------------------------------------#
     initialize = function(x, size = 3, open = TRUE, name = NULL) {
 

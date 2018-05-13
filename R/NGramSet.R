@@ -54,7 +54,7 @@ NGramSet <- R6::R6Class(
 
       counts <- self$getCounts()
       counts <- counts %>% arrange(desc(Freq))
-      n <- min(n, nrow(counts))
+      n <- min(n, nrow(cNGrams))
       top <- counts[1:n,]
 
       if (nrow(top) > 0) {
@@ -176,7 +176,7 @@ NGramSet <- R6::R6Class(
       private$getStats()
       result <- list()
       result$nGrams <- private$..content
-      result$counts <- private$..counts
+      result$cNGrams <- private$..counts
       result$spectrum <- private$..spectrum
       return(result)
     },
@@ -216,7 +216,7 @@ NGramSet <- R6::R6Class(
       sd <- list()
       sd$id <- private$summarizeIdMeta()
       sd$quant <- private$summarizeQuantMeta()
-      sd$counts  <- private$summarizeTopNGrams()
+      sd$cNGrams  <- private$summarizeTopNGrams()
       sd$spectrum  <- private$summarizeSpectrum()
       sd$documents <- private$summarizeDocMeta()
       sd$functional  <- private$summarizeFunctionalMeta()

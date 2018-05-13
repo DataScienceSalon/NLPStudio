@@ -12,11 +12,11 @@ MKNStudio0
 \item{x}{Language model object}
 }
 \description{
-\code{MKNStudio0} Abstract class for the Modified Kneser Ney language model state classes.
+\code{MKNStudio0} Abstract class for the Kneser Ney language model state classes.
 }
 \details{
 This abstract class defines a common interface and methods of the
-Modified Kneser Ney language model state classes.
+Kneser Ney language model state classes.
 }
 \seealso{
 Other MKNStudio Classes: \code{\link{MKNCounts}},
@@ -26,7 +26,7 @@ Other LMStudio Classes: \code{\link{KNCounts}},
   \code{\link{KNDocument}}, \code{\link{KNEstimate}},
   \code{\link{KNStudio0}}, \code{\link{LMStudio0}},
   \code{\link{MKNCounts}}, \code{\link{MKNDocument}},
-  \code{\link{MKNEstimate}}, \code{\link{MKN}}
+  \code{\link{MKNEstimate}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

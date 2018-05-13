@@ -3,10 +3,10 @@
 #==============================================================================#
 #' MKNCounts
 #'
-#' \code{MKNCounts} Prepares text data for downstream processing.
+#' \code{MKNCounts} Computes counts used to estimate Modified Kneser Ney probabilities
 #'
-#' Gathers text data, creates sentence tokens and, if open is TRUE, converts
-#' hapax legomenon to unknown tokens.
+#' Computes counts used in the probability calculations for the Modified Kneser Ney
+#' probabilities.
 #'
 #' @param x Language model object
 #'
@@ -24,117 +24,41 @@ MKNCounts <- R6::R6Class(
   private = list(
 
     discounts = function() {
-      private$..discounts <- data.table::rbindlist(lapply(seq_along(private$..nGrams), function(x) {
-
-        # Obtain frequency spectrum
-        spectrum <- as.data.frame(table(private$..nGrams[[x]]$count), stringsAsFactors = FALSE)
-        names(spectrum) <- c('count', 'freq')
-        spectrum$count <- as.numeric(spectrum$count)
-        if (is.na(spectrum[4,]$freq))  {
-          spectrum <- rbind(spectrum, data.frame(count = 4, freq = 0))
-        }
-
-        # Compute discounts
+      private$..discounts <- rbindlist(lapply(seq_along(1:private$..size), function(i) {
         d <- list()
-        d$n <- x
-        d$D <- spectrum$freq[1] / (spectrum$freq[1] + 2 * spectrum$freq[2])
-        d$D1 <- 1 - (2 * d$D * spectrum$freq[2] / spectrum$freq[1])
-        d$D2 <- 2 - (3 * d$D * spectrum$freq[3] / spectrum$freq[2])
-        d$D3 <- 3 - (4 * d$D * spectrum$freq[4] / spectrum$freq[3])
+        d$D <- private$..totals$n1[i] /
+          (private$..totals$n1[i] + 2 * private$..totals$n2[i])
+
+        d$D0 <- 0
+
+        d$D1 <- 1 - (2 * d$D *
+                                       private$..totals$n2[i] /
+                                       private$..totals$n1[i])
+
+        d$D2 <- 2 - (3 * d$D *
+                                       private$..totals$n3[i] /
+                                       private$..totals$n2[i])
+
+        d$D3 <- 3 - (4 * d$D *
+                                       private$..totals$n4[i] /
+                                       private$..totals$n3[i])
         d
       }))
       return(TRUE)
     },
 
-    nContexts = function() {
+    hist = function(n) {
+      # Compute the number of histories in which the prefix appears
+      # precisely 1, 2 and 3 or more times.
 
-      for (n in 1:private$..size) {
-        if (n > 1) {
-          private$..nGrams[[n]][,.(nContexts = .N), by = prefix]
-        }
-      }
-      return(TRUE)
-    },
-
-    nHistAll = function() {
-
-      for (i in 1:private$..size) {
-        if (i > 1) {
-          private$..nGrams[[i]][,.(histTypes = sum(length(unique(history))))]
-        }
-      }
-    },
-
-    cKN = function() {
-
-      for (n in 1:private$..size) {
-
-        current <- private$..nGrams[[n]]
-
-        if (n < private$..size) {
-
-          higher <- private$..nGrams[[n+1]][,.(suffix)]
-          higher <- higher[,.(cKN = .N), by = .(suffix)]
-          current <- merge(current, higher, by.x = 'nGram',
-                           by.y = 'suffix', all.x = TRUE)
-
-          for (i in seq_along(current)) {
-            set(current, i=which(is.na(current[[i]])), j=i, value=0)
-          }
-        } else {
-          current <- current[,cKN := count]
-        }
-        current <- current[, discountLevel := ifelse(cKN > 3, 3, cKN)]
-        private$..nGrams[[n]] <- current
-      }
-      return(TRUE)
-    },
-
-    createTable = function(ngrams, n) {
-      ngrams <- as.data.frame(table(ngrams), stringsAsFactors = FALSE)
-      dt <- data.table(nGram = ngrams[,1],
-                       count = ngrams[,2])
-      if (n > 1) {
-        dt$history <- gsub( " .*$", "", dt$nGram)
-        dt$prefix <- gsub(private$..regex$prefix[[n-1]], "\\1", dt$nGram, perl = TRUE)
-        dt$suffix  <- gsub(private$..regex$suffix[[n-1]], "\\1", dt$nGram, perl = TRUE)
-
-      }
-      return(dt)
-    },
-
-    createNGrams = function(text, tokenType = 'word', n) {
-      if (n == 1) {
-        ngrams <- NLPStudio::tokenize(text, tokenType = 'word', ngrams = n)
-      } else {
-        ngrams <- unlist(lapply(seq_along(text), function(i) {
-          NLPStudio::tokenize(text[i], tokenType = 'word', ngrams = n)
-        }))
-      }
-      return(ngrams)
-    },
-
-    annotateText = function(n) {
-      document <- private$..document$content
-      text <- unlist(lapply(seq_along(document), function(i) {
-        paste(paste0(rep("BOS", times = n-1), collapse = " "), document[i], "EOS", collapse = " ")
-      }))
-      return(text)
-    },
-
-    buildTables = function() {
-
-      private$..nGrams <- lapply(seq(1:private$..size), function(n) {
-        text <- private$annotateText(n)
-        ngrams <- private$createNGrams(text, tokenType = 'word', n = n)
-        private$createTable(ngrams, n)
-      })
-
-      names(private$..nGrams) <- private$..modelType[1:private$..size]
-      return(TRUE)
+      private$..nGrams[[n]] <-
+        private$..nGrams[[n]][, N1 := sum(unique(cNGram == 1)),  by = .(prefix)]
+      private$..nGrams[[n]] <-
+        private$..nGrams[[n]][, N2 := sum(unique(cNGram == 2)),  by = .(prefix)]
+      private$..nGrams[[n]] <-
+        private$..nGrams[[n]][, N3 := sum(unique(cNGram > 2)),  by = .(prefix)]
     }
   ),
-
 
   public = list(
     #-------------------------------------------------------------------------#
@@ -148,7 +72,7 @@ MKNCounts <- R6::R6Class(
       private$..params <- list()
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list(c('MKN', 'Katz', 'SBO'))
+      private$..params$classes$valid <- list(c('MKN'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize',
@@ -161,24 +85,6 @@ MKNCounts <- R6::R6Class(
       private$..document <- x$getDocument()
       private$..size <- x$getSize()
       invisible(self)
-    },
-
-    build = function() {
-
-      # Build ngram tables with raw frequency counts
-      private$buildTables()
-
-      # Add prefix and continuation counts
-      private$cKN()
-      private$nHistAll()
-      private$nContexts()
-
-      # Compute discounts
-      private$discounts()
-
-      private$..lm$setTables(private$..nGrams)
-
-      return(private$..lm)
     },
 
     #-------------------------------------------------------------------------#

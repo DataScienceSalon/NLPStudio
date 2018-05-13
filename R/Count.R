@@ -72,7 +72,7 @@ Count <- R6::R6Class(
     #                           Visitor Methods                               #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$count(self)
+      visitor$cNGram(self)
     }
   )
 )

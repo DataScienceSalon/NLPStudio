@@ -72,7 +72,7 @@ KN <- R6::R6Class(
                                               private$..modelType[i], " Summary"),
                                 symbol = "-",
                                 newlines = 2)
-        print(private$..nGrams[[i]][, tail(.SD, 10), by=cKN])
+        print(private$..nGrams[[i]][, tail(.SD, 10), by=cKN_nGram])
       }
       return(TRUE)
     }
@@ -129,6 +129,8 @@ KN <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Setters / Getters                             #
     #-------------------------------------------------------------------------#
+    getId = function() { return(private$meta$get(key = 'id'))},
+
     getName = function() { return(private$meta$get(key = 'name'))},
 
     getCorpus = function() { return(private$..x) },

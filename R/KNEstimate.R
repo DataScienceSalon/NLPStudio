@@ -27,18 +27,18 @@ KNEstimate <- R6::R6Class(
       for (i in 1:private$..size) {
 
         if (i == 1) {
-          private$..nGrams[[i]]$alpha <- private$..nGrams[[i]]$cKN /
+          private$..nGrams[[i]]$alpha <- private$..nGrams[[i]]$cKN_nGram /
             private$..totals$n[i+1]
 
         } else if (i < private$..size) {
           private$..nGrams[[i]]$alpha <-
-            pmax(private$..nGrams[[i]]$cKN - private$..discounts[i],0) /
+            pmax(private$..nGrams[[i]]$cKN_nGram - private$..discounts[i],0) /
             private$..totals$n[i+1]
 
         } else {
           private$..nGrams[[i]]$alpha <-
-            pmax(private$..nGrams[[i]]$count - private$..discounts[i],0) /
-            private$..nGrams[[i]]$prefixCount
+            pmax(private$..nGrams[[i]]$cNGram - private$..discounts[i],0) /
+            private$..nGrams[[i]]$cPre
         }
       }
     },
@@ -50,12 +50,12 @@ KNEstimate <- R6::R6Class(
           private$..nGrams[[i]]$lambda <-
             private$..discounts[i] /
             private$..totals$n[i+1] *
-            private$..nGrams[[i]]$prefixNHist
+            private$..nGrams[[i]]$N1Pre_pPre_
         } else {
           private$..nGrams[[i]]$lambda <-
             private$..discounts[i] /
-            private$..nGrams[[i]]$prefixCount *
-            private$..nGrams[[i]]$prefixNHist
+            private$..nGrams[[i]]$cPre *
+            private$..nGrams[[i]]$N1Pre_pPre_
         }
       }
     },

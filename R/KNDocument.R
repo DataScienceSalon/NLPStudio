@@ -39,7 +39,7 @@ KNDocument <- R6::R6Class(
       name <- private$..lm$getName()
       name <- paste0(name, " Document")
       private$..document$setName(name)
-      private$..document$setMeta(key = 'smoothing', value = "Modified Kneser-Ney",
+      private$..document$setMeta(key = 'smoothing', value = "Kneser-Ney",
                         type = 'f')
       private$..document$setMeta(key = 'modelType',
                        value = private$..size,
@@ -48,7 +48,7 @@ KNDocument <- R6::R6Class(
                        value = private$..lm$is.openVocabulary(),
                        type = 'f')
       private$..document$setMeta(key = 'lm',
-                       value = 'Modified Kneser-Ney',
+                       value = 'Kneser-Ney',
                        type = 'f')
 
       return(TRUE)
@@ -57,8 +57,8 @@ KNDocument <- R6::R6Class(
     processOOV = function() {
 
       nGrams <- NGrammer$new()$this(private$..document, n = 1, wordsOnly = TRUE)
-      counts <- nGrams$getCounts()
-      hapax  <- (counts %>% filter(Freq == 1) %>% select(Unigram))$Unigram
+      cNGrams <- nGrams$getCounts()
+      hapax  <- (cNGrams %>% filter(Freq == 1) %>% select(Unigram))$Unigram
       private$..document$text <- textclean::replace_tokens(x = private$..document$text, tokens = hapax,
                                    replacement = 'UNK')
       return(TRUE)

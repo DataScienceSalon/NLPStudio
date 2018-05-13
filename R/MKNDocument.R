@@ -52,22 +52,6 @@ MKNDocument <- R6::R6Class(
                        type = 'f')
 
       return(TRUE)
-    },
-
-    processOOV = function() {
-
-      nGrams <- NGrammer$new()$this(private$..document, n = 1, wordsOnly = TRUE)
-      counts <- nGrams$getCounts()
-      hapax  <- (counts %>% filter(Freq == 1) %>% select(Unigram))$Unigram
-      private$..document$text <- textclean::replace_tokens(x = private$..document$text, tokens = hapax,
-                                   replacement = 'UNK')
-      return(TRUE)
-    },
-
-    sentencify = function() {
-      tokenize <- Tokenizer$new()
-      private$..document <- tokenize$this(x = private$..document, type = 's')
-      return(TRUE)
     }
   ),
 
@@ -98,21 +82,6 @@ MKNDocument <- R6::R6Class(
       private$..corpus <- x$getCorpus()
       private$..size <- x$getSize()
       invisible(self)
-    },
-
-    build = function() {
-
-      private$convert()
-
-      if (private$..open)  private$processOOV()
-
-      private$sentencify()
-
-      private$..lm$setDocument(private$..document)
-
-      #nextStage <- MKNCounts$new(x = private$..lm)
-
-      return(private$..lm)
     },
 
     #-------------------------------------------------------------------------#

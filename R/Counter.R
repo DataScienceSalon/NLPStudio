@@ -44,7 +44,7 @@ Counter <- R6::R6Class(
                                                 stemming = stem,
                                                 dictionary = dictionary)
       )
-      return(count)
+      return(cNGram)
     },
 
     dtm = function(x, tolower, stem, dictionary) {
@@ -58,7 +58,7 @@ Counter <- R6::R6Class(
                                                 stemming = stem,
                                                 dictionary = dictionary)
       )
-      return(count)
+      return(cNGram)
     },
 
     dfm = function(x, tolower, stem, dictionary) {
@@ -86,7 +86,7 @@ Counter <- R6::R6Class(
       q <- ConverterQuanteda$new()$convert(x)
       count$content <- quanteda::dfm(q, tolower = tolower, stem = stem,
                               dictionary = dict)
-      return(count)
+      return(cNGram)
     }
   ),
 
@@ -131,14 +131,14 @@ Counter <- R6::R6Class(
                       x$getName(), ". ")
       private$logR$log(method = 'this', event = event)
 
-      return(count)
+      return(cNGram)
     },
 
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$counter(self)
+      visitor$cNGramer(self)
     }
   )
 )

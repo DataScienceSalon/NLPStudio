@@ -40,20 +40,18 @@ KNCounts <- R6::R6Class(
         n <- nrow(private$..nGrams[[i]])
 
         # Obtain frequency spectrum
-        spectrum <- as.data.frame(table(private$..nGrams[[i]]$count), stringsAsFactors = FALSE)
-        names(spectrum) <- c('count', 'freq')
-        spectrum$count <- as.numeric(spectrum$count)
-        for (j in 1:4) {
+        spectrum <- as.data.frame(table(private$..nGrams[[i]]$cNGram), stringsAsFactors = FALSE)
+        names(spectrum) <- c('cNGram', 'freq')
+        spectrum$cNGram <- as.numeric(spectrum$cNGram)
+        for (j in 1:2) {
           if (is.na(spectrum[j,]$freq))  {
-            spectrum <- rbind(spectrum, data.frame(count = j, freq = 0))
+            spectrum <- rbind(spectrum, data.frame(cNGram = j, freq = 0))
           }
         }
 
         dt_i <- data.table(nGram = nGram, n = n,
                            n1 = spectrum$freq[1],
-                           n2 = spectrum$freq[2],
-                           n3 = spectrum$freq[3],
-                           n4 = spectrum$freq[4])
+                           n2 = spectrum$freq[2])
         private$..totals <- rbind(private$..totals, dt_i)
       }
       return(TRUE)
@@ -62,7 +60,7 @@ KNCounts <- R6::R6Class(
 
     prefix = function(n) {
       # Compute the number of times a prefix occurs in the corpus
-      private$..nGrams[[n]][, ":=" (prefixCount = sum(count)), by = prefix]
+      private$..nGrams[[n]][, ":=" (cPre = sum(cNGram)), by = prefix]
 
 
     },
@@ -73,14 +71,12 @@ KNCounts <- R6::R6Class(
       # nGram occurs, e.g, the number of unique words that follow
       # an nGram prefix.  This computed for all levels except
       # the unigram level, which does not have a prefix.
-      if (n > 1) {
-        prefixNHist <-
-          private$..nGrams[[n]][,.(prefixNHist = .N), by = .(prefix)]
+      N1pPre_ <-
+        private$..nGrams[[n]][,.(N1pPre_ = .N), by = .(prefix)]
 
-        private$..nGrams[[n]] <-
-          merge(private$..nGrams[[n]], prefixNHist, by = 'prefix',
-                all.x = TRUE)
-      }
+      private$..nGrams[[n]] <-
+        merge(private$..nGrams[[n]], N1pPre_, by = 'prefix',
+              all.x = TRUE)
     },
 
     ckn = function(n) {
@@ -92,13 +88,13 @@ KNCounts <- R6::R6Class(
 
         # Compute the continuation count for the nGram
         higher <- private$..nGrams[[n+1]][,.(suffix)]
-        higher <- higher[,.(cKN = .N), by = .(suffix)]
+        higher <- higher[,.(cKN_nGram = .N), by = .(suffix)]
         private$..nGrams[[n]] <-
           merge(private$..nGrams[[n]], higher, by.x = 'nGram',
                 by.y = 'suffix', all.x = TRUE)
 
       } else {
-        private$..nGrams[[n]]$cKN <- private$..nGrams[[n]]$count
+        private$..nGrams[[n]]$cKN_nGram <- private$..nGrams[[n]]$cNGram
       }
 
 
@@ -129,7 +125,7 @@ KNCounts <- R6::R6Class(
     createTable = function(ngrams, n) {
       ngrams <- as.data.frame(table(ngrams), stringsAsFactors = FALSE)
       dt <- data.table(nGram = ngrams[,1],
-                       count = ngrams[,2])
+                       cNGram = ngrams[,2])
       if (n > 1) {
         dt$prefix <- gsub(private$..regex$prefix[[n-1]], "\\1", dt$nGram, perl = TRUE)
         dt$suffix  <- gsub(private$..regex$suffix[[n-1]], "\\1", dt$nGram, perl = TRUE)

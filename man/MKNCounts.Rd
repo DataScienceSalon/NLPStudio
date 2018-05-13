@@ -12,11 +12,11 @@ MKNCounts
 \item{x}{Language model object}
 }
 \description{
-\code{MKNCounts} Prepares text data for downstream processing.
+\code{MKNCounts} Computes counts used to estimate Modified Kneser Ney probabilities
 }
 \details{
-Gathers text data, creates sentence tokens and, if open is TRUE, converts
-hapax legomenon to unknown tokens.
+Computes counts used in the probability calculations for the Modified Kneser Ney
+probabilities.
 }
 \seealso{
 Other MKNStudio Classes: \code{\link{MKNDocument}},
@@ -26,7 +26,7 @@ Other LMStudio Classes: \code{\link{KNCounts}},
   \code{\link{KNDocument}}, \code{\link{KNEstimate}},
   \code{\link{KNStudio0}}, \code{\link{LMStudio0}},
   \code{\link{MKNDocument}}, \code{\link{MKNEstimate}},
-  \code{\link{MKNStudio0}}, \code{\link{MKN}}
+  \code{\link{MKNStudio0}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

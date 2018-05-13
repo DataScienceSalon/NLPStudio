@@ -24,6 +24,9 @@ the training set. Default is TRUE.}
 \details{
 Kneser Ney language model object.
 }
+\seealso{
+Other Language Model Classes: \code{\link{MKN}}
+}
 \author{
 John James, \email{jjames@dataScienceSalon.org}
 }

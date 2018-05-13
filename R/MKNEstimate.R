@@ -23,65 +23,76 @@ MKNEstimate <- R6::R6Class(
   private = list(
 
     alpha = function() {
-      # Computes alpha = (max(cKN(nGram) -D,0) / cKN(nGramContext))
-      #TODO: 1.Add discount level to data table.
-      #TODO: 2. Update discount to compute based upon col index min(discount level,3)
+
       for (i in 1:private$..size) {
 
-        # Obtain nGram, prefix, continuation counts as well as discount for
-        # the nGram level
-        current <- private$..nGrams[[i]][,. (nGram, prefix, cKN)]
-        discount <- private$..discounts[[i,2]]
-
-        # For the unigram level alpha is the ratio of the continuation unigram
-        # count and the number of bigram types.
         if (i == 1) {
-          nBigrams <- nrow(private$..nGrams[[i+1]])
-          current[,.(alpha =  ifelse(cKN - discount > 0,
-                                     cKN - discount, 0)
-                     / nBigrams)]
+          private$..nGrams[[i]]$alpha <- private$..nGrams[[i]]$cMKN_nGram /
+            private$..totals$n[i+1]
 
-        # For the higher levels, alpha is computed as described above
         } else {
-          prefix <- private$..nGrams[[i-1]][,.(nGram, cKN)]
-          setnames(prefix, "cKN", "cKNContext")
-          current <- merge(current, prefix, by.x = 'prefix',
-                           by.y = 'nGram', all.x = TRUE)
-          for (k in seq_along(current)) {
-            set(current, i=which(is.na(current[[k]])), j=k, value=0)
+          discount <- private$..discounts[i,pmin(private$..nGrams[[i]]$cMKN_nGram,3)+2]
+          if (i < private$..size) {
+          private$..nGrams[[i]]$alpha <-
+            pmax(private$..nGrams[[i]]$cMKN_nGram - discount, 0) /
+            private$..totals$n[i+1]
+
+          } else {
+            private$..nGrams[[i]]$alpha <-
+              pmax(private$..nGrams[[i]]$cNGram - discount, 0) /
+              private$..nGrams[[i]]$cPre
           }
-          current[,.(alpha =  ifelse(cKN - discount > 0,
-                                     cKN - discount, 0)
-                     / cKNContext)]
         }
-        current <- current[,.(nGram, alpha, cKNContext)]
-        private$..nGrams[[i]] <- merge(private$..nGrams[[i]],
-                                              current,  by = 'nGram',
-                                              all.x = TRUE)
       }
     },
 
     lambda = function() {
+      for (i in 2:private$..size) {
 
-      for (i in 1:private$..size) {
+        D1 <- private$..discounts$D1[i]
+        D2 <- private$..discounts$D2[i]
+        D3 <- private$..discounts$D3[i]
 
-        current <- private$..nGrams[[i]][,. (nGram, cKN, cknContext)]
-
-        if (i > 1) {
-
-        }
+        discounts <-
+          D1 * private$..nGrams[[i]]$N1Pre_ +
+          D2 * private$..nGrams[[i]]$N2Pre_ +
+          D3 * private$..nGrams[[i]]$N3pPre_ +
 
         if (i < private$..size) {
-          higher <- private$..nGrams[[i+1]][,.(prefix)]
-          counts <- higher[,.(cKN = .N), by = .(prefix)]
-
+          private$..nGrams[[i]]$lambda <-
+            discounts /
+            private$..totals$n[i+1]
+        } else {
+          private$..nGrams[[i]]$lambda <-
+            discounts /
+            private$..nGrams[[i]]$cPre
         }
+      }
+    },
 
+    pMKN = function() {
+      for (i in 1:private$..size) {
 
+        if (i == 1) {
+          private$..nGrams[[i]]$pMKN <- private$..nGrams[[i]]$alpha
 
+        } else {
+          lower <- private$..nGrams[[i-1]][,.(nGram, pMKN)]
+          setnames(lower, "pMKN", "pMKNSuffix")
+          private$..nGrams[[i]] <-
+            merge(private$..nGrams[[i]], lower, by.x = 'suffix',
+                  by.y = 'nGram', all.x = TRUE)
+          for (j in seq_along(private$..nGrams[[i]])) {
+            set(private$..nGrams[[i]],
+                i=which(is.na(private$..nGrams[[i]][[j]])), j=j, value=0)
+          }
+          private$..nGrams[[i]]$pMKN <-
+            private$..nGrams[[i]]$alpha +
+            private$..nGrams[[i]]$lambda *
+            private$..nGrams[[i]]$pMKNSuffix
+        }
       }
     }
-
   ),
 
 
@@ -97,7 +108,7 @@ MKNEstimate <- R6::R6Class(
       private$..params <- list()
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list(c('MKN', 'Katz', 'SBO'))
+      private$..params$classes$valid <- list(c('MKN', 'MKN', 'Katz', 'SBO'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize',
@@ -107,7 +118,9 @@ MKNEstimate <- R6::R6Class(
 
       # Dock current lm (extract members read/updated within class)
       private$..lm <- x
-      private$..nGrams <- x$getTables()
+      private$..nGrams <- x$getnGrams()
+      private$..discounts <- x$getDiscounts()
+      private$..totals <- x$getTotals()
       private$..size <- x$getSize()
       invisible(self)
     },
@@ -115,13 +128,10 @@ MKNEstimate <- R6::R6Class(
     build = function() {
 
       private$alpha()
-
       private$lambda()
+      private$pMKN()
 
-      private$pmkn()
-
-
-      private$..lm$setTables(private$..nGrams)
+      private$..lm$setnGrams(private$..nGrams)
 
       return(private$..lm)
     },
@@ -130,7 +140,7 @@ MKNEstimate <- R6::R6Class(
     #                           Visitor Method                                #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$mknEstimate(self)
+      visitor$knEstimate(self)
     }
   )
 )
