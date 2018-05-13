@@ -28,12 +28,12 @@ KNEstimate <- R6::R6Class(
 
         if (i == 1) {
           private$..nGrams[[i]]$alpha <- private$..nGrams[[i]]$cKN /
-            private$..totals$totalCkn[i+1]
+            private$..totals$n[i+1]
 
         } else if (i < private$..size) {
           private$..nGrams[[i]]$alpha <-
             pmax(private$..nGrams[[i]]$cKN - private$..discounts[i],0) /
-            private$..totals$totalCkn[i+1]
+            private$..totals$n[i+1]
 
         } else {
           private$..nGrams[[i]]$alpha <-
@@ -49,7 +49,7 @@ KNEstimate <- R6::R6Class(
         if (i < private$..size) {
           private$..nGrams[[i]]$lambda <-
             private$..discounts[i] /
-            private$..totals$totalCkn[i+1] *
+            private$..totals$n[i+1] *
             private$..nGrams[[i]]$prefixNHist
         } else {
           private$..nGrams[[i]]$lambda <-

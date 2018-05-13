@@ -102,8 +102,8 @@ proper <- function(x) {
 #' @family Internal Functions
 #' @export
 printHeading <- function(text, symbol = "=", newlines = 1) {
-  leftPad <- 38 - floor(nchar(text)/2)
-  rightPad <- 80 - leftPad - nchar(text) - 2
+  leftPad <- max(38 - floor(nchar(text)/2), 0)
+  rightPad <- max(80 - leftPad - nchar(text) - 2, 8, 0)
   cat(rep("\n", newlines))
   cat(paste0("#", strrep(symbol, 78), "#", collapse = ""))
   cat(paste0("\n#", strrep(" ", leftPad), text,

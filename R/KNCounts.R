@@ -36,12 +36,8 @@ KNCounts <- R6::R6Class(
       for (i in 1:private$..size) {
 
         # Summarize counts and store in summary table
-        n <- i
         nGram <- private$..modelType[i]
-        types <- nrow(private$..nGrams[[i]])
-        totalCkn <- ifelse(i > 1,
-                        sum(length(unique(private$..nGrams[[i]]$history))),
-                        0)
+        n <- nrow(private$..nGrams[[i]])
 
         # Obtain frequency spectrum
         spectrum <- as.data.frame(table(private$..nGrams[[i]]$count), stringsAsFactors = FALSE)
@@ -53,8 +49,7 @@ KNCounts <- R6::R6Class(
           }
         }
 
-        dt_i <- data.table(n = n, nGram = nGram, types = types,
-                           totalCkn = totalCkn,
+        dt_i <- data.table(nGram = nGram, n = n,
                            n1 = spectrum$freq[1],
                            n2 = spectrum$freq[2],
                            n3 = spectrum$freq[3],
@@ -67,16 +62,9 @@ KNCounts <- R6::R6Class(
 
     prefix = function(n) {
       # Compute the number of times a prefix occurs in the corpus
-      lower <- private$..nGrams[[n-1]][,.(nGram, count)]
-      setnames(lower, "count", "prefixCount")
-      private$..nGrams[[n]] <- merge(private$..nGrams[[n]],
-                                     lower, by.x = 'prefix',
-                       by.y = 'nGram', all.x = TRUE)
+      private$..nGrams[[n]][, ":=" (prefixCount = sum(count)), by = prefix]
 
-      for (i in seq_along(private$..nGrams[[n]])) {
-        set(private$..nGrams[[n]],
-            i=which(is.na(private$..nGrams[[n]][[i]])), j=i, value=0)
-      }
+
     },
 
 
@@ -102,16 +90,13 @@ KNCounts <- R6::R6Class(
 
       if (n < private$..size) {
 
+        # Compute the continuation count for the nGram
         higher <- private$..nGrams[[n+1]][,.(suffix)]
         higher <- higher[,.(cKN = .N), by = .(suffix)]
         private$..nGrams[[n]] <-
           merge(private$..nGrams[[n]], higher, by.x = 'nGram',
                 by.y = 'suffix', all.x = TRUE)
 
-        for (i in seq_along(private$..nGrams[[n]])) {
-          set(private$..nGrams[[n]],
-              i=which(is.na(private$..nGrams[[n]][[i]])), j=i, value=0)
-        }
       } else {
         private$..nGrams[[n]]$cKN <- private$..nGrams[[n]]$count
       }
@@ -126,10 +111,16 @@ KNCounts <- R6::R6Class(
 
       for (n in 1:private$..size) {
 
-        if (n > 1) private$hist(n)
         private$ckn(n)
+        if (n > 1) {
+          private$hist(n)
+        }
         if (n == private$..size) private$prefix(n)
 
+        for (i in seq_along(private$..nGrams[[n]])) {
+          set(private$..nGrams[[n]],
+              i=which(is.na(private$..nGrams[[n]][[i]])), j=i, value=0)
+        }
       }
       private$totals()
       return(TRUE)
@@ -140,7 +131,6 @@ KNCounts <- R6::R6Class(
       dt <- data.table(nGram = ngrams[,1],
                        count = ngrams[,2])
       if (n > 1) {
-        dt$history <- gsub( " .*$", "", dt$nGram)
         dt$prefix <- gsub(private$..regex$prefix[[n-1]], "\\1", dt$nGram, perl = TRUE)
         dt$suffix  <- gsub(private$..regex$suffix[[n-1]], "\\1", dt$nGram, perl = TRUE)
 
