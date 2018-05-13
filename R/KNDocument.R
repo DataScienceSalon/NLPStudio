@@ -56,11 +56,11 @@ KNDocument <- R6::R6Class(
 
     processOOV = function() {
 
-      nGrams <- NGrammer$new()$this(private$..document, n = 1, wordsOnly = TRUE)
-      cNGrams <- nGrams$getCounts()
-      hapax  <- (cNGrams %>% filter(Freq == 1) %>% select(Unigram))$Unigram
-      private$..document$text <- textclean::replace_tokens(x = private$..document$text, tokens = hapax,
-                                   replacement = 'UNK')
+      tokensObject <- quanteda::tokens(x = private$..document$text, what = 'word')
+      freq <- as.data.frame(table(tokensObject$text1), stringsAsFactors = FALSE)
+      hapax  <- (freq %>% filter(Freq == 1) %>% select(Var1))$Var1
+      private$..document$text <- quanteda::tokens_replace(x = tokensObject, pattern = hapax,
+                                   replacement = rep('UNK', length(hapax)))$text1
       return(TRUE)
     },
 
