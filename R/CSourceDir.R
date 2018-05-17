@@ -41,15 +41,16 @@ CSourceDir <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Source Method                                 #
     #-------------------------------------------------------------------------#
-    source = function(x, name = NULL, docNames = TRUE) {
+    source = function(x, name = NULL, docNames = TRUE, repair = TRUE,
+                      codes = nonPrintables) {
 
       # Validation
       private$..params <- list()
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
       private$..params$classes$valid <- list(c("character"))
-      private$..params$logicals$variables <- list('docNames')
-      private$..params$logicals$values <- list(docNames)
+      private$..params$logicals$variables <- list('docNames', 'repair')
+      private$..params$logicals$values <- list(docNames, repair)
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'source',
@@ -72,8 +73,14 @@ CSourceDir <- R6::R6Class(
 
       lapply(paths, function(p) {
 
-        io <- IOFactory$new()$strategy(p)
-        content <- io$read(p)
+        # Obtain content
+        if (repair) {
+          content <- removeNonPrintable(path = p, codes = codes)
+        } else {
+          io <- IOFactory$new()$strategy(p)
+          content <- io$read(p)
+
+        }
 
         # Instantiate Document objects
         if (docNames) {

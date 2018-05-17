@@ -38,7 +38,17 @@ ReplaceNonAsciiApp <- R6::R6Class(
 
     processDocument = function(document) {
 
-      document$text <- textclean::replace_non_ascii(x = document$text,
+      content <- document$text
+
+      Encoding(content) <- "latin1"
+      content <- enc2utf8(content)
+      content <- gsub("â€™", "'", content)
+      content <- gsub("â€˜", "'", content)
+      content <- gsub("â€¦", "", content)
+      content <- gsub("â€", "-", content)
+      content <- iconv(content, "UTF-8", "ASCII", sub = "")
+
+      document$text <- textclean::replace_non_ascii(x = content,
                                                        remove.nonconverted =
                                                          private$..removeNonConverted)
       private$logEvent(document)

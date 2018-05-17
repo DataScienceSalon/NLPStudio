@@ -31,11 +31,3 @@ tokenize(x, tokenType = "word", ngrams = 1, removeNumbers = FALSE,
 \code{\link[quanteda]{tokens}}
 Source \url{https://cran.r-project.org/web/packages/quanteda/quanteda.pdf}
 }
-\seealso{
-Other Internal Functions: \code{\link{listFiles}},
-  \code{\link{printHeading}}, \code{\link{proper}},
-  \code{\link{slice}}
-}
-\author{
-John James, \email{jjames@DataScienceSalon.org}
-}

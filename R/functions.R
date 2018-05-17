@@ -3,12 +3,49 @@
 #------------------------------------------------------------------------------#
 #' slice
 #'
+#' \code{removeNonPrintable} Removes select non-printable characters from file
+#' using binary facilities. Defaults to removing all but line and form feed
+#' characters.
+#' @param path Character string including path to file
+#' @param codes Numeric indicating the decimal codes for the characters
+#' to be removed.
+#' @return content Character vector containing content with non-printable
+#' characters removed.
+#' @export
+removeNonPrintable <- function(path, codes = nonPrintables) {
+
+  # Validate path and file type
+  if (!R.utils::isFile(path)) stop(paste("File", path, "does not exist."))
+  if (tools::file_ext(path) != "txt") {
+    stop("This method operates on '.txt' files only.")
+  }
+
+  ioBin <- IOBin$new()
+  ioTxt <- IOText$new()
+
+  content <- ioBin$read(path = path)
+  for (i in 1:length(codes)) {
+    content[content == as.raw(codes[i])] = as.raw(0x20)
+  }
+
+  # Save to temp file, then re-read
+  d <- tempfile(fileext = '.txt')
+  ioBin$write(path = d, content = content)
+  content <- ioTxt$read(path = d)
+  unlink(d)
+  return(content)
+}
+
+
+
+#------------------------------------------------------------------------------#
+#                                     slice                                    #
+#------------------------------------------------------------------------------#
+#' slice
+#'
 #' \code{tokenize} Slices a vector into chunks of the given size
 #' @param v Input vector to be split
 #' @param size Numeric indicating the number of elements per slice.
-#' @author John James, \email{jjames@@DataScienceSalon.org}
-#' @family Internal Functions
-#' @export
 slice = function(v, size) {
     starts <- seq(1,length(v),size)
     tt <- lapply(starts, function(y) v[y:(y+(size-1))])
@@ -33,9 +70,6 @@ slice = function(v, size) {
 #' @param removePunct Logical. If TRUE, remove all characters in the Unicode "Punctuation" [P] class
 #' @param removeURL Logical. If TRUE, find and eliminate URLs beginning with http(s)
 #' @param removeHyphens Logical. If TRUE, split words that are connected by hyphenation and hyphenation-like characters in between words
-#'
-#' @author John James, \email{jjames@@DataScienceSalon.org}
-#' @family Internal Functions
 #' @export
 tokenize = function(x, tokenType = 'word', ngrams =  1, removeNumbers = FALSE,
                     removeTwitter = FALSE, removeSymbols = FALSE,
@@ -62,7 +96,6 @@ tokenize = function(x, tokenType = 'word', ngrams =  1, removeNumbers = FALSE,
     sa <- openNLP::Maxent_Sent_Token_Annotator()
     a <- NLP::annotate(s, sa)
     tokens <- s[a]
-    nTokens <- length(tokens)
 
   } else {
     tokens <- quanteda::tokens(x = x, what = tokenType, ngrams = ngrams,
@@ -74,6 +107,7 @@ tokenize = function(x, tokenType = 'word', ngrams =  1, removeNumbers = FALSE,
                                remove_url = removeURL,
                                concatenator = concatenator)$text1
   }
+
   return(tokens)
 }
 
@@ -83,9 +117,6 @@ tokenize = function(x, tokenType = 'word', ngrams =  1, removeNumbers = FALSE,
 #' proper
 #'
 #' \code{proper} Converts text string to proper case
-#' @author John James, \email{jjames@@DataScienceSalon.org}
-#' @family Internal Functions
-#' @export
 proper <- function(x) {
   s <- strsplit(x, " ")[[1]]
   paste(toupper(substring(s, 1,1)), substring(s, 2),
@@ -98,8 +129,6 @@ proper <- function(x) {
 #' printHeading
 #'
 #' \code{printHeading} Prints a three line heading with text centered on 2nd line
-#' @author John James, \email{jjames@@DataScienceSalon.org}
-#' @family Internal Functions
 #' @export
 printHeading <- function(text, symbol = "=", newlines = 1) {
   leftPad <- max(38 - floor(nchar(text)/2), 0)
@@ -117,8 +146,6 @@ printHeading <- function(text, symbol = "=", newlines = 1) {
 #' listFiles
 #'
 #' \code{listFiles} Returns the list of files associated with a directory or a glob
-#' @author John James, \email{jjames@@DataScienceSalon.org}
-#' @family Internal Functions
 #' @export
 listFiles = function(x) {
 

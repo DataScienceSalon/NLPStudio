@@ -18,7 +18,7 @@ MKNEstimate <- R6::R6Class(
   classname = "MKNEstimate",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = MKNStudio0,
+  inherit = KNEstimate,
 
   private = list(
 
@@ -31,16 +31,30 @@ MKNEstimate <- R6::R6Class(
             private$..totals$n[i+1]
 
         } else {
-          discount <- private$..discounts[i,pmin(private$..nGrams[[i]]$cMKN_nGram,3)+2]
+
+          # Select discounts for nGram Order
+          discounts <- t(private$..discounts[i,-c(1,2)])
+
+          # Compute discount group based upon continuation counts
+          private$..nGrams[[i]] <-
+            private$..nGrams[[i]][, cMKN_Group := pmin(3, (cMKN_nGram)),
+                                  by=cMKN_nGram]
+
+          # Determine the discount based upon the count group
+          private$..nGrams[[i]] <-
+            private$..nGrams[[i]][, D := discounts[cMKN_Group]]
+
+
           if (i < private$..size) {
-          private$..nGrams[[i]]$alpha <-
-            pmax(private$..nGrams[[i]]$cMKN_nGram - discount, 0) /
-            private$..totals$n[i+1]
+            private$..nGrams[[i]][, alpha := (cMKN_nGram - D)]
+            private$..nGrams[[i]]$alpha <- pmax(private$..nGrams[[i]]$alpha, 0) /
+              as.numeric(private$..totals$n[i+1])
 
           } else {
-            private$..nGrams[[i]]$alpha <-
-              pmax(private$..nGrams[[i]]$cNGram - discount, 0) /
-              private$..nGrams[[i]]$cPre
+            # Compute highest order pseudo probability alpha
+            private$..nGrams[[i]][, alpha := (cMKN_nGram - D)]
+            private$..nGrams[[i]]$alpha <- pmax(private$..nGrams[[i]]$alpha, 0) /
+              as.numeric(private$..nGrams[[i]]$cPre)
           }
         }
       }
@@ -56,7 +70,7 @@ MKNEstimate <- R6::R6Class(
         discounts <-
           D1 * private$..nGrams[[i]]$N1Pre_ +
           D2 * private$..nGrams[[i]]$N2Pre_ +
-          D3 * private$..nGrams[[i]]$N3pPre_ +
+          D3 * private$..nGrams[[i]]$N3pPre_
 
         if (i < private$..size) {
           private$..nGrams[[i]]$lambda <-
@@ -108,7 +122,7 @@ MKNEstimate <- R6::R6Class(
       private$..params <- list()
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list(c('MKN', 'MKN', 'Katz', 'SBO'))
+      private$..params$classes$valid <- list(c('MKN', 'KN', 'Katz', 'SBO'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize',
@@ -140,7 +154,7 @@ MKNEstimate <- R6::R6Class(
     #                           Visitor Method                                #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$knEstimate(self)
+      visitor$mknEstimate(self)
     }
   )
 )

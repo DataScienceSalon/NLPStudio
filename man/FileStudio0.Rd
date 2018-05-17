@@ -43,10 +43,6 @@ the family of text cleaning classes, encapsulates class and allows
 text cleaning algorithms to be selected and exchagned at runtime.
 }
 
-\seealso{
-Other FileStudio Classes: \code{\link{RemoveNonPrintableApp}},
-  \code{\link{RemoveNonPrintable}}
-}
 \author{
 John James, \email{jjames@dataScienceSalon.org}
 }

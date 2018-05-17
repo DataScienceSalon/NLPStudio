@@ -234,11 +234,11 @@ Document0 <- R6::R6Class(
       sd <- list()
 
       if (!is.null(section)) {
-        if ("i" %in% section)  sd$id <- private$summarizeIdMeta()
-        if ("d" %in% section)  sd$descriptive <- private$summarizeDescriptiveMeta()
-        if ("q" %in% section)  sd$quant <- private$summarizeQuantMeta()
-        if ("f" %in% section)  sd$functional  <- private$summarizeFunctionalMeta()
-        if ("a" %in% section)  sd$admin <- private$summarizeAdminMeta()
+        if (grepl("^i", section, ignore.case = TRUE)) sd$id <- private$summarizeIdMeta()
+        if (grepl("^d", section, ignore.case = TRUE)) sd$descriptive <- private$summarizeDescriptiveMeta()
+        if (grepl("^q", section, ignore.case = TRUE)) sd$quant <- private$summarizeQuantMeta()
+        if (grepl("^f", section, ignore.case = TRUE)) sd$functional  <- private$summarizeFunctionalMeta()
+        if (grepl("^a", section, ignore.case = TRUE)) sd$admin <- private$summarizeAdminMeta()
       } else {
         sd$id <- private$summarizeIdMeta()
         sd$descriptive <- private$summarizeDescriptiveMeta()

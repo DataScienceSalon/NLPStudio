@@ -19,7 +19,7 @@ MKNCounts <- R6::R6Class(
   classname = "MKNCounts",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = MKNStudio0,
+  inherit = KNCounts,
 
   private = list(
 
@@ -47,16 +47,60 @@ MKNCounts <- R6::R6Class(
       return(TRUE)
     },
 
+    totals = function() {
+
+      private$..totals <- data.table()
+
+      for (i in 1:private$..size) {
+
+        # Summarize counts and store in summary table
+        nGram <- private$..modelType[i]
+        n <- nrow(private$..nGrams[[i]])
+        n1 <- nrow(private$..nGrams[[i]] %>% filter(cNGram == 1))
+        n2 <- nrow(private$..nGrams[[i]] %>% filter(cNGram == 2))
+        n3 <- nrow(private$..nGrams[[i]] %>% filter(cNGram == 3))
+        n4 <- nrow(private$..nGrams[[i]] %>% filter(cNGram == 4))
+
+        dt_i <- data.table(nGram = nGram, n = n, n1 = n1, n2 = n2,
+                           n3 = n3, n4 = n4)
+        private$..totals <- rbind(private$..totals, dt_i)
+      }
+      return(TRUE)
+    },
+
+    ckn = function(n) {
+      # Compute continuation counts e.g. the number of words that
+      # precede an nGram.  This is compute for all levels except
+      # the highest.
+
+      if (n < private$..size) {
+
+        # Compute the continuation count for the nGram
+        higher <- private$..nGrams[[n+1]][,.(suffix)]
+        higher <- higher[,.(cMKN_nGram = .N), by = .(suffix)]
+        higher$cMKN_nGram <- as.numeric(higher$cMKN_nGram)
+        private$..nGrams[[n]] <-
+          merge(private$..nGrams[[n]], higher, by.x = 'nGram',
+                by.y = 'suffix', all.x = TRUE)
+
+      } else {
+        private$..nGrams[[n]]$cMKN_nGram <-
+          as.numeric(private$..nGrams[[n]]$cNGram)
+      }
+
+      return(TRUE)
+    },
+
     hist = function(n) {
       # Compute the number of histories in which the prefix appears
       # precisely 1, 2 and 3 or more times.
 
       private$..nGrams[[n]] <-
-        private$..nGrams[[n]][, N1 := sum(unique(cNGram == 1)),  by = .(prefix)]
+        private$..nGrams[[n]][, N1Pre_ := sum(unique(cNGram == 1)),  by = .(prefix)]
       private$..nGrams[[n]] <-
-        private$..nGrams[[n]][, N2 := sum(unique(cNGram == 2)),  by = .(prefix)]
+        private$..nGrams[[n]][, N2Pre_ := sum(unique(cNGram == 2)),  by = .(prefix)]
       private$..nGrams[[n]] <-
-        private$..nGrams[[n]][, N3 := sum(unique(cNGram > 2)),  by = .(prefix)]
+        private$..nGrams[[n]][, N3pPre_ := sum(unique(cNGram > 2)),  by = .(prefix)]
     }
   ),
 

@@ -9,11 +9,3 @@ proper(x)
 \description{
 \code{proper} Converts text string to proper case
 }
-\seealso{
-Other Internal Functions: \code{\link{listFiles}},
-  \code{\link{printHeading}}, \code{\link{slice}},
-  \code{\link{tokenize}}
-}
-\author{
-John James, \email{jjames@DataScienceSalon.org}
-}

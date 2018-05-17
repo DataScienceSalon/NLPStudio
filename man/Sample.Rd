@@ -9,26 +9,27 @@
 Sample <- Sample$new()
 }
 \arguments{
-\item{x}{The source Document object.}
+\item{x}{The source Document or Corpus object.}
+
+\item{n}{Numeric. If n <= 1, the proportion of 'unit' to sample. If n>1, the number
+of 'unit' to sample.}
+
+\item{unit}{Character indicating the units to sample. Values
+include c('word', 'sentence', 'vector'). The default is 'sentence'}
+
+\item{stratify}{Logical. Applies to Corpus objects with with two or more documents.
+If TRUE, stratified sampling will occur within each document; otherwise, samples
+will be taken from a single combined document. Default is TRUE}
+
+\item{replace}{Logical. If TRUE, samples will be taken with replacement. Default is FALSE.}
+
+\item{seed}{Numeric. Seed for sampling reproducibility. Default is NULL}
 }
 \value{
 Sample object, containing the Sample for a single Document object.
 }
 \description{
 \code{Sample} Class representing sampled Document objects.
-
-@param x The principal object
- @param key Character string or a vector of strings containing a key or
- keys for metadata key/value pair(s).
- @param value Character or numeric, or a vector thereof, containing a value
- or values for metadata key/value pair(s).
- @param format Character string used in the metadata method. Indicates
- whether to return the metadata as  list of lists, or a data.frame.This method
- returns metadata in a list if no key/value pair is provided. The list
- may contain other lists or data frames associated with the type of
- metadata. This parameter specifies whether to return the metadata
- as a list of lists, or a list of data frames. Valid values are:
- c('list', 'data.frame')
 }
 \details{
 Class containing the sampled representation of a Document object.

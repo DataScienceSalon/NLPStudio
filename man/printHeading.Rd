@@ -9,11 +9,3 @@ printHeading(text, symbol = "=", newlines = 1)
 \description{
 \code{printHeading} Prints a three line heading with text centered on 2nd line
 }
-\seealso{
-Other Internal Functions: \code{\link{listFiles}},
-  \code{\link{proper}}, \code{\link{slice}},
-  \code{\link{tokenize}}
-}
-\author{
-John James, \email{jjames@DataScienceSalon.org}
-}

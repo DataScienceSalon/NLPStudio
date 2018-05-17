@@ -14,14 +14,21 @@
 #'   Sample content.}
 #'  }
 #'
-#' @param x The source Document object.
-#' @template metadataParams
+#' @param x The source Document or Corpus object.
+#' @param n Numeric. If n <= 1, the proportion of 'unit' to sample. If n>1, the number
+#' of 'unit' to sample.
+#' @param unit Character indicating the units to sample. Values
+#' include c('word', 'sentence', 'vector'). The default is 'sentence'
+#' @param stratify Logical. Applies to Corpus objects with with two or more documents.
+#' If TRUE, stratified sampling will occur within each document; otherwise, samples
+#' will be taken from a single combined document. Default is TRUE
+#' @param replace Logical. If TRUE, samples will be taken with replacement. Default is FALSE.
+#' @param seed Numeric. Seed for sampling reproducibility. Default is NULL
 #'
 #' @return Sample object, containing the Sample for a single Document object.
 #'
 #' @docType class
 #' @author John James, \email{jjames@@datasciencesalon.org}
-#' @family Sample Classes
 #' @export
 Sample <- R6::R6Class(
   classname = "Sample",
@@ -31,7 +38,7 @@ Sample <- R6::R6Class(
 
   private = list(
 
-    validate = function(x, n, unit, size, stratify, replace) {
+    validate = function(x, n, unit, stratify, replace) {
 
       # Validate Source Object
       private$..params <- list()
@@ -40,8 +47,8 @@ Sample <- R6::R6Class(
       private$..params$classes$valid <- list(c('Document', 'Corpus'))
       private$..params$discrete$variables <- list(c('unit'))
       private$..params$discrete$values <- list(c(unit))
-      private$..params$discrete$valid <- list(c('vector', 'sentence', 'word',
-                                                'v', 's', 'w'))
+      private$..params$discrete$valid <- list(c('sentence', 'word',
+                                                's', 'w'))
       private$..params$logicals$variables <- c('stratify', 'replace')
       private$..params$logicals$values <- c(stratify, replace)
       v <- private$validator$validate(self)
@@ -52,14 +59,12 @@ Sample <- R6::R6Class(
       }
 
       if (grepl("^w", unit, ignore.case = TRUE)) {
-        type <- 'word'
+        private$..unit <- 'word'
       } else if (grepl("^s", unit, ignore.case = TRUE)) {
-        type <- 'sentence'
-      } else if (grepl("^v", unit, ignore.case = TRUE)) {
-        type <- 'vector'
+        private$..unit <- 'sentence'
       } else {
-        event <- paste0("Invalid unit. Valid types are c('word', 'sentence',",
-                        ", 'vector'). See?", class(self)[1], " for further ",
+        event <- paste0("Invalid unit. Valid types are c('word', 'sentence'). ",
+                        "See?", class(self)[1], " for further ",
                         "assistance.")
         private$logR$log(method = 'this', event = event, level = "Error")
         stop()
@@ -78,57 +83,79 @@ Sample <- R6::R6Class(
       }
     },
 
+    sampleWords = function(x) {
 
-    sampleDocument = function(x, n, unit, size, replace, seed) {
+      tokens <- tokenize(x = x$text, tokenType = private$..unit)
 
-      # Format text into designated units
-      tokens <- NLPStudio::tokenize(x = x$text, tokenType = unit)
+      size <- private$..n
+      if (size <= 1) size <- floor(size * length(tokens))
 
-      # Combine the units into segments of the designated size
-      segments <- slice(tokens, size)
+      if (!is.null(private$..seed)) set.seed(private$..seed)
 
-      # Create samples
-      if (n <= 1) n <- floor(n * length(segments))
-      if (!is.null(seed)) set.seed(seed)
-      idx <- sample(1:length(segments), size = n, replace = replace)
-      samples <- paste(unlist(segments[idx]), collapse = ' ')
+      idx <- sample(1:length(tokens), size = size, replace = private$..replace)
+      samples <- paste(unlist(tokens[idx]), collapse = ' ')
+      return(samples)
+    },
+
+    sampleSentences = function(x) {
+
+      sentences <- character()
+      sentenceCount <- 0
+      nSentences <- x$getMeta()$quant$sentences
+
+      # Sample vectors
+      size <- private$..n
+      if (size <= 1) size <- floor(size * nSentences)
+      if (!is.null(private$..seed)) set.seed(private$..seed)
+      idx <- sample(1:length(x$text), size = length(x$text), replace = private$..replace)
+      i <- 1
+      while (sentenceCount < size) {
+        s <- as.character(tokenize(x = x$text[idx[i]], tokenType = 'sentence'))
+        sentences <- c(sentences, s)
+        sentenceCount <- sentenceCount + length(s)
+        i <- i + 1
+      }
+      return(sentences)
+    },
+
+    sampleDocument = function(x) {
+
+      samples <- switch(private$..unit,
+                        "word" = private$sampleWords(x),
+                        "sentence" = private$sampleSentences(x)
+      )
 
       # Create Document
       name <- paste0(x$getName(), " (sample)")
       doc <- Document$new(x = samples, name = name)
 
       # Add parameters as functional metadata
-      doc$setMeta(key = 'nSamples', value = n, type = 'f')
-      doc$setMeta(key = 'samplingUnit', value = unit, type = 'f')
-      doc$setMeta(key = 'nUnitsPerSample', value = size, type = 'f')
-      doc$setMeta(key = 'sampleReplace', value = replace, type = 'f')
+      doc$setMeta(key = 'nSamples', value = private$..n, type = 'f')
+      doc$setMeta(key = 'samplingUnit', value = private$..unit, type = 'f')
+      doc$setMeta(key = 'sampleReplace', value = private$..replace, type = 'f')
 
       return(doc)
     },
 
-    sampleCorpus = function(x, n, unit, size, name, stratify,
-                            replace, seed) {
+    sampleCorpus = function() {
 
       # Create corpus
-      corpus <- Clone$new()$this(x = x, reference = FALSE)
-      if (is.null(name)) name <- paste0(x$getName(), " (sample)")
-      corpus$setName(name)
+      corpus <- Clone$new()$this(x = private$..x, reference = FALSE)
+      if (is.null(private$..name)) private$..name <- paste0(x$getName(), " (sample)")
+      corpus$setName(private$..name)
 
       # Extract and if stratify is false, combine documents
-      documents <- x$getDocuments()
-      if (!stratify) {
+      documents <- private$..x$getDocuments()
+      if (!private$..stratify) {
         docText <- paste(unlist(lapply(documents, function(d) { d$text })), collapse = '')
         documents <- list()
-        documents[[1]] <- Document$new(x = docText, name = paste0("Corpus ", x$getName(), " document"))
+        documents[[1]] <- Document$new(x = docText, name = paste0("Corpus ",
+                                                                  private$..x$getName(), " document"))
       }
-
-      # Format length one n vector
-      if (length(n) == 1)  n <- rep(n, length(documents))
 
       # Sample documents and add to corpus
       for (i in 1:length(documents)) {
-        doc <- private$sampleDocument(documents[[i]], n[i], unit, size,
-                                      replace, seed)
+        doc <- private$sampleDocument(documents[[i]])
         corpus$addDocument(doc)
       }
 
@@ -149,17 +176,23 @@ Sample <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                               Sample                                    #
     #-------------------------------------------------------------------------#
-    this = function(x, n, unit = 'sentence', size, name = NULL, stratify = TRUE,
+    this = function(x, n, unit = 'sentence', name = NULL, stratify = TRUE,
                     replace = FALSE, seed = NULL) {
 
-      private$validate(x, n, unit, size, stratify, replace)
+      private$validate(x, n, unit, stratify, replace)
+      private$..x <- x
+      private$..n <- n
+      private$..name <- name
+      private$..unit <- unit
+      private$..stratify <- stratify
+      private$..replace <- replace
+      private$..seed <- seed
 
 
       if (class(x)[1] == 'Corpus') {
-        sample <- private$sampleCorpus(x, n, unit, size, name, stratify,
-                                       replace, seed)
+        sample <- private$sampleCorpus()
       } else {
-        sample <- private$sampleDocument(x, n, unit, size, replace, seed)
+        sample <- private$sampleDocument(private$..x)
       }
 
       event <- paste0("Sampled ", class(x)[1], ", ", x$getName(), ".")

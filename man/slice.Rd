@@ -14,11 +14,3 @@ slice(v, size)
 \description{
 \code{tokenize} Slices a vector into chunks of the given size
 }
-\seealso{
-Other Internal Functions: \code{\link{listFiles}},
-  \code{\link{printHeading}}, \code{\link{proper}},
-  \code{\link{tokenize}}
-}
-\author{
-John James, \email{jjames@DataScienceSalon.org}
-}

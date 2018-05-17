@@ -39,7 +39,7 @@ KNDocument <- R6::R6Class(
       name <- private$..lm$getName()
       name <- paste0(name, " Document")
       private$..document$setName(name)
-      private$..document$setMeta(key = 'smoothing', value = "Kneser-Ney",
+      private$..document$setMeta(key = 'smoothing', value = private$..smoothing,
                         type = 'f')
       private$..document$setMeta(key = 'modelType',
                        value = private$..size,
@@ -48,7 +48,7 @@ KNDocument <- R6::R6Class(
                        value = private$..lm$is.openVocabulary(),
                        type = 'f')
       private$..document$setMeta(key = 'lm',
-                       value = 'Kneser-Ney',
+                       value = private$..smoothing,
                        type = 'f')
 
       return(TRUE)
@@ -94,6 +94,7 @@ KNDocument <- R6::R6Class(
 
       # Dock language model (extract members read/modified in class)
       private$..lm <- x
+      private$..smoothing <- 'Kneser-Ney'
       private$..open <- x$is.openVocabulary()
       private$..corpus <- x$getCorpus()
       private$..size <- x$getSize()

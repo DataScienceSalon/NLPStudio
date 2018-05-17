@@ -9,11 +9,3 @@ listFiles(x)
 \description{
 \code{listFiles} Returns the list of files associated with a directory or a glob
 }
-\seealso{
-Other Internal Functions: \code{\link{printHeading}},
-  \code{\link{proper}}, \code{\link{slice}},
-  \code{\link{tokenize}}
-}
-\author{
-John James, \email{jjames@DataScienceSalon.org}
-}

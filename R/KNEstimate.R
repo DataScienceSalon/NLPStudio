@@ -50,12 +50,12 @@ KNEstimate <- R6::R6Class(
           private$..nGrams[[i]]$lambda <-
             private$..discounts[i] /
             private$..totals$n[i+1] *
-            private$..nGrams[[i]]$N1Pre_pPre_
+            private$..nGrams[[i]]$N1pPre_
         } else {
           private$..nGrams[[i]]$lambda <-
             private$..discounts[i] /
             private$..nGrams[[i]]$cPre *
-            private$..nGrams[[i]]$N1Pre_pPre_
+            private$..nGrams[[i]]$N1pPre_
         }
       }
     },

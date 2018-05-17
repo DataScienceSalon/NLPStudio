@@ -64,6 +64,14 @@ KN <- R6::R6Class(
 
     },
 
+    discountSummary = function() {
+
+      NLPStudio::printHeading(text = 'Discounts', symbol = "-", newlines = 2)
+      print(private$..discounts)
+      return(TRUE)
+
+    },
+
     nGramDetail = function() {
 
       for (i in 1:private$meta$get(key = 'modelSize')) {
@@ -170,6 +178,7 @@ KN <- R6::R6Class(
     summary = function() {
       private$overview()
       private$..document$summary(section = c("i", "q"))
+      private$discountSummary()
       private$nGramSummary()
       private$nGramDetail()
     },
