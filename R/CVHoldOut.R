@@ -1,13 +1,13 @@
-#' CVFactoryHoldOut
+#' CVHoldOut
 #'
-#' \code{CVFactoryHoldOut} Creates a hold out CVSet object.
+#' \code{CVHoldOut} Creates a hold out CVSet object.
 #'
 #' Class responsible for creating hold out cross-validation sets or CVSetHoldOut objects.
 #' CVSetHoldOut objects contain a training, test and an optional validation test set.
 #'
 #' @section Methods:
 #'  \itemize{
-#'   \item{\code{new(X, name = NULL)}}{Initializes an object of the CVFactoryHoldOut class.}
+#'   \item{\code{new(X, name = NULL)}}{Initializes an object of the CVHoldOut class.}
 #'   \item{\code{execute()}}{Executes the process of sourcing the Corpus object.}
 #'  }
 #'
@@ -29,33 +29,26 @@
 #' @author John James, \email{jjames@@datasciencesalon.org}
 #' @family Cross Validation Classes
 #' @export
-CVFactoryHoldOut <- R6::R6Class(
-  classname = "CVFactoryHoldOut",
+CVHoldOut <- R6::R6Class(
+  classname = "CVHoldOut",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = CVFactory0,
+  inherit = Super,
 
   private = list(
-    splitDocument = function(x, corpora, unit, proportions, seed) {
+    splitDocument = function(x, corpora, proportions, seed) {
 
-      set.seed(seed)
+      if (!is.null(seed)) { set.seed(seed) }
       splits <- list()
 
-      # Obtain text based upon unit
-      if (grepl("^s", unit, ignore.case = TRUE)) {
-        text <- Tokenizer$new()$this(x = x, type = 'sentence')$get()
-      } else  {
-        text <- x$text
-      }
-
       # Create indices and create splits
-      idx <- sample(corpora, size = length(text), replace = TRUE,
+      idx <- sample(corpora, size = length(x$content), replace = TRUE,
                     prob = proportions)
       for (i in 1:length(proportions)) {
         name <- paste(x$getName(), corpora[i], "Set")
         splits[[corpora[i]]] <- Clone$new()$this(x = x, reference = FALSE)
         splits[[corpora[i]]]$setName(name)
-        splits[[corpora[i]]]$text <- text[idx == corpora[i]]
+        splits[[corpora[i]]]$content <- x$content[idx == corpora[i]]
       }
 
       return(splits)
@@ -73,23 +66,22 @@ CVFactoryHoldOut <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                             Build Method                                #
+    #                             Split Method                                #
     #-------------------------------------------------------------------------#
-    build = function(x, unit = "vector", stratify = TRUE, proportions = c(.8,.2),
-                     seed = 1, name = NULL) {
+    split = function(x, stratify = TRUE, proportions = c(.8,.2),
+                     seed = NULL, name = NULL) {
       # --------------------Validate parameters-------------------------------#
       private$..params$classes$name <- list('x','seed', 'proportions')
       private$..params$classes$objects <- list(x, seed, proportions)
-      private$..params$classes$valid <- list(c('Corpus'),  c('integer', 'numeric'),
+      private$..params$classes$valid <- list(c('Corpus'),
+                                             c('integer', 'numeric', 'NULL'),
                                              c("numeric"))
-      private$..params$discrete$variables <- c('unit')
-      private$..params$discrete$values <- c(unit)
       private$..params$discrete$valid <- list(c("vector", "sentence", "v", "s"))
       private$..params$logicals$variables <- c('stratify')
       private$..params$logicals$values <- c(stratify)
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
-        private$logR$log(method = 'build',
+        private$logR$log(method = 'split',
                          event = v$msg, level = "Error")
         stop()
       }
@@ -113,19 +105,18 @@ CVFactoryHoldOut <- R6::R6Class(
       # Create single Document object if stratify is FALSE
       if (stratify == FALSE) {
         content <- unlist(lapply(docs, function(d) {
-          d$text
+          d$content
         }))
         docs <- list(Document$new(x = content, name = paste(x$getName(), "Text Document")))
       }
 
       # Split Documents
       docSplits <- lapply(docs, function(d) {
-        private$splitDocument(d, corpora, unit, proportions, seed)
+        private$splitDocument(d, corpora, proportions, seed)
       })
 
-      # Create CV, CVSet, and Corpora objects
+      # Create CVSet, and Corpora objects
       if (!is.null(name)) name <- x$getName()
-      cv <- CV$new(name = paste(name, "Cross-Validation Sets"))
       cvSet <- CVSet$new(name = paste(name, "Hold-Out Cross-Validation Set"))
       for (i in 1:length(corpora)) {
         corpus <- Clone$new()$this(x, reference = FALSE)
@@ -136,15 +127,14 @@ CVFactoryHoldOut <- R6::R6Class(
         corpus$setMeta(key = 'cv', value = corpora[i], type = 'f')
         cvSet$addCorpus(corpus)
       }
-      cv$addCVSet(cvSet)
 
-      return(cv)
+      return(cvSet)
     },
     #-------------------------------------------------------------------------#
     #                           Visitor Methods                               #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$cvFactoryHoldOut(self)
+      visitor$cvHoldOut(self)
     }
   )
 )

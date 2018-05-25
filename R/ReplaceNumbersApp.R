@@ -38,7 +38,7 @@ ReplaceNumbersApp <- R6::R6Class(
     ..remove = logical(),
 
     processDocument = function(document) {
-      document$text <- textclean::replace_number(x = document$text,
+      document$content <- textclean::replace_number(x = document$content,
                                             num.paste = private$..joinNumbers,
                                             remove = private$..remove)
       private$logEvent(document)

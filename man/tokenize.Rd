@@ -4,23 +4,21 @@
 \alias{tokenize}
 \title{tokenize}
 \usage{
-tokenize(x, tokenType = "word", ngrams = 1, removeNumbers = FALSE,
-  removeTwitter = FALSE, removeSymbols = FALSE, removePunct = FALSE,
-  removeURL = FALSE, removeHyphens = FALSE, wordsOnly = FALSE,
-  concatenator = " ")
+tokenize(x, tokenType = "word", ngrams = NULL, lowercase = TRUE,
+  removePunct = TRUE, removeNumeric = FALSE)
 }
 \arguments{
 \item{x}{Character vector containing texts}
 
 \item{tokenType}{Character taking the following values c('word', 'sentence', 'character')}
 
+\item{removePunct}{Logical. If TRUE, remove all characters in the Unicode "Punctuation" [P] class}
+
 \item{removeNumbers}{Logical. Tokens including only numbers are removed if TRUE}
 
 \item{removeTwitter}{Logical. Removes Twitter characters if set to TRUE}
 
 \item{removeSymbols}{Logical. If TRUE, remove all characters in the Unicode "Symbol" [S] class}
-
-\item{removePunct}{Logical. If TRUE, remove all characters in the Unicode "Punctuation" [P] class}
 
 \item{removeURL}{Logical. If TRUE, find and eliminate URLs beginning with http(s)}
 

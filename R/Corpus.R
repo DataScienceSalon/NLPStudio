@@ -34,7 +34,7 @@
 #'           "she heard someone scream 'Avalanche!'",
 #'           "Then John, 39, saw 'a cloud of snow coming down.'")
 #' avalanche <- Corpus$new(name = 'avalanche', purpose = 'raw')
-#' avalance$text <- report
+#' avalance$content <- report
 #' key <- c('genre', 'author', 'year')
 #' value <- c('weather', 'chris jones', 2018)
 #' avalanche$meta$setDescriptive(key = key value = value)
@@ -65,9 +65,30 @@ Corpus <- R6::R6Class(
       words <- sum(quant$words)
       characters <- sum(quant$characters)
 
-      k <- c("documents","vectors", "sentences", "words", "types", "characters")
-      v <- c(documents, vectors, sentences, words, types, characters)
-      private$meta$set(key = k, value = v, type = 'quant')
+      if (documents > 0 ) {
+        private$meta$set(key = 'documents', value = documents, type = 'q')
+      }
+
+      if (vectors > 0 ) {
+        private$meta$set(key = 'vectors', value = vectors, type = 'q')
+      }
+
+      if (sentences > 0 ) {
+        private$meta$set(key = 'sentences', value = sentences, type = 'q')
+      }
+
+      if (types > 0 ) {
+        private$meta$set(key = 'types', value = types, type = 'q')
+      }
+
+      if (words > 0 ) {
+        private$meta$set(key = 'words', value = words, type = 'q')
+      }
+
+      if (characters > 0 ) {
+        private$meta$set(key = 'characters', value = characters, type = 'q')
+      }
+
       return(TRUE)
     },
 
@@ -75,6 +96,7 @@ Corpus <- R6::R6Class(
     #                           Summary Methods                               #
     #-------------------------------------------------------------------------#
     summarizeQuantMeta = function(verbose = TRUE) {
+
       private$setQuant()
       quant <- private$meta$get(type = 'quant')
       if (verbose) {
@@ -105,31 +127,7 @@ Corpus <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Document Management                           #
     #-------------------------------------------------------------------------#
-    getDocuments = function(classname = "Document", key = NULL, value = NULL) {
-
-      key <- c(key, "classname")
-      value <- c(value, classname)
-
-      # Validate key/value pair
-      private$..params <- list()
-      private$..params$kv$key <- key
-      private$..params$kv$value <- value
-      v <- private$validator$validate(self)
-      if (v$code == FALSE) {
-        private$logR$log( method = 'getDocuments',
-                          event = v$msg, level = "Error")
-        stop()
-      }
-
-      result <- list()
-      # Search for documents that match the metadata and return
-      if (length(private$..documents) > 0) {
-        listCondition <- private$search(key, value)
-        result <- private$..documents[listCondition]
-      }
-
-      return(result)
-    },
+    getDocuments = function() { return(private$..documents) },
 
     addDocument = function(x) {
 
@@ -137,7 +135,7 @@ Corpus <- R6::R6Class(
       private$..params <- list()
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list(c('Document'))
+      private$..params$classes$valid <- list(c('Document', 'Tokens'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'addDocument',

@@ -58,9 +58,9 @@ ReplaceTokensApp <- R6::R6Class(
 
     processDocument = function(document) {
 
-      content <- document$text
+      content <- document$content
 
-      document$text <- textclean::mgsub(x = content,
+      document$content <- textclean::mgsub(x = content,
                                   pattern = private$..tokens,
                                   replacement = private$..replacement,
                                   leadspace = private$..leadspace,

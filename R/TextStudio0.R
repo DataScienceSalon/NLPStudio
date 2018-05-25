@@ -38,9 +38,9 @@ TextStudio0 <- R6::R6Class(
     },
 
     processDocument = function(document) {
-      document$text <- gsub(pattern = private$..pattern,
+      document$content <- gsub(pattern = private$..pattern,
                       replacement = private$..replacement,
-                      x = document$text,
+                      x = document$content,
                       ignore.case = private$..ignoreCase,
                       perl = private$..perl,
                       fixed = private$..fixed)
@@ -49,7 +49,7 @@ TextStudio0 <- R6::R6Class(
     },
 
     processCorpus = function() {
-      docs <- private$..x$getDocuments(key = 'classname', value = "Document")
+      docs <- private$..x$getDocuments()
       for (i in 1:length(docs)) {
         doc <- private$processDocument(docs[[i]])
         private$..x$addDocument(doc)

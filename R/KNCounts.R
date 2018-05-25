@@ -192,6 +192,8 @@ KNCounts <- R6::R6Class(
       private$..lm <- x
       private$..document <- x$getDocument()
       private$..size <- x$getSize()
+
+      print(paste0("Instantiated KNCounts at ", Sys.time()))
       invisible(self)
     },
 

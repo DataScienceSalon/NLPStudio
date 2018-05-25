@@ -39,7 +39,7 @@ ReplaceOrdinalApp <- R6::R6Class(
     ..remove = logical(),
 
     processDocument = function(document) {
-      document$text <- qdap::replace_ordinal(text.var = document$text,
+      document$content <- qdap::replace_ordinal(text.var = document$content,
                                             num.paste = private$..numPaste,
                                             remove = private$..remove)
       private$logEvent(document)

@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------#
-#                               Set0                                    #
+#                                   Set0                                       #
 #------------------------------------------------------------------------------#
 #' Set0
 #'
@@ -137,17 +137,6 @@ Set0 <- R6::R6Class(
   public = list(
 
     #-------------------------------------------------------------------------#
-    #                         Document Management                             #
-    #-------------------------------------------------------------------------#
-    getDocuments = function(classname = "Document", key = NULL, value = NULL) {
-      stop("This method not implemented for this abstract class.")
-    },
-
-    addDocument = function(x) { stop("Not implemented for this abstract class.") },
-
-    removeDocument = function(x) { stop("Not implemented for this abstract class.") },
-
-    #-------------------------------------------------------------------------#
     #                           Document Metadata                             #
     #-------------------------------------------------------------------------#
     getDocMeta = function(classname = NULL, type = NULL) {
@@ -263,7 +252,7 @@ Set0 <- R6::R6Class(
         stop()
       }
 
-      docs <- self$getDocuments(key = 'classname', value = classname)
+      docs <- self$getDocuments()
 
       if (nrow(docMeta) != length(docs)) {
         event <- paste0("The docMeta variable must be a data.frame or ",

@@ -30,6 +30,54 @@ Document0 <- R6::R6Class(
     ..parent = character(),
     ..content = character(),
 
+    compress = function(x) {
+      memCompress(x, "g")
+    },
+
+    decompress = function(x) {
+      strsplit(memDecompress(x, "g", asChar = TRUE), "\n")[[1]]
+    },
+
+    setQuant = function(x) {
+      x <- paste0(unlist(x), collapse = ' ')
+      vectors <- length(x)
+      sentences <- tokenizers::count_sentences(x)
+      words <- tokenizers::count_words(x)
+      types <- sum(quanteda::ntype(unlist(x)))
+      characters <- tokenizers::count_characters(x)
+      k <- c("vectors", "sentences", "words", "types", "characters")
+      v <- c(vectors, sentences, words, types, characters)
+      private$meta$set(key = k, value = v, type = 'quant')
+      return(TRUE)
+    },
+
+    processContent = function(x, note = NULL) {
+
+      # Validate text
+      if (!is.null(x)) {
+        private$..params <- list()
+        private$..params$classes$name <- list('x')
+        private$..params$classes$objects <- list(x)
+        private$..params$classes$valid <- list(c('character', 'list'))
+        v <- private$validator$validate(self)
+        if (v$code == FALSE) {
+          private$logR$log(method = 'processContent',
+                           event = v$msg, level = "Error")
+          stop()
+        }
+
+        # Update text, compute statistics and update admin information
+        if (class(x)[1] == 'character') {
+          private$..content <- private$compress(x)
+        } else {
+          private$..content <- x
+        }
+        private$setQuant(x)
+        private$meta$modified(event = note)
+      }
+      return(TRUE)
+    },
+
     #-------------------------------------------------------------------------#
     #                           Summary Methods                               #
     #-------------------------------------------------------------------------#
@@ -181,10 +229,17 @@ Document0 <- R6::R6Class(
     content = function(value) {
 
       if (missing(value)) {
-        return(private$..content)
+        if (length(private$..content) > 0) {
+          if (is.raw(private$..content)) {
+            return(private$decompress(private$..content))
+          } else {
+            return(private$..content)
+          }
+        } else {
+          return(NULL)
+        }
       } else {
-        private$..content <- value
-        invisible(self)
+        private$processContent(value)
       }
     }
   ),

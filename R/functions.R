@@ -71,43 +71,22 @@ slice = function(v, size) {
 #' @param removeURL Logical. If TRUE, find and eliminate URLs beginning with http(s)
 #' @param removeHyphens Logical. If TRUE, split words that are connected by hyphenation and hyphenation-like characters in between words
 #' @export
-tokenize = function(x, tokenType = 'word', ngrams =  1, removeNumbers = FALSE,
-                    removeTwitter = FALSE, removeSymbols = FALSE,
-                    removePunct = FALSE, removeURL = FALSE,
-                    removeHyphens = FALSE, wordsOnly = FALSE,
-                    concatenator = " ") {
+tokenize = function(x, tokenType = 'word', ngrams = NULL, lowercase = TRUE, removePunct = TRUE,
+                    removeNumeric = FALSE) {
 
-  if (wordsOnly) {
-    removeNumbers <- TRUE
-    removeSymbols <- TRUE
-    removeTwitter <- TRUE
-    removeURL <- TRUE
-    removePunct <- TRUE
-  }
+  if (!is.null(ngrams)) {
+    tokens <- tokenizers::tokenize_ngrams(x, lowercase = lowercase, n = ngrams, n_min = ngrams)
 
-  # Collapse into single vector
-  x <- paste(x, collapse = " ")
-
-  # Produce Tokenizer
-  if (tokenType %in% c("sentence")) {
-
-    # Use sentence token from openNLP and NLP packages
-    s <- NLP::as.String(x)
-    sa <- openNLP::Maxent_Sent_Token_Annotator()
-    a <- NLP::annotate(s, sa)
-    tokens <- s[a]
-
+  } else if (tokenType == 'word') {
+    tokens <- tokenizers::tokenize_words(x = x, lowercase = lowercase,
+                                         strip_punct = removePunct,
+                                         strip_numeric = removeNumeric,
+                                         simplify = FALSE)
   } else {
-    tokens <- quanteda::tokens(x = x, what = tokenType, ngrams = ngrams,
-                               remove_numbers = removeNumbers,
-                               remove_punct = removePunct,
-                               remove_symbols = removeSymbols,
-                               remove_twitter = removeTwitter,
-                               remove_hyphens = removeHyphens,
-                               remove_url = removeURL,
-                               concatenator = concatenator)$text1
+    tokens <- tokenizers::tokenize_sentences(x = x, lowercase = lowercase,
+                                             strip_punct = removePunct,
+                                             simplify = FALSE)
   }
-
   return(tokens)
 }
 

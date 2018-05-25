@@ -40,7 +40,7 @@ NGrammer <- R6::R6Class(
       nGrams$setName(name)
 
       # Tokenize text and extract nGrams
-      nGrams$content <- NLPStudio::tokenize(x = x$text, tokenType = 'word',
+      nGrams$content <- NLPStudio::tokenize(x = x$content, tokenType = 'word',
                                     wordsOnly = wordsOnly,
                                     ngrams = n ,concatenator = " ")
 

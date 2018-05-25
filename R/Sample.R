@@ -83,47 +83,15 @@ Sample <- R6::R6Class(
       }
     },
 
-    sampleWords = function(x) {
-
-      tokens <- tokenize(x = x$text, tokenType = private$..unit)
-
-      size <- private$..n
-      if (size <= 1) size <- floor(size * length(tokens))
-
-      if (!is.null(private$..seed)) set.seed(private$..seed)
-
-      idx <- sample(1:length(tokens), size = size, replace = private$..replace)
-      samples <- paste(unlist(tokens[idx]), collapse = ' ')
-      return(samples)
-    },
-
-    sampleSentences = function(x) {
-
-      sentences <- character()
-      sentenceCount <- 0
-      nSentences <- x$getMeta()$quant$sentences
-
-      # Sample vectors
-      size <- private$..n
-      if (size <= 1) size <- floor(size * nSentences)
-      if (!is.null(private$..seed)) set.seed(private$..seed)
-      idx <- sample(1:length(x$text), size = length(x$text), replace = private$..replace)
-      i <- 1
-      while (sentenceCount < size) {
-        s <- as.character(tokenize(x = x$text[idx[i]], tokenType = 'sentence'))
-        sentences <- c(sentences, s)
-        sentenceCount <- sentenceCount + length(s)
-        i <- i + 1
-      }
-      return(sentences)
-    },
-
     sampleDocument = function(x) {
 
-      samples <- switch(private$..unit,
-                        "word" = private$sampleWords(x),
-                        "sentence" = private$sampleSentences(x)
-      )
+      size <- private$..n
+      if (size <= 1) size <- floor(size * length(x$content))
+
+      if (!is.null(private$..seed)) set.seed(private$..seed)
+
+      idx <- sample(1:length(x$content), size = size, replace = private$..replace)
+      samples <- x$content[idx]
 
       # Create Document
       name <- paste0(x$getName(), " (sample)")
@@ -141,13 +109,13 @@ Sample <- R6::R6Class(
 
       # Create corpus
       corpus <- Clone$new()$this(x = private$..x, reference = FALSE)
-      if (is.null(private$..name)) private$..name <- paste0(x$getName(), " (sample)")
+      if (is.null(private$..name)) private$..name <- paste0(private$..x$getName(), " (sample)")
       corpus$setName(private$..name)
 
       # Extract and if stratify is false, combine documents
       documents <- private$..x$getDocuments()
       if (!private$..stratify) {
-        docText <- paste(unlist(lapply(documents, function(d) { d$text })), collapse = '')
+        docText <- unlist(lapply(documents, function(d) { d$content }))
         documents <- list()
         documents[[1]] <- Document$new(x = docText, name = paste0("Corpus ",
                                                                   private$..x$getName(), " document"))

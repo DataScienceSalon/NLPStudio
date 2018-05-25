@@ -30,7 +30,13 @@ Tokens <- R6::R6Class(
   inherit = Document0,
 
   private = list(
-    ..x = character()
+
+    ..tokenType = character(),
+
+    setQuant = function(x) {
+      private$meta$set(key = private$..tokenType, value = length(x), type = 'q')
+      return(TRUE)
+    }
   ),
 
   public = list(
@@ -38,33 +44,29 @@ Tokens <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Constructor                                   #
     #-------------------------------------------------------------------------#
-    initialize = function(x) {
+    initialize = function(tokenType) {
 
       private$loadDependencies()
 
-      # Validate Source Document
       private$..params <- list()
-      private$..params$classes$name <- list('x')
-      private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list('Document')
+      private$..params$classes$name <- list('tokenType')
+      private$..params$classes$objects <- list(tokenType)
+      private$..params$classes$valid <- list(c('character', 'sentence', 'word'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
-        private$logR$log(method = 'initialize',
-                         event = v$msg, level = "Error")
+        private$logR$log(method = 'initialize', event = v$msg, level = "Error")
         stop()
       }
 
-      private$..x <- x
+      private$..tokenType <- tokenType
       private$meta <- Meta$new(x = self)
+      private$meta$set(key = 'tokenType', value = tokenType, type = 'f')
       private$logR$log(method = 'initialize', event = "Initialization complete.")
       invisible(self)
     },
 
-    get = function() { return(private$..content) },
-    getDocument = function() { return(private$..x) },
     nTokens = function() {
-      tokenType <- private$meta$get(key = 'type', type = 'f')
-      private$meta$get(key = paste0(tokenType, 's'), type = 'q')
+      return(length(private$..content))
     },
 
     #-------------------------------------------------------------------------#

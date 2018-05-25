@@ -36,11 +36,11 @@ ReplaceEmojiApp <- R6::R6Class(
     ..emojis = data.table(),
 
     processDocument = function(document) {
-      content <- document$text
+      content <- document$content
       if (is.null(private$..emojis)) {
-        document$text <- textclean::replace_emoji(x = content)
+        document$content <- textclean::replace_emoji(x = content)
       } else {
-        document$text <- textclean::replace_emoji(x = content,
+        document$content <- textclean::replace_emoji(x = content,
                                             emoji_dt = private$..emojis)
       }
       private$logEvent(document)

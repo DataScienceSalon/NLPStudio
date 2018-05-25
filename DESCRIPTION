@@ -35,6 +35,7 @@ Imports:
     readtext,
     textclean,
     tm,
+    tokenizers,
     tools,
     NLPLists
 Remotes: github::DataScienceSalon/NLPLists

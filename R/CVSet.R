@@ -55,18 +55,12 @@ CVSet <- R6::R6Class(
     #-------------------------------------------------------------------------#
     getCorpus = function(what = NULL) {
 
-      # Validate key/value pair
-      if (!is.null(what)) {
-        private$..params <- list()
-        private$..params$discrete$variables <- c('cv')
-        private$..params$discrete$values <- list(what)
-        private$..params$discrete$valid <- list(c('train', 'validation', 'test'))
-        v <- private$validator$validate(self)
-        if (v$code == FALSE) {
-          private$logR$log( method = 'get',
-                            event = v$msg, level = "Error")
-          stop()
-        }
+      if (grepl("^train", what, ignore.case = TRUE)) {
+        what <- "Training"
+      } else if (grepl("^val", what, ignore.case = TRUE)) {
+        what <- "Validation"
+      } else if (grepl("^test", what, ignore.case = TRUE)) {
+        what <- "Test"
       }
 
       # Search for documents that match the metadata and return
@@ -78,6 +72,14 @@ CVSet <- R6::R6Class(
       } else {
         result <- private$..documents
       }
+
+      if (is.null(result)) {
+        event <- paste0("No ", what, " corpus in the cross-validation set. ",
+                        "See ?", class(self)[1], " for further assistance.")
+        private$logR$log(method = 'getCorpus', event = event, level = "Warn")
+      }
+
+      if (length(result) == 1) result <- result[[1]]
 
       return(result)
     },

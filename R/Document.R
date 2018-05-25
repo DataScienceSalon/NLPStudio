@@ -35,7 +35,7 @@
 #'           "she heard someone scream 'Avalanche!'",
 #'           "Then John, 39, saw 'a cloud of snow coming down.'")
 #' avalanche <- Document$new(name = 'avalanche', purpose = 'raw')
-#' avalance$text <- report
+#' avalance$content <- report
 #' key <- c('genre', 'author', 'year')
 #' value <- c('weather', 'chris jones', 2018)
 #' avalanche$meta$setDescriptive(key = key value = value)
@@ -49,79 +49,6 @@ Document <- R6::R6Class(
   lock_objects = FALSE,
   lock_class = FALSE,
   inherit = Document0,
-
-  private = list(
-
-    compress = function(x) {
-      memCompress(x, "g")
-    },
-
-    decompress = function(x) {
-      strsplit(memDecompress(x, "g", asChar = TRUE), "\n")[[1]]
-    },
-
-    setQuant = function(x) {
-      vectors <- length(x)
-      sentences <- sum(quanteda::nsentence(x))
-      words <- sum(quanteda::ntoken(x))
-      types <- sum(quanteda::ntype(x))
-      characters <- sum(nchar(x))
-      k <- c("vectors", "sentences", "words", "types", "characters")
-      v <- c(vectors, sentences, words, types, characters)
-      private$meta$set(key = k, value = v, type = 'quant')
-      return(TRUE)
-    },
-
-    processText = function(x, note = NULL) {
-
-      # Validate text
-      if (!is.null(x)) {
-        private$..params <- list()
-        private$..params$classes$name <- list('x')
-        private$..params$classes$objects <- list(x)
-        private$..params$classes$valid <- list(c('character', 'list'))
-        v <- private$validator$validate(self)
-        if (v$code == FALSE) {
-          private$logR$log(method = 'processContent',
-                           event = v$msg, level = "Error")
-          stop()
-        }
-
-        # Update text, compute statistics and update admin information
-        if (class(x)[1] == 'character') {
-          private$..content <- private$compress(x)
-        } else {
-          private$..content <- x
-        }
-        private$setQuant(x)
-        private$meta$modified(event = note)
-      }
-      return(TRUE)
-    }
-  ),
-
-  active = list(
-
-    content = function() { stop(paste("This method is not implemented for the Document class.",
-                                      "Use the 'text' method instead.")) },
-
-    text = function(value) {
-
-      if (missing(value)) {
-        if (length(private$..content) > 0) {
-          if (is.raw(private$..content)) {
-            return(private$decompress(private$..content))
-          } else {
-            return(private$..content)
-          }
-        } else {
-          return(NULL)
-        }
-      } else {
-        private$processText(value)
-      }
-    }
-  ),
 
   public = list(
 
@@ -145,7 +72,7 @@ Document <- R6::R6Class(
                            event = v$msg, level = "Error")
           stop()
         }
-        private$processText(x, note = "Initialized text.")
+        private$processContent(x, note = "Initialized text.")
       }
 
       private$logR$log(method = 'initialize',

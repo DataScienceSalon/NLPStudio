@@ -33,7 +33,7 @@ ConverterQuanteda <- R6::R6Class(
       # Convert list of text to character vectors
       text = character()
       for (i in 1:length(docs)) {
-        text[i] <- paste(docs[[i]]$text, collapse = '')
+        text[i] <- paste(docs[[i]]$content, collapse = '')
       }
 
       #..and obtain text names

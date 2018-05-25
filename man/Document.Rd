@@ -60,7 +60,7 @@ report <- c("SAN FRANCISCO  — She was snowboarding with her boyfriend when ",
           "she heard someone scream 'Avalanche!'",
           "Then John, 39, saw 'a cloud of snow coming down.'")
 avalanche <- Document$new(name = 'avalanche', purpose = 'raw')
-avalance$text <- report
+avalance$content <- report
 key <- c('genre', 'author', 'year')
 value <- c('weather', 'chris jones', 2018)
 avalanche$meta$setDescriptive(key = key value = value)

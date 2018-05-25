@@ -1,55 +1,45 @@
 #------------------------------------------------------------------------------#
-#                         Replace Emoticons App                                #
+#                         Replace Word Elongation App                          #
 #------------------------------------------------------------------------------#
-#' ReplaceEmoticonApp
+#' ReplaceWhiteApp
 #'
-#' \code{ReplaceEmoticonApp}  Replace emoticons with the words they represent.
+#' \code{ReplaceWhiteApp}  Replace multiple white spaces with single space.
 #'
-#' A wrapper for \code{\link[textclean]{replace_emoticon}} that replaces
-#' emoticons with the words they represent.
+#' A wrapper for \code{\link[textclean]{replace_white}} Replaces multiple whitespaces with a single space.
 #' Source \url{https://cran.r-project.org/web/packages/textclean/textclean.pdf}
 #'
-#' @usage ReplaceEmoticonApp$new(x, emoticons = NULL)$execute()
+#' @usage ReplaceWhiteApp$new(x, impartMeaning = FALSE)$execute()
 #'
 #' @template textStudioParams
-#' @param emoticons A data.table of emoticons (graphical representations) and
-#' corresponding word meanings.
 #' @template textStudioMethods
 #' @template textStudioClasses
 #' @template textStudioDesign
 #'
 #' @examples
 #'
-#' @return \code{ReplaceEmoticonApp} Returns a vector with emoticons replaced.
+#' @return \code{ReplaceWhiteApp} Returns a vector with word elongations replaced.
 #'
 #' @docType class
 #' @author John James, \email{jjames@@dataScienceSalon.org}
 #' @family TextStudio Classes
 #' @export
-ReplaceEmoticonApp <- R6::R6Class(
-  classname = "ReplaceEmoticonApp",
+ReplaceWhiteApp <- R6::R6Class(
+  classname = "ReplaceWhiteApp",
   lock_objects = FALSE,
   lock_class = FALSE,
   inherit = TextStudio0,
 
   private = list(
-    ..emoticons = data.table(),
 
     processDocument = function(document) {
-      content <- document$content
-      if (is.null(private$..emoticons)) {
-        document$content <- textclean::replace_emoticon(x = content)
-      } else {
-        document$content <- textclean::replace_emoticon(x = content,
-                                               emoticon_dt = private$..emoticons)
-      }
+      document$content <- textclean::replace_white(x = document$content)
       private$logEvent(document)
       return(document)
     }
   ),
 
   public = list(
-    initialize = function(x, emoticons = NULL) {
+    initialize = function(x) {
 
       private$loadDependencies()
 
@@ -65,7 +55,6 @@ ReplaceEmoticonApp <- R6::R6Class(
       }
 
       private$..x <- x
-      private$..emoticons <- emoticons
 
       invisible(self)
     }

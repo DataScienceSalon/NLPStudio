@@ -98,8 +98,6 @@ Meta0 <- R6::R6Class(
       private$..meta$tech$os <- Sys.info()["sysname"]
       private$..meta$tech$release <- Sys.info()["release"]
       private$..meta$tech$version <- Sys.info()["version"]
-      private$..meta$tech$objectSize <- as.character(format(objectSize(x),
-                                                            units = "auto"))
 
       invisible(self)
     }
@@ -190,8 +188,6 @@ Meta0 <- R6::R6Class(
       private$..meta$admin$modifiedBy <- Sys.info()[["user"]]
       private$..meta$admin$nModified <- private$..meta$admin$nModified + 1
       private$..meta$admin$lastState <- ifelse(is.null(event), "Modified.", event)
-      private$..meta$tech$objectSize <- as.character(format(objectSize(private$..owner),
-                                                            units = "auto"))
 
       invisible(self)
     },

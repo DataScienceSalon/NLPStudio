@@ -55,9 +55,8 @@ a training, validation, test, or k-fold set of Document objects.
 }
 
 \seealso{
-Other Cross Validation Classes: \code{\link{CVFactory0}},
-  \code{\link{CVFactoryHoldOut}},
-  \code{\link{CVFactoryKFold}}, \code{\link{CV}}
+Other Cross Validation Classes: \code{\link{CVHoldOut}},
+  \code{\link{CVKFold}}
 }
 \author{
 John James, \email{jjames@datasciencesalon.org}

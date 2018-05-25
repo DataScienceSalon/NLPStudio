@@ -112,6 +112,8 @@ KNEstimate <- R6::R6Class(
       private$..discounts <- x$getDiscounts()
       private$..totals <- x$getTotals()
       private$..size <- x$getSize()
+
+      print(paste0("Instantiated KNEstimate at ", Sys.time()))
       invisible(self)
     },
 

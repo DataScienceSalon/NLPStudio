@@ -33,39 +33,35 @@ Tokenizer <- R6::R6Class(
 
     tokenizeDocument = function(x, tokenType) {
 
-      tokens <- Tokens$new(x)
-      tokens <- Copy$new()$this(x, to = tokens)
+      document <- Tokens$new(tokenType)
+      document <- Copy$new()$this(x, to = document)
       name <- paste0(x$getName(), " (", tokenType, " tokens)")
-      tokens$setName(name)
+      document$setName(name)
 
-      tokens$content <- NLPStudio::tokenize(x = x$text, tokenType = tokenType)
-      nTokens <- length(tokens$content)
+      document$content <- unlist(NLPStudio::tokenize(x = x$content, tokenType = tokenType))
 
-      # Update text, compute statistics and update admin information
-      tokens$setMeta(key = 'type', value = tokenType, type = 'f')
-      tokens$setMeta(key = paste0(tokenType, 's'), value = nTokens, type = 'q')
-
-      return(tokens)
+      return(document)
     },
 
     tokenizeCorpus = function(x, tokenType) {
 
-      tokensSet <- TokensSet$new(x)
-      tokensSet <- Copy$new()$this(x, to = tokensSet)
+      corpus <- Clone$new()$this(x, reference = FALSE)
       name <- paste0(x$getName(), " (", tokenType, " tokens)")
-      tokensSet$setName(name)
+      corpus$setName(name)
 
       nTokens <- 0
       docs <- x$getDocuments()
       for (i in 1:length(docs)) {
-        tokens <- private$tokenizeDocument(docs[[i]], tokenType)
-        nTokens <- nTokens + tokens$nTokens()
-        tokensSet$addTokens(tokens)
+        document <- private$tokenizeDocument(docs[[i]], tokenType)
+        nTokens <- nTokens + document$nTokens()
+        corpus$addDocument(document)
       }
-      tokensSet$setMeta(key = 'type', value = tokenType, type = 'f')
-      tokensSet$setMeta(key = paste0(tokenType, 's'), value = nTokens, type = 'q')
 
-      return(tokensSet)
+      corpus$setMeta(key = 'tokenType', value = tokenType, type = 'f')
+      corpus$setMeta(key = paste0(tokenType, 's'), value = nTokens, type = 'q')
+      corpus$setMeta(key = 'documents', value = length(docs), type = 'q')
+
+      return(corpus)
     }
   ),
 

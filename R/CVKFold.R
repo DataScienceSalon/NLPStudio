@@ -1,13 +1,13 @@
-#' CVFactoryKFold
+#' CVKFold
 #'
-#' \code{CVFactoryKFold} Creates a hold out CVSet object.
+#' \code{CVKFold} Creates a hold out CVSet object.
 #'
 #' Class responsible for creating hold out cross-validation sets or CVSetKFold objects.
 #' CVSetKFold objects contain a training, test and an optional validation test set.
 #'
 #' @section Methods:
 #'  \itemize{
-#'   \item{\code{new(X, name = NULL)}}{Initializes an object of the CVFactoryKFold class.}
+#'   \item{\code{new(X, name = NULL)}}{Initializes an object of the CVKFold class.}
 #'   \item{\code{execute()}}{Executes the process of sourcing the Corpus object.}
 #'  }
 #'
@@ -29,11 +29,11 @@
 #' @author John James, \email{jjames@@datasciencesalon.org}
 #' @family Cross Validation Classes
 #' @export
-CVFactoryKFold <- R6::R6Class(
-  classname = "CVFactoryKFold",
+CVKFold <- R6::R6Class(
+  classname = "CVKFold",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = CVFactory0,
+  inherit = Super,
 
   private = list(
     splitDocument = function(x, k, sets, unit, proportions, seed) {
@@ -42,7 +42,7 @@ CVFactoryKFold <- R6::R6Class(
       if (grepl("^s", unit, ignore.case = TRUE)) {
         text <- Tokenizer$new()$this(x = x, type = 'sentence')$get()
       } else  {
-        text <- x$text
+        text <- x$content
       }
 
       # Create text folds
@@ -62,8 +62,8 @@ CVFactoryKFold <- R6::R6Class(
         splits[[sets[i]]]$validation <- Clone$new()$this(x = x, reference = FALSE)
         splits[[sets[i]]]$training$setName(name = paste(name, "Training Set"))
         splits[[sets[i]]]$validation$setName(name = paste(name, "Validation Set"))
-        splits[[sets[i]]]$training$text <- unlist(folds[-i])
-        splits[[sets[i]]]$validation$text <- unlist(folds[i])
+        splits[[sets[i]]]$training$content <- unlist(folds[-i])
+        splits[[sets[i]]]$validation$content <- unlist(folds[i])
       }
 
       return(splits)
@@ -81,13 +81,14 @@ CVFactoryKFold <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                             Build Method                                #
+    #                             Split Method                                #
     #-------------------------------------------------------------------------#
-    build = function(x, unit = "vector", stratify = FALSE, k = 10, seed = 1) {
+    split = function(x, unit = "vector", stratify = FALSE, k = 10, seed = NULL) {
       # --------------------Validate parameters-------------------------------#
       private$..params$classes$name <- list('x','seed', 'k')
       private$..params$classes$objects <- list(x, seed, k)
-      private$..params$classes$valid <- list(c('Corpus'),  c('integer', 'numeric'),
+      private$..params$classes$valid <- list(c('Corpus'),
+                                             c('integer', 'numeric', 'NULL'),
                                              c("numeric"))
       private$..params$discrete$variables <- c('unit')
       private$..params$discrete$values <- c(unit)
@@ -96,7 +97,7 @@ CVFactoryKFold <- R6::R6Class(
       private$..params$logicals$values <- c(stratify)
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
-        private$logR$log(method = 'build',
+        private$logR$log(method = 'split',
                          event = v$msg, level = "Error")
         stop()
       }
@@ -110,7 +111,7 @@ CVFactoryKFold <- R6::R6Class(
       # Create single Document object if stratify is FALSE
       if (stratify == FALSE) {
         content <- unlist(lapply(docs, function(d) {
-          d$text
+          d$content
         }))
         docs <- list(Document$new(x = content, name = paste(x$getName(), "Text Document")))
       }
@@ -146,7 +147,7 @@ CVFactoryKFold <- R6::R6Class(
     #                           Visitor Methods                               #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$cvFactoryKFold(self)
+      visitor$cvKFold(self)
     }
   )
 )

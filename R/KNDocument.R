@@ -25,11 +25,13 @@ KNDocument <- R6::R6Class(
     ..corpus = character(),
 
     convert = function() {
+      # Converts a corpus with multiple documents into a corpus with a
+      # single document.
 
       # Extract and collapse private$..corpus text
       documents <- private$..corpus$getDocuments()
       text <- paste(unlist(lapply(documents, function(d) {
-        d$text})), collapse = " ")
+        d$content})), collapse = " ")
 
       # Create new Document object and copy metadata from the private$..corpus object
       private$..document <- Document$new(x = text)
@@ -56,17 +58,19 @@ KNDocument <- R6::R6Class(
 
     processOOV = function() {
 
-      tokensObject <- quanteda::tokens(x = private$..document$text, what = 'word')
-      freq <- as.data.frame(table(tokensObject$text1), stringsAsFactors = FALSE)
-      hapax  <- (freq %>% filter(Freq == 1) %>% select(Var1))$Var1
-      private$..document$text <- quanteda::tokens_replace(x = tokensObject, pattern = hapax,
-                                   replacement = rep('UNK', length(hapax)))$text1
+      tokens <- NLPStudio::tokenize(x = private$..document$content, tokenType = 'word')
+      freq <- as.data.frame(table(tokens), stringsAsFactors = FALSE)
+      hapax  <- (freq %>% filter(Freq == 1) %>% select(tokens))
+      private$..document$content <-
+        textclean::replace_tokens(x = private$..document$content,
+                                  tokens = hapax,
+                                  replacement = 'UNK', ignore.case = TRUE)
       return(TRUE)
     },
 
     sentencify = function() {
-      tokenize <- Tokenizer$new()
-      private$..document <- tokenize$this(x = private$..document, type = 's')
+      private$..document$content <- NLPStudio::tokenize(x = private$..document$content,
+                                                     tokenType = 'sentence')
       return(TRUE)
     }
   ),
@@ -98,6 +102,8 @@ KNDocument <- R6::R6Class(
       private$..open <- x$is.openVocabulary()
       private$..corpus <- x$getCorpus()
       private$..size <- x$getSize()
+
+      print(paste0("Instantiated KNDocument at ", Sys.time()))
       invisible(self)
     },
 

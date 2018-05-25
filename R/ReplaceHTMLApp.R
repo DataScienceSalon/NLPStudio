@@ -37,7 +37,7 @@ ReplaceHTMLApp <- R6::R6Class(
     ..symbol = logical(),
 
     processDocument = function(document) {
-      document$text <- textclean::replace_html(x = document$text,
+      document$content <- textclean::replace_html(x = document$content,
                                              symbol = private$..symbol)
       private$logEvent(document)
       return(document)

@@ -1,52 +1,42 @@
 #------------------------------------------------------------------------------#
-#                       Replace Curly Quotes App                               #
+#                              Remove Punct App                                #
 #------------------------------------------------------------------------------#
-#' ReplaceCurlyQuotesApp
+#' RemovePunctApp
 #'
-#' \code{ReplaceCurlyQuotesApp}  Replaces curly single and double quotes.
+#' \code{RemovePunctApp} Removes Puncts.
 #'
-#' A wrapper for \code{\link[textclean]{replace_non_ascii}}
-#' Replaces curly single and double quotes.
-#' Source \url{https://cran.r-project.org/web/packages/textclean/textclean.pdf}
+#' Removes Puncts  from text.
 #'
-#' @usage ReplaceCurlyQuotesApp$new(x, removeNonCoverted)$execute()
+#' @usage RemovePunctApp$new(x)$execute()
 #'
 #' @template textStudioParams
 #' @template textStudioMethods
 #' @template textStudioClasses
 #' @template textStudioDesign
 #'
-#' @examples
-#'
-#' @return \code{ReplaceCurlyQuotesApp} Returns a vector with curly quotes replaced.
-#'
 #' @docType class
 #' @author John James, \email{jjames@@dataScienceSalon.org}
 #' @family TextStudio Classes
 #' @export
-ReplaceCurlyQuotesApp <- R6::R6Class(
-  classname = "ReplaceCurlyQuotesApp",
+RemovePunctApp <- R6::R6Class(
+  classname = "RemovePunctApp",
   lock_objects = FALSE,
   lock_class = FALSE,
   inherit = TextStudio0,
 
   private = list(
-
-    processDocument = function(document) {
-      content <- document$content
-      Encoding(document$content) <- "latin1"
-      document$content <- textclean::replace_curly_quote(x = content)
-      private$logEvent(document)
-      return(document)
-    }
+    ..keepApostrophe = logical(),
+    ..keepHyphen = logical()
   ),
 
   public = list(
-    initialize = function(x) {
+    initialize = function(x, keepApostrophe = TRUE, keepHyphen = TRUE, perl = TRUE) {
 
       private$loadDependencies()
 
       # Validate parameters
+      private$..params$logicals$variables <- list('keepApostrophe', 'keepHyphen')
+      private$..params$logicals$values <- list(keepApostrophe, keepHyphen)
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
       private$..params$classes$valid <- list(c('Document', 'Corpus'))
@@ -58,6 +48,18 @@ ReplaceCurlyQuotesApp <- R6::R6Class(
       }
 
       private$..x <- x
+      private$..perl <- perl
+
+      if (keepApostrophe & keepHyphen) {
+        private$..pattern <- "(?![-'])[[:punct:]]"
+      } else if (keepApostrophe) {
+        private$..pattern <- "(?!['])[[:punct:]]"
+      } else if (keepHyphen) {
+        private$..pattern <- "(?![-])[[:punct:]]"
+      }
+      private$..replacement = " "
+      private$..keepApostrophe <- keepApostrophe
+      private$..keepHyphen <- keepHyphen
 
       invisible(self)
     }
