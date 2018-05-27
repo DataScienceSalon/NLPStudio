@@ -19,14 +19,14 @@ Computes counts used in the probability calculations for the Modified Kneser Ney
 probabilities.
 }
 \seealso{
-Other MKNStudio Classes: \code{\link{MKNDocument}},
-  \code{\link{MKNEstimate}}, \code{\link{MKNStudio0}}
+Other MKNStudio Classes: \code{\link{MKNEstimate}},
+  \code{\link{MKNPrepDocuments0}}, \code{\link{MKNStudio0}}
 
 Other LMStudio Classes: \code{\link{KNCounts}},
-  \code{\link{KNDocument}}, \code{\link{KNEstimate}},
-  \code{\link{KNStudio0}}, \code{\link{LMStudio0}},
-  \code{\link{MKNDocument}}, \code{\link{MKNEstimate}},
-  \code{\link{MKNStudio0}}
+  \code{\link{KNEstimate}}, \code{\link{KNEvaluate}},
+  \code{\link{KNStudio0}}, \code{\link{LMCorpora}},
+  \code{\link{LMStudio0}}, \code{\link{MKNEstimate}},
+  \code{\link{MKNPrepDocuments0}}, \code{\link{MKNStudio0}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

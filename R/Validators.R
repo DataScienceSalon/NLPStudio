@@ -212,3 +212,45 @@ validateKeyValue <- function(object) {
   }
   return(status)
 }
+
+#------------------------------------------------------------------------------#
+#                              Validate Range                                  #
+#------------------------------------------------------------------------------#
+#' validateRange
+#'
+#' \code{validateRange} Validates a parameter that takes a range of values.
+#'
+#' Class accepts an object with a public parameters member. The parameters
+#' member must be a list with four elements: (1) the variable name,
+#' (2) the variable value, (3), the low range, and (4), the high range.
+#' All ranges are inclusive.
+#'
+#' @usage validateRange(object)
+#'
+#' @param object The object to be validated
+#'
+#' @author John James, \email{jjames@@DataScienceSalon.org}
+#' @family Validation Functions
+#' @export
+validateRange <- function(object) {
+
+  status <- list()
+  status$code <- TRUE
+  status$msg <- NULL
+
+  params <- object$getParams()
+
+  if (length(params$range$value) > 0) {
+    if (params$range$value < params$range$low |
+        params$range$value > params$range$high ) {
+        status[['code']] <- FALSE
+        status[['msg']] <- paste0("Invalid ", params$range$variable,
+                                  " parameter. Valid values must be between ",
+                                  params$range$low, " and ", params$range$high,
+                                  ". See ?", class(object)[1],
+                                  " for further assistance.")
+        return(status)
+      }
+    }
+  return(status)
+}

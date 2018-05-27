@@ -60,9 +60,13 @@ Set0 <- R6::R6Class(
     #                             attach Document                             #
     #-------------------------------------------------------------------------#
     attach = function(x) {
-    # Get document credentials, add document and update inventory
+
+      # Add Document to inventory
       credentials <- x$getMeta(type = 'identity')
       private$..documents[[credentials$id]] <- x
+
+      # Update inventory data frame
+      private$..inventory <- private$..inventory %>% filter(id != credentials$id)
       credentials <- as.data.frame(credentials, stringsAsFactors = FALSE, row.names = NULL)
       private$..inventory <- rbind(private$..inventory, credentials)
 

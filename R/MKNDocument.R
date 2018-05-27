@@ -1,9 +1,9 @@
 #==============================================================================#
-#                               MKNDocument                                    #
+#                               MKNPrepDocuments0                                    #
 #==============================================================================#
-#' MKNDocument
+#' MKNPrepDocuments0
 #'
-#' \code{MKNDocument} Prepares text data for downstream processing.
+#' \code{MKNPrepDocuments0} Prepares text data for downstream processing.
 #'
 #' Gathers text data, creates sentence tokens and, if open is TRUE, converts
 #' hapax legomenon to unknown tokens.
@@ -15,11 +15,11 @@
 #' @family MKNStudio Classes
 #' @family LMStudio Classes
 #' @export
-MKNDocument <- R6::R6Class(
-  classname = "MKNDocument",
+MKNPrepDocuments0 <- R6::R6Class(
+  classname = "MKNPrepDocuments0",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = KNDocument,
+  inherit = KNPrepDocuments0,
 
   public = list(
     #-------------------------------------------------------------------------#
@@ -54,7 +54,7 @@ MKNDocument <- R6::R6Class(
     #                           Visitor Method                                #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$mknDocument(self)
+      visitor$mknPrepDocuments0(self)
     }
   )
 )

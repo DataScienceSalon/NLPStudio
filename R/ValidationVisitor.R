@@ -57,6 +57,13 @@ ValidationVisitor <- R6::R6Class(
           return(status)
         }
       }
+
+      if (!is.null(p$range)) {
+        status <- validateRange(object)
+        if (status$code == FALSE) {
+          return(status)
+        }
+      }
       return(status)
     }
   ),
@@ -230,7 +237,7 @@ ValidationVisitor <- R6::R6Class(
       return(private$validate(object))
     },
 
-    knDocument = function(object) {
+    lmCorpora = function(object) {
       return(private$validate(object))
     },
 
@@ -246,7 +253,7 @@ ValidationVisitor <- R6::R6Class(
       return(private$validate(object))
     },
 
-    mknDocument = function(object) {
+    mknPrepDocuments0 = function(object) {
       return(private$validate(object))
     },
 

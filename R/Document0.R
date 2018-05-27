@@ -39,12 +39,12 @@ Document0 <- R6::R6Class(
     },
 
     setQuant = function(x) {
-      x <- paste0(unlist(x), collapse = ' ')
+      x <- paste0(unlist(x), sep = ' ')
       vectors <- length(x)
-      sentences <- tokenizers::count_sentences(x)
-      words <- tokenizers::count_words(x)
+      sentences <- sum(tokenizers::count_sentences(x))
+      words <- sum(tokenizers::count_words(x))
       types <- sum(quanteda::ntype(unlist(x)))
-      characters <- tokenizers::count_characters(x)
+      characters <- sum(tokenizers::count_characters(x))
       k <- c("vectors", "sentences", "words", "types", "characters")
       v <- c(vectors, sentences, words, types, characters)
       private$meta$set(key = k, value = v, type = 'quant')
@@ -67,11 +67,7 @@ Document0 <- R6::R6Class(
         }
 
         # Update text, compute statistics and update admin information
-        if (class(x)[1] == 'character') {
-          private$..content <- private$compress(x)
-        } else {
-          private$..content <- x
-        }
+        private$..content <- private$compress(x)
         private$setQuant(x)
         private$meta$modified(event = note)
       }

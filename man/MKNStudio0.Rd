@@ -20,13 +20,15 @@ Kneser Ney language model state classes.
 }
 \seealso{
 Other MKNStudio Classes: \code{\link{MKNCounts}},
-  \code{\link{MKNDocument}}, \code{\link{MKNEstimate}}
+  \code{\link{MKNEstimate}},
+  \code{\link{MKNPrepDocuments0}}
 
 Other LMStudio Classes: \code{\link{KNCounts}},
-  \code{\link{KNDocument}}, \code{\link{KNEstimate}},
-  \code{\link{KNStudio0}}, \code{\link{LMStudio0}},
-  \code{\link{MKNCounts}}, \code{\link{MKNDocument}},
-  \code{\link{MKNEstimate}}
+  \code{\link{KNEstimate}}, \code{\link{KNEvaluate}},
+  \code{\link{KNStudio0}}, \code{\link{LMCorpora}},
+  \code{\link{LMStudio0}}, \code{\link{MKNCounts}},
+  \code{\link{MKNEstimate}},
+  \code{\link{MKNPrepDocuments0}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

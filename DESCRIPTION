@@ -22,13 +22,13 @@ Suggests:
 VignetteBuilder: knitr
 Imports:
     doParallel,
+    fastmatch,
     hashids,
     Hmisc,
     installr,
     NLP,
     openNLP,
     parsedate,
-    pryr,
     qdap,
     quanteda,
     R6,
@@ -37,6 +37,7 @@ Imports:
     tm,
     tokenizers,
     tools,
+    stringr,
     NLPLists
 Remotes: github::DataScienceSalon/NLPLists
 RoxygenNote: 6.0.1

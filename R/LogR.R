@@ -71,7 +71,7 @@ LogR <- R6::R6Class(
       )
 
       # Append information log to log for object.
-      if (level == "Info") {
+      if (level %in% c("Progress", "Info")) {
         log <- data.frame(class = ifelse(is.null(x),
                                          class(private$..x)[1],
                                          class(x)[1]),

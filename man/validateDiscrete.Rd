@@ -28,7 +28,8 @@ contains the valid values for each of the variables.
 \seealso{
 Other Validation Functions: \code{\link{validateClass}},
   \code{\link{validateKeyValue}},
-  \code{\link{validateLogical}}
+  \code{\link{validateLogical}},
+  \code{\link{validateRange}}
 }
 \author{
 John James, \email{jjames@DataScienceSalon.org}

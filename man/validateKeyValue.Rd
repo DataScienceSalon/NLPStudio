@@ -19,7 +19,8 @@ member has one of two formats.
 \seealso{
 Other Validation Functions: \code{\link{validateClass}},
   \code{\link{validateDiscrete}},
-  \code{\link{validateLogical}}
+  \code{\link{validateLogical}},
+  \code{\link{validateRange}}
 }
 \author{
 John James, \email{jjames@DataScienceSalon.org}

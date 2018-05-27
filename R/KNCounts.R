@@ -61,8 +61,6 @@ KNCounts <- R6::R6Class(
     prefix = function(n) {
       # Compute the number of times a prefix occurs in the corpus
       private$..nGrams[[n]][, ":=" (cPre = sum(cNGram)), by = prefix]
-
-
     },
 
 

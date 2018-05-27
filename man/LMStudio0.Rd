@@ -20,10 +20,10 @@ family of classes.
 }
 \seealso{
 Other LMStudio Classes: \code{\link{KNCounts}},
-  \code{\link{KNDocument}}, \code{\link{KNEstimate}},
-  \code{\link{KNStudio0}}, \code{\link{MKNCounts}},
-  \code{\link{MKNDocument}}, \code{\link{MKNEstimate}},
-  \code{\link{MKNStudio0}}
+  \code{\link{KNEstimate}}, \code{\link{KNEvaluate}},
+  \code{\link{KNStudio0}}, \code{\link{LMCorpora}},
+  \code{\link{MKNCounts}}, \code{\link{MKNEstimate}},
+  \code{\link{MKNPrepDocuments0}}, \code{\link{MKNStudio0}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

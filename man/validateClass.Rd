@@ -28,7 +28,8 @@ contains the valid classes for each of the objects
 \seealso{
 Other Validation Functions: \code{\link{validateDiscrete}},
   \code{\link{validateKeyValue}},
-  \code{\link{validateLogical}}
+  \code{\link{validateLogical}},
+  \code{\link{validateRange}}
 }
 \author{
 John James, \email{jjames@DataScienceSalon.org}

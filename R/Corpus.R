@@ -153,6 +153,12 @@ Corpus <- R6::R6Class(
       invisible(self)
     },
 
+    purgeDocuments = function() {
+      private$..documents <- list()
+      private$..inventory <- data.frame()
+      invisible(self)
+    },
+
     #-------------------------------------------------------------------------#
     #                           Visitor Methods                               #
     #-------------------------------------------------------------------------#
