@@ -116,7 +116,7 @@ CVHoldOut <- R6::R6Class(
       })
 
       # Create CVSet, and Corpora objects
-      if (!is.null(name)) name <- x$getName()
+      if (is.null(name)) name <- x$getName()
       cvSet <- CVSet$new(name = paste(name, "Hold-Out Cross-Validation Set"))
       for (i in 1:length(corpora)) {
         corpus <- Clone$new()$this(x, reference = FALSE)

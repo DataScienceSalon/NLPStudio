@@ -1,5 +1,5 @@
 #==============================================================================#
-#                             LMCorpora                                #
+#                                LMCorpora                                     #
 #==============================================================================#
 #' LMCorpora
 #'
@@ -48,22 +48,29 @@ LMCorpora <- R6::R6Class(
       return(corpus)
     },
 
+    gsubq = function(text, words) {
+      size <- length(words) %% 1000
+      wordChunks <- base::split(words, ceiling(seq_along(words)/size))
+      for (i in 1:length(wordChunks)) {
+        pattern <- paste("\\b(?:", paste(wordChunks[[i]], collapse = "|"), ")\\b ?")
+        text <- gsub(pattern = pattern, replacement = " UNK ", text, perl = TRUE)
+      }
+      return(text)
+    },
+
     processTrainOOV = function() {
 
-      document <- private$..train$getDocuments()[[1]]
+      train <- private$..train$getDocuments()[[1]]
 
-      tokens <- unlist(NLPStudio::tokenize(x = document$content, tokenType = 'word'))
+      tokens <- unlist(NLPStudio::tokenize(x = train$content, tokenType = 'word'))
       freq <- as.data.frame(table(tokens), stringsAsFactors = FALSE)
-      hapax  <- (freq %>% filter(Freq == 1) %>% select(tokens))
-      document$content <-
-        stringi::stri_replace_all_regex(str = document$content,
-                                        pattern = paste0('\\b', hapax, '\\b'),
-                                        replacement = 'UNK',
-                                        vectorize_all = FALSE)
+      hapax  <- (freq %>% filter(Freq == 1) %>% select(tokens))$tokens
 
-      document$setMeta(key = 'OOV', value = nrow(hapax), type = 'q')
-      private$..train$setMeta(key = 'OOV', value = nrow(hapax), type = 'q')
-      private$..train$addDocument(document)
+      train$content <- private$gsubq(text = train$content, words = hapax)
+
+      train$setMeta(key = 'OOV', value = length(hapax), type = 'q')
+      private$..train$setMeta(key = 'OOV', value = length(hapax), type = 'q')
+      private$..train$addDocument(train)
       return(TRUE)
     },
 
@@ -74,17 +81,14 @@ LMCorpora <- R6::R6Class(
       test <- private$..test$getDocuments()[[1]]
 
       vocabulary <- unique(unlist(NLPStudio::tokenize(x = train$content, tokenType = 'word')))
-      testWords <- unlist(NLPStudio::tokenize(x = test$content, tokenType = 'word'))
-      oov <- testWords[!testWords %fin% vocabulary]
-      test$content <-
-        stringi::stri_replace_all_regex(str = test$content,
-                                        pattern = paste0('\\b', oov, '\\b'),
-                                        replacement = 'UNK',
-                                        vectorize_all = FALSE)
+      testWords <- unique(unlist(NLPStudio::tokenize(x = test$content, tokenType = 'word')))
+      oov <- unique(testWords[!testWords %fin% vocabulary])
 
-      document$setMeta(key = 'OOV', value = length(oov), type = 'q')
+      test$content <- private$gsubq(text = test$content, words = oov)
+
+      test$setMeta(key = 'OOV', value = length(oov), type = 'q')
       private$..test$setMeta(key = 'OOV', value = length(oov), type = 'q')
-      private$..test$addDocument(document)
+      private$..test$addDocument(test)
       return(TRUE)
     },
 
@@ -92,9 +96,10 @@ LMCorpora <- R6::R6Class(
       # Assumes a single document Corpus
       document <- corpus$getDocuments()[[1]]
       document$content <-
-        paste(paste0(rep("<s>", times = private$..modelSize-1), collapse = " "),
+        paste(paste0(rep("BOS", times = private$..modelSize-1), collapse = " "),
               document$content,
-              "</s>", sep = " ")
+              "EOS", sep = " ")
+      corpus$purgeDocuments()
       corpus$addDocument(document)
       return(corpus)
     }

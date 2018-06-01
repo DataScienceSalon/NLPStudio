@@ -278,17 +278,33 @@ Set0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Summary Method                                #
     #-------------------------------------------------------------------------#
-    summary = function() {
+    summary = function(section = NULL) {
 
       sd <- list()
-      sd$id <- private$summarizeIdMeta()
-      sd$descriptive <- private$summarizeDescriptiveMeta()
-      sd$quant <- private$summarizeQuantMeta()
-      sd$functional  <- private$summarizeFunctionalMeta()
-      sd$documents <- private$summarizeDocMeta()
-      sd$admin <- private$summarizeAdminMeta()
-      sd$tech <- private$summarizeTechMeta()
-      invisible(sd)
+
+      if (!is.null(section)) {
+        if (c('id', 'i') %in% section)
+          sd$id <- private$summarizeIdMeta()
+        if (c('descriptive') %in% section)
+          sd$descriptive <- private$summarizeDescriptiveMeta()
+        if (c('quant', 'q') %in% section)
+          sd$quant <- private$summarizeQuantMeta()
+        if (c('functional', 'f') %in% section)
+          sd$functional <- private$summarizeFunctionalMeta()
+        if (c('documents') %in% section)
+          sd$documents <- private$summarizeDocMeta()
+
+      } else {
+
+        sd$id <- private$summarizeIdMeta()
+        sd$descriptive <- private$summarizeDescriptiveMeta()
+        sd$quant <- private$summarizeQuantMeta()
+        sd$functional  <- private$summarizeFunctionalMeta()
+        sd$documents <- private$summarizeDocMeta()
+        sd$admin <- private$summarizeAdminMeta()
+        sd$tech <- private$summarizeTechMeta()
+        invisible(sd)
+      }
     }
   )
 )

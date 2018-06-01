@@ -22,6 +22,11 @@ KNCounts <- R6::R6Class(
   inherit = KNStudio0,
 
   private = list(
+    ..modelSize = numeric(),
+    ..modelTypes = character(),
+    ..nGrams = list(),
+    ..totals = data.table(),
+    ..discounts = data.table(),
 
     discounts = function() {
       private$..discounts <- private$..totals$n1 /
@@ -31,12 +36,10 @@ KNCounts <- R6::R6Class(
 
     totals = function() {
 
-      private$..totals <- data.table()
-
-      for (i in 1:private$..size) {
+      for (i in 1:private$..modelSize) {
 
         # Summarize counts and store in summary table
-        nGram <- private$..modelType[i]
+        nGram <- private$..modelTypes[i]
         n <- nrow(private$..nGrams[[i]])
 
         # Obtain frequency spectrum
@@ -82,7 +85,7 @@ KNCounts <- R6::R6Class(
       # precede an nGram.  This is compute for all levels except
       # the highest.
 
-      if (n < private$..size) {
+      if (n < private$..modelSize) {
 
         # Compute the continuation count for the nGram
         higher <- private$..nGrams[[n+1]][,.(suffix)]
@@ -101,15 +104,13 @@ KNCounts <- R6::R6Class(
 
     counts = function() {
 
-      private$..totals <- data.table()
-
-      for (n in 1:private$..size) {
+      for (n in 1:private$..modelSize) {
 
         private$ckn(n)
         if (n > 1) {
           private$hist(n)
         }
-        if (n == private$..size) private$prefix(n)
+        if (n == private$..modelSize) private$prefix(n)
 
         for (i in seq_along(private$..nGrams[[n]])) {
           set(private$..nGrams[[n]],
@@ -120,10 +121,10 @@ KNCounts <- R6::R6Class(
       return(TRUE)
     },
 
-    createTable = function(ngrams, n) {
-      ngrams <- as.data.frame(table(ngrams), stringsAsFactors = FALSE)
-      dt <- data.table(nGram = ngrams[,1],
-                       cNGram = ngrams[,2])
+    createTable = function(nGrams, n) {
+      nGrams <- as.data.frame(table(nGrams), stringsAsFactors = FALSE)
+      dt <- data.table(nGram = nGrams[,1],
+                       cNGram = nGrams[,2])
       if (n > 1) {
         dt$prefix <- gsub(private$..regex$prefix[[n-1]], "\\1", dt$nGram, perl = TRUE)
         dt$suffix  <- gsub(private$..regex$suffix[[n-1]], "\\1", dt$nGram, perl = TRUE)
@@ -132,34 +133,18 @@ KNCounts <- R6::R6Class(
       return(dt)
     },
 
-    createNGrams = function(text, tokenType = 'word', n) {
-      if (n == 1) {
-        ngrams <- NLPStudio::tokenize(text, tokenType = 'word', ngrams = n)
-      } else {
-        ngrams <- unlist(lapply(seq_along(text), function(i) {
-          NLPStudio::tokenize(text[i], tokenType = 'word', ngrams = n)
-        }))
-      }
-      return(ngrams)
-    },
-
-    annotateText = function(n) {
-      document <- private$..document$content
-      text <- unlist(lapply(seq_along(document), function(i) {
-        paste(paste0(rep("BOS", times = n-1), collapse = " "), document[i], "EOS", collapse = " ")
-      }))
-      return(text)
-    },
-
     buildTables = function() {
 
-      private$..nGrams <- lapply(seq(1:private$..size), function(n) {
-        text <- private$annotateText(n)
-        ngrams <- private$createNGrams(text, tokenType = 'word', n = n)
-        private$createTable(ngrams, n)
+      train <- private$..model$getTrain()
+      document <- train$getDocuments()[[1]]
+
+      private$..nGrams <- lapply(seq(1:private$..modelSize), function(n) {
+        nGrams <- unlist(NLPStudio::tokenize(document$content, tokenType = 'word',
+                                             nGrams = n, lowercase = FALSE))
+        private$createTable(nGrams, n)
       })
 
-      names(private$..nGrams) <- private$..modelType[1:private$..size]
+      names(private$..nGrams) <- private$..modelTypes[1:private$..modelSize]
 
       return(TRUE)
     }
@@ -174,28 +159,27 @@ KNCounts <- R6::R6Class(
 
       private$loadDependencies()
 
-      # Validation
       private$..params <- list()
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list(c('KN', 'Katz', 'SBO'))
+      private$..params$classes$valid <- list(c('KNModel'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
-        private$logR$log(method = 'initialize',
-                         event = v$msg, level = "Error")
+        private$logR$log(method = 'initialize', event = v$msg, level = "Error")
         stop()
       }
 
-      # Dock current lm (extract members read/updated within class)
-      private$..lm <- x
-      private$..document <- x$getDocument()
-      private$..size <- x$getSize()
+      private$..model <- x
+      private$..modelSize <- x$getModelSize()
+      private$..modelTypes <- x$getModelTypes()
 
-      print(paste0("Instantiated KNCounts at ", Sys.time()))
+      event <-  paste0("Instantiated KNCounts ")
+      private$logR$log(method = 'initialize', event = event)
       invisible(self)
     },
 
     build = function() {
+
 
       # Build ngram tables with raw frequency counts
       private$buildTables()
@@ -207,11 +191,11 @@ KNCounts <- R6::R6Class(
       private$discounts()
 
       # Update language model
-      private$..lm$setnGrams(private$..nGrams)
-      private$..lm$setDiscounts(private$..discounts)
-      private$..lm$setTotals(private$..totals)
+      private$..model$setNGrams(private$..nGrams)
+      private$..model$setDiscounts(private$..discounts)
+      private$..model$setTotals(private$..totals)
 
-      return(private$..lm)
+      return(private$..model)
     },
 
     #-------------------------------------------------------------------------#

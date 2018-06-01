@@ -22,81 +22,95 @@ KNEvaluate <- R6::R6Class(
   inherit = KNStudio0,
 
   private = list(
-    ..testCorpus = character(),
-    ..quant = list(
-      nGrams = numeric(),
-      exact = numeric(),
-      backOff = numeric()
-    ),
 
-    annotate = function(text) {
+    ..model = character(),
+    ..test = character(),
+    ..nGrams = list(),
+    ..modelSize = numeric(),
+    ..scores = data.table(),
+    ..nWords = 0,
+    ..nSentence = 0,
+    ..nSentences = numeric(),
+    ..nGram = numeric(),
 
+    scoreNGram = function(ngram, nGramOrder) {
+      prob <- private$..nGrams[[nGramOrder]][ nGram == ngram][, pKN]
+      if (length(prob) == 0) {
+        ngram <- gsub(pattern = "^([\\w\\-]+) ", replacement = "",x = ngram, perl = TRUE)
+        nGramOrder <- nGramOrder - 1
+        prob <- private$scoreNGram(ngram, nGramOrder)
+      } else {
+        res <- list()
+        res$prob <- prob
+        res$nGramOrder <- nGramOrder
+        return(res)
+      }
     },
 
-    markOOV = function() {
-      # Obtain unigrams from model
-      nGrams <- private$..lm$getNGrams()
-      vocabulary <- nGrams[[1]]$nGram
-
-      # Obtain test set text
-      docs <- private$..testCorpus$getDocuments()
-      text <- unlist(lapply(docs, function(d) { d$content }))
-      tokens <- unlist(tokenizers::tokenize_words(x = text))
-      oov <- unlist(tokens[!(tokens %fin% vocabulary)])
-      closedText <-
-        stringi::stri_replace_all_regex(str = text,
-                                        pattern = paste0('\\b', oov, '\\b'),
-                                        replacement = rep('UNK', length(oov)),
-                                        vectorize_all = FALSE)
-      return(closedText)
+    scoreSentence = function(sentence) {
+      nGrams <- unlist(NLPStudio::tokenize(sentence, tokenType = 'word',
+                                           nGrams = private$..modelSize))
+      nGramScores <- lapply(nGrams, function(n) {
+        private$..nGram <- private$..nGram + 1
+        s <- private$scoreNGram(n, private$..modelSize)
+        score <- list()
+        score$nSentence <- private$..nSentence
+        score$nGramNum <- private$..nGram
+        score$nGram <- n
+        score$match <- s$nGramOrder
+        score$pKN <- s$prob
+        score
+      })
     },
 
-    prepareTestData = function() {
-      text <- private$markOOV()
-      text <- private$annotate(text)
-      return(TRUE)
+    scoreTestData = function() {
+      document <- private$..test$getDocuments()[[1]]
+      scores <- rbindlist(lapply(document$content, function(d) {
+        private$..nSentence <- private$..nSentence + 1
+        private$..nGram <- 0
+        private$scoreSentence(d)
+      }))
     }
   ),
-
 
   public = list(
     #-------------------------------------------------------------------------#
     #                              Constructor                                #
     #-------------------------------------------------------------------------#
-    initialize = function(x, testCorpus) {
+    initialize = function(x) {
+
 
       private$loadDependencies()
 
-      # Validation
       private$..params <- list()
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list(c('KN'))
+      private$..params$classes$valid <- list(c('KNModel'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
-        private$logR$log(method = 'initialize',
-                         event = v$msg, level = "Error")
+        private$logR$log(method = 'initialize', event = v$msg, level = "Error")
         stop()
       }
 
-      # Dock current lm (extract members read/updated within class)
-      private$..lm <- x
-      private$..testCorpus <- testCorpus
+      private$..model <- x
+      private$..test <- x$getTest()
+      private$..nGrams <- x$getNGrams()
+      private$..modelSize <- x$getModelSize()
+
+      invisible(self)
 
       event <-  paste0("Instantiated KNEvaluate ")
-      private$logR$log(method = 'initialize', event = event, level = "Progress")
+      private$logR$log(method = 'initialize', event = event)
       invisible(self)
     },
 
     evaluate = function() {
 
-      private$prepareTestData()
       private$scoreTestData()
       private$perplexity()
 
-      private$..lm$setEvaluation(private$..nGrams)
 
-      return(private$..lm)
+      return(private$..model)
     },
 
     #-------------------------------------------------------------------------#

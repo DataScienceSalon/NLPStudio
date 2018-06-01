@@ -24,13 +24,13 @@ KNEstimate <- R6::R6Class(
 
     alpha = function() {
 
-      for (i in 1:private$..size) {
+      for (i in 1:private$..modelSize) {
 
         if (i == 1) {
           private$..nGrams[[i]]$alpha <- private$..nGrams[[i]]$cKN_nGram /
             private$..totals$n[i+1]
 
-        } else if (i < private$..size) {
+        } else if (i < private$..modelSize) {
           private$..nGrams[[i]]$alpha <-
             pmax(private$..nGrams[[i]]$cKN_nGram - private$..discounts[i],0) /
             private$..totals$n[i+1]
@@ -44,9 +44,9 @@ KNEstimate <- R6::R6Class(
     },
 
     lambda = function() {
-      for (i in 2:private$..size) {
+      for (i in 2:private$..modelSize) {
 
-        if (i < private$..size) {
+        if (i < private$..modelSize) {
           private$..nGrams[[i]]$lambda <-
             private$..discounts[i] /
             private$..totals$n[i+1] *
@@ -61,7 +61,7 @@ KNEstimate <- R6::R6Class(
     },
 
     pKN = function() {
-      for (i in 1:private$..size) {
+      for (i in 1:private$..modelSize) {
 
         if (i == 1) {
           private$..nGrams[[i]]$pKN <- private$..nGrams[[i]]$alpha
@@ -98,22 +98,23 @@ KNEstimate <- R6::R6Class(
       private$..params <- list()
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list(c('KN', 'KN', 'Katz', 'SBO'))
+      private$..params$classes$valid <- list(c('KNModel'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
-        private$logR$log(method = 'initialize',
-                         event = v$msg, level = "Error")
+        private$logR$log(method = 'initialize', event = v$msg, level = "Error")
         stop()
       }
 
       # Dock current lm (extract members read/updated within class)
-      private$..lm <- x
-      private$..nGrams <- x$getnGrams()
+      private$..model <- x
+      private$..nGrams <- x$getNGrams()
       private$..discounts <- x$getDiscounts()
       private$..totals <- x$getTotals()
-      private$..size <- x$getSize()
+      private$..modelSize <- x$getModelSize()
 
-      print(paste0("Instantiated KNEstimate at ", Sys.time()))
+      event <-  paste0("Instantiated KNEstimate ")
+      private$logR$log(method = 'initialize', event = event)
+
       invisible(self)
     },
 
@@ -123,9 +124,9 @@ KNEstimate <- R6::R6Class(
       private$lambda()
       private$pKN()
 
-      private$..lm$setnGrams(private$..nGrams)
+      private$..model$setNGrams(private$..nGrams)
 
-      return(private$..lm)
+      return(private$..model)
     },
 
     #-------------------------------------------------------------------------#

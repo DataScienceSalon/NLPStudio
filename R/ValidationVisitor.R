@@ -237,6 +237,10 @@ ValidationVisitor <- R6::R6Class(
       return(private$validate(object))
     },
 
+    knModel = function(object) {
+      return(private$validate(object))
+    },
+
     lmCorpora = function(object) {
       return(private$validate(object))
     },
