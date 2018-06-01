@@ -34,9 +34,10 @@ KNEvaluate <- R6::R6Class(
     ..nGram = numeric(),
 
     scoreNGram = function(ngram, nGramOrder) {
+      print(ngram)
       prob <- private$..nGrams[[nGramOrder]][ nGram == ngram][, pKN]
       if (length(prob) == 0) {
-        ngram <- gsub(pattern = "^([\\w\\-]+) ", replacement = "",x = ngram, perl = TRUE)
+        ngram <- gsub(pattern = "^([\\w'\\-]+) ", replacement = "",x = ngram, perl = TRUE)
         nGramOrder <- nGramOrder - 1
         prob <- private$scoreNGram(ngram, nGramOrder)
       } else {
@@ -48,8 +49,9 @@ KNEvaluate <- R6::R6Class(
     },
 
     scoreSentence = function(sentence) {
-      nGrams <- unlist(NLPStudio::tokenize(sentence, tokenType = 'word',
-                                           nGrams = private$..modelSize))
+      nGrams <- unlist(NLPStudio::tokenize(text, tokenType = 'word',
+                                           nGrams = private$..modelSize,
+                                           lowercase = FALSE))
       nGramScores <- lapply(nGrams, function(n) {
         private$..nGram <- private$..nGram + 1
         s <- private$scoreNGram(n, private$..modelSize)
