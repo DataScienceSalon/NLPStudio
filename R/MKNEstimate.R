@@ -9,7 +9,7 @@
 #'
 #' @param x Language model object
 #'
-#' @docTypes class
+#' @docType class
 #' @author John James, \email{jjames@@dataScienceSalon.org}
 #' @family MKNStudio Classes
 #' @family LMStudio Classes
@@ -43,7 +43,6 @@ MKNEstimate <- R6::R6Class(
           # Determine the discount based upon the count group
           private$..nGrams[[i]] <-
             private$..nGrams[[i]][, D := discounts[cMKN_Group]]
-
 
           if (i < private$..modelSize) {
             private$..nGrams[[i]][, alpha := (cMKN_nGram - D)]

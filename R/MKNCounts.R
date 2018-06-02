@@ -87,6 +87,11 @@ MKNCounts <- R6::R6Class(
           merge(private$..nGrams[[n]], higher, by.x = 'nGram',
                 by.y = 'suffix', all.x = TRUE)
 
+        # Handle special case where nGram is sequence of BOS tags
+        # The continuation count is the number of occurences
+        # of BOS tag.
+        private$..nGrams[[n]][like(nGram, "BOS"), cMKN_nGram := as.numeric(cNGram)]
+
       } else {
         private$..nGrams[[n]]$cMKN_nGram <-
           as.numeric(private$..nGrams[[n]]$cNGram)

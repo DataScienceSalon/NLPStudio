@@ -90,11 +90,17 @@ KNCounts <- R6::R6Class(
         # Compute the continuation count for the nGram
         higher <- private$..nGrams[[n+1]][,.(suffix)]
         higher <- higher[,.(cKN_nGram = .N), by = .(suffix)]
+        higher$cMKN_nGram <- as.numeric(higher$cKN_nGram)
         setkey(private$..nGrams[[n]], nGram)
         setkey(higher, suffix)
         private$..nGrams[[n]] <-
           merge(private$..nGrams[[n]], higher, by.x = 'nGram',
                 by.y = 'suffix', all.x = TRUE)
+
+        # Handle special case where nGram is sequence of BOS tags
+        # The continuation count is the number of occurences
+        # of BOS tag.
+        private$..nGrams[[n]][like(nGram, "BOS"), cKN_nGram := as.numeric(cNGram)]
 
       } else {
         private$..nGrams[[n]]$cKN_nGram <- private$..nGrams[[n]]$cNGram
