@@ -9,24 +9,25 @@
 KNStudio0
 }
 \arguments{
-\item{x}{Language model object}
+\item{x}{Corpus object upon which the model will be trained.}
+
+\item{size}{Numeric indicating the model size in terms of nGrams. Defaults to trigram model.}
+
+\item{open}{Logical indicating whether the vocabulary is open
+or closed. Open indicates that it is possible to encounter out of vocabulary
+words in the test set. If TRUE, OOV processing will be performed on
+the training set. Default is TRUE.}
 }
 \description{
-\code{KNStudio0} Abstract class for the Kneser Ney language model state classes.
-}
-\details{
-This abstract class defines a common interface and methods of the
-Kneser Ney language model state classes.
+\code{KNStudio} Abstract class for the Kneser-Ney Studio Classes
 }
 \seealso{
-Other KNStudio Classes: \code{\link{KNCounts}},
-  \code{\link{KNEstimate}}, \code{\link{KNEvaluate}}
+Other Language Model Classes: \code{\link{KNStudio}},
+  \code{\link{KN}}, \code{\link{MKNStudio}},
+  \code{\link{MKN}}
 
-Other LMStudio Classes: \code{\link{KNCounts}},
-  \code{\link{KNEstimate}}, \code{\link{KNEvaluate}},
-  \code{\link{LMCorpora}}, \code{\link{LMStudio0}},
-  \code{\link{MKNCounts}}, \code{\link{MKNEstimate}},
-  \code{\link{MKNPrepDocuments0}}, \code{\link{MKNStudio0}}
+Other Kneser Ney Model Classes: \code{\link{KNStudio}},
+  \code{\link{MKNStudio}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

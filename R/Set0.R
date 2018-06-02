@@ -283,17 +283,11 @@ Set0 <- R6::R6Class(
       sd <- list()
 
       if (!is.null(section)) {
-        if (c('id', 'i') %in% section)
-          sd$id <- private$summarizeIdMeta()
-        if (c('descriptive') %in% section)
-          sd$descriptive <- private$summarizeDescriptiveMeta()
-        if (c('quant', 'q') %in% section)
-          sd$quant <- private$summarizeQuantMeta()
-        if (c('functional', 'f') %in% section)
-          sd$functional <- private$summarizeFunctionalMeta()
-        if (c('documents') %in% section)
-          sd$documents <- private$summarizeDocMeta()
-
+        if (grepl("^i", section, ignore.case = TRUE)) sd$id <- private$summarizeIdMeta()
+        if (grepl("^d", section, ignore.case = TRUE)) sd$descriptive <- private$summarizeDescriptiveMeta()
+        if (grepl("^q", section, ignore.case = TRUE)) sd$quant <- private$summarizeQuantMeta()
+        if (grepl("^f", section, ignore.case = TRUE)) sd$functional  <- private$summarizeFunctionalMeta()
+        if (grepl("^a", section, ignore.case = TRUE)) sd$admin <- private$summarizeAdminMeta()
       } else {
 
         sd$id <- private$summarizeIdMeta()

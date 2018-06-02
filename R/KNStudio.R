@@ -1,12 +1,11 @@
 #==============================================================================#
-#                                    MKN                                       #
+#                                   KNStudio                                   #
 #==============================================================================#
-#' MKN
+#' KNStudio
 #'
-#' \code{MKN} Class containing the Modified KNeser Ney Language Model object.
+#' \code{KNStudio} Builds Kneser Ney language model object.
 #'
-#' @param corpora training and test Corpora object upon which the model
-#' will be trained and evaluated
+#' @param x Corpus object upon which the model will be trained.
 #' @param size Numeric indicating the model size in terms of nGrams. Defaults to trigram model.
 #' @param open Logical indicating whether the vocabulary is open
 #' or closed. Open indicates that it is possible to encounter out of vocabulary
@@ -17,21 +16,25 @@
 #' @docType class
 #' @author John James, \email{jjames@@dataScienceSalon.org}
 #' @family Language Model Classes
-#' @family MKNeser-Ney Language Model Classes
+#' @family Kneser Ney Model Classes
 #' @export
-MKN <- R6::R6Class(
-  classname = "MKN",
+KNStudio <- R6::R6Class(
+  classname = "KNStudio",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = KN,
+  inherit = LMStudio0,
 
   public = list(
     #-------------------------------------------------------------------------#
     #                           Core Methods                                  #
     #-------------------------------------------------------------------------#
-    initialize = function(corpora, modelSize = 3, open = TRUE, name = NULL) {
+    initialize = function()  {
 
       private$loadDependencies()
+      invisible(self)
+    },
+
+    build = function(corpora, modelSize = 3, open = TRUE, name = NULL) {
 
       # Validation
       private$..params <- list()
@@ -46,47 +49,28 @@ MKN <- R6::R6Class(
       private$..params$logicals$values <- c(open)
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
-        private$logR$log(method = 'initialize',
+        private$logR$log(method = 'build',
                          event = v$msg, level = "Error")
         stop()
       }
 
-      # Unpack the Corpora object
-      train <- corpora$getTrain()
-      test <- corpora$getTest()
+      # Create Language Model Object
+      private$..model <- KN$new(corpora = corpora, modelSize = modelSize,
+                                open = open , name = name)
 
-      if (is.null(name)) {
-        name <- train$getName()
-      }
-      private$meta <- Meta$new(x = self, name = name)
 
-      # Initalize member variables
-      private$..modelName <- name
-      private$..train <- train
-      private$..test <- test
-      private$..smoothing <- 'Modified KNeser-Ney'
-      private$..modelSize <- modelSize
-      private$..modelType <- private$..modelTypes[modelSize]
-      private$..openVocabulary <- open
+      private$..model <- KNCounts$new(private$..model)$build()
+      private$..model <- KNEstimate$new(private$..model)$build()
+      private$..model <- KNEvaluate$new(private$..model)$build()
 
-      # Initialize private members
-      private$meta$set(key = 'smoothing', value = "Modified KNeser-Ney", type = 'f')
-      private$meta$set(key = 'modelSize', value = modelSize, type = 'f')
-      private$meta$set(key = 'modelType', value = private$..modelTypes[modelSize], type = 'f')
-      private$meta$set(key = 'openVocabulary', value = open, type = 'f')
-
-      # Create log entry
-      event <- paste0("MKN Language Model Object Instantiated.")
-      private$logR$log(method = 'initialize', event = event)
-
-      invisible(self)
+      return(private$..model)
     },
 
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$mkn(self)
+      visitor$knStudio(self)
     }
 
   )

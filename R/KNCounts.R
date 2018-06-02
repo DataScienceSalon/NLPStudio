@@ -90,6 +90,8 @@ KNCounts <- R6::R6Class(
         # Compute the continuation count for the nGram
         higher <- private$..nGrams[[n+1]][,.(suffix)]
         higher <- higher[,.(cKN_nGram = .N), by = .(suffix)]
+        setkey(private$..nGrams[[n]], nGram)
+        setkey(higher, suffix)
         private$..nGrams[[n]] <-
           merge(private$..nGrams[[n]], higher, by.x = 'nGram',
                 by.y = 'suffix', all.x = TRUE)
@@ -162,7 +164,7 @@ KNCounts <- R6::R6Class(
       private$..params <- list()
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list(c('KNModel'))
+      private$..params$classes$valid <- list(c('KN'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize', event = v$msg, level = "Error")
@@ -194,6 +196,13 @@ KNCounts <- R6::R6Class(
       private$..model$setNGrams(private$..nGrams)
       private$..model$setDiscounts(private$..discounts)
       private$..model$setTotals(private$..totals)
+
+      # Remove temporary members
+      private$....modelSize <- NULL
+      private$....modelTypes <- NULL
+      private$....nGrams <- NULL
+      private$....totals <- NULL
+      private$....discounts <- NULL
 
       return(private$..model)
     },

@@ -9,7 +9,7 @@
 #'
 #' @param x Language model object
 #'
-#' @docType class
+#' @docTypes class
 #' @author John James, \email{jjames@@dataScienceSalon.org}
 #' @family MKNStudio Classes
 #' @family LMStudio Classes
@@ -24,7 +24,7 @@ MKNEstimate <- R6::R6Class(
 
     alpha = function() {
 
-      for (i in 1:private$..size) {
+      for (i in 1:private$..modelSize) {
 
         if (i == 1) {
           private$..nGrams[[i]]$alpha <- private$..nGrams[[i]]$cMKN_nGram /
@@ -45,7 +45,7 @@ MKNEstimate <- R6::R6Class(
             private$..nGrams[[i]][, D := discounts[cMKN_Group]]
 
 
-          if (i < private$..size) {
+          if (i < private$..modelSize) {
             private$..nGrams[[i]][, alpha := (cMKN_nGram - D)]
             private$..nGrams[[i]]$alpha <- pmax(private$..nGrams[[i]]$alpha, 0) /
               as.numeric(private$..totals$n[i+1])
@@ -61,7 +61,7 @@ MKNEstimate <- R6::R6Class(
     },
 
     lambda = function() {
-      for (i in 2:private$..size) {
+      for (i in 2:private$..modelSize) {
 
         D1 <- private$..discounts$D1[i]
         D2 <- private$..discounts$D2[i]
@@ -72,7 +72,7 @@ MKNEstimate <- R6::R6Class(
           D2 * private$..nGrams[[i]]$N2Pre_ +
           D3 * private$..nGrams[[i]]$N3pPre_
 
-        if (i < private$..size) {
+        if (i < private$..modelSize) {
           private$..nGrams[[i]]$lambda <-
             discounts /
             private$..totals$n[i+1]
@@ -85,7 +85,7 @@ MKNEstimate <- R6::R6Class(
     },
 
     pMKN = function() {
-      for (i in 1:private$..size) {
+      for (i in 1:private$..modelSize) {
 
         if (i == 1) {
           private$..nGrams[[i]]$pMKN <- private$..nGrams[[i]]$alpha
@@ -93,6 +93,8 @@ MKNEstimate <- R6::R6Class(
         } else {
           lower <- private$..nGrams[[i-1]][,.(nGram, pMKN)]
           setnames(lower, "pMKN", "pMKNSuffix")
+          setkey(lower, nGram)
+          setkey(private$..nGrams[[i]], suffix)
           private$..nGrams[[i]] <-
             merge(private$..nGrams[[i]], lower, by.x = 'suffix',
                   by.y = 'nGram', all.x = TRUE)
@@ -122,7 +124,7 @@ MKNEstimate <- R6::R6Class(
       private$..params <- list()
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list(c('MKN', 'KN', 'Katz', 'SBO'))
+      private$..params$classes$valid <- list(c('MKN'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize',
@@ -130,12 +132,17 @@ MKNEstimate <- R6::R6Class(
         stop()
       }
 
+
       # Dock current lm (extract members read/updated within class)
-      private$..lm <- x
-      private$..nGrams <- x$getnGrams()
+      private$..model <- x
+      private$..nGrams <- x$getNGrams()
       private$..discounts <- x$getDiscounts()
       private$..totals <- x$getTotals()
-      private$..size <- x$getSize()
+      private$..modelSize <- x$getModelSize()
+
+      event <-  paste0("Instantiated MKNEstimate ")
+      private$logR$log(method = 'initialize', event = event)
+
       invisible(self)
     },
 
@@ -145,9 +152,16 @@ MKNEstimate <- R6::R6Class(
       private$lambda()
       private$pMKN()
 
-      private$..lm$setnGrams(private$..nGrams)
 
-      return(private$..lm)
+      private$..model$setNGrams(private$..nGrams)
+
+      # Remove temporary members
+      private$..nGrams <- NULL
+      private$..discounts <- NULL
+      private$..totals <- NULL
+      private$..modelSize <- NULL
+
+      return(private$..model)
     },
 
     #-------------------------------------------------------------------------#

@@ -22,6 +22,11 @@ KNEstimate <- R6::R6Class(
 
   private = list(
 
+    ..nGrams = list(),
+    ..discounts = data.table(),
+    ..totals = data.table(),
+    ..modelSize = numeric(),
+
     alpha = function() {
 
       for (i in 1:private$..modelSize) {
@@ -69,6 +74,8 @@ KNEstimate <- R6::R6Class(
         } else {
           lower <- private$..nGrams[[i-1]][,.(nGram, pKN)]
           setnames(lower, "pKN", "pKNSuffix")
+          setkey(lower, nGram)
+          setkey(private$..nGrams[[i]], suffix)
           private$..nGrams[[i]] <-
             merge(private$..nGrams[[i]], lower, by.x = 'suffix',
                   by.y = 'nGram', all.x = TRUE)
@@ -98,7 +105,7 @@ KNEstimate <- R6::R6Class(
       private$..params <- list()
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list(c('KNModel'))
+      private$..params$classes$valid <- list(c('KN'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize', event = v$msg, level = "Error")
@@ -125,6 +132,12 @@ KNEstimate <- R6::R6Class(
       private$pKN()
 
       private$..model$setNGrams(private$..nGrams)
+
+      # Remove temporary members
+      private$..nGrams <- NULL
+      private$..discounts <- NULL
+      private$..totals <- NULL
+      private$..modelSize <- NULL
 
       return(private$..model)
     },

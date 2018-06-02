@@ -23,8 +23,14 @@ MKNCounts <- R6::R6Class(
 
   private = list(
 
+    ..modelSize = numeric(),
+    ..modelTypes = character(),
+    ..nGrams = list(),
+    ..totals = data.table(),
+    ..discounts = data.table(),
+
     discounts = function() {
-      private$..discounts <- rbindlist(lapply(seq_along(1:private$..size), function(i) {
+      private$..discounts <- rbindlist(lapply(seq_along(1:private$..modelSize), function(i) {
         d <- list()
         d$D <- private$..totals$n1[i] /
           (private$..totals$n1[i] + 2 * private$..totals$n2[i])
@@ -32,16 +38,16 @@ MKNCounts <- R6::R6Class(
         d$D0 <- 0
 
         d$D1 <- 1 - (2 * d$D *
-                                       private$..totals$n2[i] /
-                                       private$..totals$n1[i])
+                       private$..totals$n2[i] /
+                       private$..totals$n1[i])
 
         d$D2 <- 2 - (3 * d$D *
-                                       private$..totals$n3[i] /
-                                       private$..totals$n2[i])
+                       private$..totals$n3[i] /
+                       private$..totals$n2[i])
 
         d$D3 <- 3 - (4 * d$D *
-                                       private$..totals$n4[i] /
-                                       private$..totals$n3[i])
+                       private$..totals$n4[i] /
+                       private$..totals$n3[i])
         d
       }))
       return(TRUE)
@@ -49,12 +55,10 @@ MKNCounts <- R6::R6Class(
 
     totals = function() {
 
-      private$..totals <- data.table()
-
-      for (i in 1:private$..size) {
+      for (i in 1:private$..modelSize) {
 
         # Summarize counts and store in summary table
-        nGram <- private$..modelType[i]
+        nGram <- private$..modelTypes[i]
         n <- nrow(private$..nGrams[[i]])
         n1 <- nrow(private$..nGrams[[i]] %>% filter(cNGram == 1))
         n2 <- nrow(private$..nGrams[[i]] %>% filter(cNGram == 2))
@@ -73,7 +77,7 @@ MKNCounts <- R6::R6Class(
       # precede an nGram.  This is compute for all levels except
       # the highest.
 
-      if (n < private$..size) {
+      if (n < private$..modelSize) {
 
         # Compute the continuation count for the nGram
         higher <- private$..nGrams[[n+1]][,.(suffix)]
@@ -124,10 +128,13 @@ MKNCounts <- R6::R6Class(
         stop()
       }
 
-      # Dock current lm (extract members read/updated within class)
-      private$..lm <- x
-      private$..document <- x$getDocument()
-      private$..size <- x$getSize()
+
+      private$..model <- x
+      private$..modelSize <- x$getModelSize()
+      private$..modelTypes <- x$getModelTypes()
+
+      event <-  paste0("Instantiated MKNCounts ")
+      private$logR$log(method = 'initialize', event = event)
       invisible(self)
     },
 

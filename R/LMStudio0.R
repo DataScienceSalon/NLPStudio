@@ -21,11 +21,21 @@ LMStudio0 <- R6::R6Class(
   inherit = Super,
 
   private = list(
-    ..lm = character(),
-    ..document = character(),
-    ..tables = list(),
-    ..size = integer(),
-    ..modelType = c('Unigram', 'Bigram', 'Trigram', 'Quadgram', 'Quintgram')
+    ..model = character(),
+    ..regex = list(
+      prefix = list(
+        bigrams   = "^((\\S+\\s+){0}\\S+).*$",
+        trigrams  = "^((\\S+\\s+){1}\\S+).*$",
+        quadgrams = "^((\\S+\\s+){2}\\S+).*$",
+        quintgrams = "^((\\S+\\s+){3}\\S+).*$"
+      ),
+      suffix = list(
+        bigrams = "^.*\\s+((?:\\S+\\s+){0}\\S+)$",
+        trigrams = "^.*\\s+((?:\\S+\\s+){1}\\S+)$",
+        quadgrams = "^.*\\s+((?:\\S+\\s+){2}\\S+)$",
+        quintgrams = "^.*\\s+((?:\\S+\\s+){3}\\S+)$"
+      )
+    )
   ),
 
   public = list(

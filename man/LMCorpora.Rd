@@ -20,9 +20,9 @@ Class responsible for preparing training Corpus objects for language modeling.
 \seealso{
 Other LMStudio Classes: \code{\link{KNCounts}},
   \code{\link{KNEstimate}}, \code{\link{KNEvaluate}},
-  \code{\link{KNStudio0}}, \code{\link{LMStudio0}},
-  \code{\link{MKNCounts}}, \code{\link{MKNEstimate}},
-  \code{\link{MKNPrepDocuments0}}, \code{\link{MKNStudio0}}
+  \code{\link{LMStudio0}}, \code{\link{MKNCounts}},
+  \code{\link{MKNEstimate}}, \code{\link{MKNEvaluate}},
+  \code{\link{MKNStudio0}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

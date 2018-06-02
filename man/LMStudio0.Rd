@@ -21,9 +21,9 @@ family of classes.
 \seealso{
 Other LMStudio Classes: \code{\link{KNCounts}},
   \code{\link{KNEstimate}}, \code{\link{KNEvaluate}},
-  \code{\link{KNStudio0}}, \code{\link{LMCorpora}},
-  \code{\link{MKNCounts}}, \code{\link{MKNEstimate}},
-  \code{\link{MKNPrepDocuments0}}, \code{\link{MKNStudio0}}
+  \code{\link{LMCorpora}}, \code{\link{MKNCounts}},
+  \code{\link{MKNEstimate}}, \code{\link{MKNEvaluate}},
+  \code{\link{MKNStudio0}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

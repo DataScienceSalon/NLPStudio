@@ -9,7 +9,8 @@
 KN
 }
 \arguments{
-\item{x}{Corpus object upon which the model will be trained.}
+\item{corpora}{training and test Corpora object upon which the model
+will be trained and evaluated}
 
 \item{size}{Numeric indicating the model size in terms of nGrams. Defaults to trigram model.}
 
@@ -19,13 +20,12 @@ words in the test set. If TRUE, OOV processing will be performed on
 the training set. Default is TRUE.}
 }
 \description{
-\code{KN} Kneser Ney language model object.
-}
-\details{
-Kneser Ney language model object.
+\code{KN} Class containing the Kneser Ney Language Model object.
 }
 \seealso{
-Other Language Model Classes: \code{\link{MKN}}
+Other Language Model Classes: \code{\link{KNStudio0}},
+  \code{\link{KNStudio}}, \code{\link{MKNStudio}},
+  \code{\link{MKN}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

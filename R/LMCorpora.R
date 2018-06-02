@@ -48,6 +48,14 @@ LMCorpora <- R6::R6Class(
       return(corpus)
     },
 
+    countWords = function(tokens) {
+      # Computes net words = total words - BOS tokens
+      bosTokens <- sum(grepl("BOS", tokens, ignore.case = FALSE, fixed = TRUE))
+      netWords <- length(tokens) - bosTokens
+      return(netWords)
+
+    },
+
     gsubq = function(text, words) {
       size <- length(words) %% 1000
       wordChunks <- base::split(words, ceiling(seq_along(words)/size))
@@ -58,7 +66,7 @@ LMCorpora <- R6::R6Class(
       return(text)
     },
 
-    processTrainOOV = function() {
+    processTrain = function() {
 
       train <- private$..train$getDocuments()[[1]]
 
@@ -68,25 +76,35 @@ LMCorpora <- R6::R6Class(
 
       train$content <- private$gsubq(text = train$content, words = hapax)
 
+      # Compute and update quantitative data
+      netWords <- private$countWords(tokens = tokens)
+      train$setMeta(key = 'netWords', value = netWords, type = 'q')
       train$setMeta(key = 'OOV', value = length(hapax), type = 'q')
+      private$..train$setMeta(key = 'netWords', value = netWords, type = 'q')
       private$..train$setMeta(key = 'OOV', value = length(hapax), type = 'q')
       private$..train$addDocument(train)
       return(TRUE)
     },
 
-    processTestOOV = function() {
+    processTest = function() {
 
       # Assumes a single document Corpus
       train <- private$..train$getDocuments()[[1]]
       test <- private$..test$getDocuments()[[1]]
 
-      vocabulary <- unique(unlist(NLPStudio::tokenize(x = train$content, tokenType = 'word')))
-      testWords <- unique(unlist(NLPStudio::tokenize(x = test$content, tokenType = 'word')))
-      oov <- unique(testWords[!testWords %fin% vocabulary])
+      trainTokens <- unlist(NLPStudio::tokenize(x = train$content, tokenType = 'word'))
+      vocabulary <- unique(trainTokens)
+      testTokens <- unlist(NLPStudio::tokenize(x = test$content, tokenType = 'word'))
+      testVocabulary <- unique(testTokens)
+      oov <- unique(testVocabulary[!testVocabulary %fin% vocabulary])
 
       test$content <- private$gsubq(text = test$content, words = oov)
 
+      # Compute and update quantitative data
+      netWords <- private$countWords(tokens = testTokens)
+      test$setMeta(key = 'netWords', value = netWords, type = 'q')
       test$setMeta(key = 'OOV', value = length(oov), type = 'q')
+      private$..test$setMeta(key = 'netWords', value = netWords, type = 'q')
       private$..test$setMeta(key = 'OOV', value = length(oov), type = 'q')
       private$..test$addDocument(test)
       return(TRUE)
@@ -99,6 +117,7 @@ LMCorpora <- R6::R6Class(
         paste(paste0(rep("BOS", times = private$..modelSize-1), collapse = " "),
               document$content,
               "EOS", sep = " ")
+
       corpus$purgeDocuments()
       corpus$addDocument(document)
       return(corpus)
@@ -144,9 +163,9 @@ LMCorpora <- R6::R6Class(
 
       private$..train <- private$combine(private$..train)
 
-      if (private$..openVocabulary) private$processTrainOOV()
-
       private$..train <- private$annotate(private$..train)
+
+      if (private$..openVocabulary) private$processTrain()
 
       invisible(self)
     },
@@ -155,9 +174,9 @@ LMCorpora <- R6::R6Class(
 
       private$..test <- private$combine(private$..test)
 
-      if (private$..openVocabulary) private$processTestOOV()
-
       private$..test <- private$annotate(private$..test)
+
+      if (private$..openVocabulary) private$processTest()
 
       invisible(self)
     },

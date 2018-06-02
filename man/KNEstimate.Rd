@@ -19,13 +19,13 @@ Computes Modified Kneser Ney estimates for all nGrams in the Model
 }
 \seealso{
 Other KNStudio Classes: \code{\link{KNCounts}},
-  \code{\link{KNEvaluate}}, \code{\link{KNStudio0}}
+  \code{\link{KNEvaluate}}, \code{\link{MKNEvaluate}}
 
 Other LMStudio Classes: \code{\link{KNCounts}},
-  \code{\link{KNEvaluate}}, \code{\link{KNStudio0}},
-  \code{\link{LMCorpora}}, \code{\link{LMStudio0}},
-  \code{\link{MKNCounts}}, \code{\link{MKNEstimate}},
-  \code{\link{MKNPrepDocuments0}}, \code{\link{MKNStudio0}}
+  \code{\link{KNEvaluate}}, \code{\link{LMCorpora}},
+  \code{\link{LMStudio0}}, \code{\link{MKNCounts}},
+  \code{\link{MKNEstimate}}, \code{\link{MKNEvaluate}},
+  \code{\link{MKNStudio0}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

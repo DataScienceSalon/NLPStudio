@@ -23,56 +23,117 @@ KNEvaluate <- R6::R6Class(
 
   private = list(
 
-    ..model = character(),
     ..test = character(),
     ..nGrams = list(),
     ..modelSize = numeric(),
+    ..modelTypes = character(),
     ..scores = data.table(),
-    ..nWords = 0,
-    ..nSentence = 0,
-    ..nSentences = numeric(),
-    ..nGram = numeric(),
+    ..evaluation = data.frame(),
 
-    scoreNGram = function(ngram, nGramOrder) {
-      print(ngram)
-      prob <- private$..nGrams[[nGramOrder]][ nGram == ngram][, pKN]
-      if (length(prob) == 0) {
-        ngram <- gsub(pattern = "^([\\w'\\-]+) ", replacement = "",x = ngram, perl = TRUE)
-        nGramOrder <- nGramOrder - 1
-        prob <- private$scoreNGram(ngram, nGramOrder)
-      } else {
-        res <- list()
-        res$prob <- prob
-        res$nGramOrder <- nGramOrder
-        return(res)
-      }
+    score = function() {
+
+      # Obtain training test summary data.
+
+      # Obtain networds and subtract zero probability words
+      netWords <- private$..test$getMeta(key = 'netWords')
+      OOV = private$..test$getMeta(key = 'OOV')
+      exact <- nrow(private$..scores[ Match == private$..modelSize])
+      exactRate <- exact / nrow(private$..scores)
+      zeroProbs <- nrow(private$..scores[ pKN == 0])
+      scores <- private$..scores[ pKN > 0]
+      scores[, logProb := log2(pKN)]
+      H <- -1 * 1/netWords * sum(scores$logProb)
+      pp <- 2^H
+
+      private$..evaluation <- data.frame(N = netWords,
+                                         OOV = OOV,
+                                         OOV.Rate = OOV / netWords,
+                                         ZeroProbs = zeroProbs,
+                                         Exact = exact,
+                                         ExactRate = exactRate,
+                                         Entropy = H,
+                                         Perplexity = pp)
+      return(TRUE)
     },
 
-    scoreSentence = function(sentence) {
-      nGrams <- unlist(NLPStudio::tokenize(text, tokenType = 'word',
+    computeProbs = function() {
+
+      i <- private$..modelSize
+
+      while (i > 0) {
+        # Obtain training probabilities
+        setkey(private$..nGrams[[i]], nGram)
+        probs <- private$..nGrams[[i]][,.(nGram, pKN, Match = i)]
+
+        if (i == 1) {
+          setkey(private$..scores, Unigram)
+          private$..scores <- merge(private$..scores, probs, by.x = 'Unigram',
+                                    by.y = 'nGram', all.x = TRUE,
+                                    suffixes = c("", ".update"))
+          private$..scores[(!is.na(pKN.update) & (Match == 0)),
+                           c("Match", "pKN") := list(Match.update, pKN.update)]
+          private$..scores[, c('pKN.update', 'Match.update') := NULL]
+        } else if (i == 2) {
+          setkey(private$..scores, Bigram)
+          private$..scores <- merge(private$..scores, probs, by.x = 'Bigram',
+                                    by.y = 'nGram', all.x = TRUE,
+                                    suffixes = c("", ".update"))
+          private$..scores[(!is.na(pKN.update) & (Match == 0)),
+                           c("Match", "pKN") := list(Match.update, pKN.update)]
+          private$..scores[, c('pKN.update', 'Match.update') := NULL]
+
+        } else if (i == 3) {
+          setkey(private$..scores, Trigram)
+          private$..scores <- merge(private$..scores, probs, by.x = 'Trigram',
+                                    by.y = 'nGram', all.x = TRUE,
+                                    suffixes = c("", ".update"))
+          private$..scores[(!is.na(pKN.update) & (Match == 0)),
+                           c("Match", "pKN") := list(Match.update, pKN.update)]
+          private$..scores[, c('pKN.update', 'Match.update') := NULL]
+
+        } else if (i == 4) {
+          setkey(private$..scores, Quadgram)
+          private$..scores <- merge(private$..scores, probs, by.x = 'Quadgram',
+                                    by.y = 'nGram', all.x = TRUE,
+                                    suffixes = c("", ".update"))
+          private$..scores[(!is.na(pKN.update) & (Match == 0)),
+                           c("Match", "pKN") := list(Match.update, pKN.update)]
+          private$..scores[, c('pKN.update', 'Match.update') := NULL]
+        } else if (i == 5) {
+          setkey(private$..scores, Quintgram)
+          private$..scores <- merge(private$..scores, probs, by.x = 'Quintgram',
+                                    by.y = 'nGram', all.x = TRUE,
+                                    suffixes = c("", ".update"))
+          private$..scores[(!is.na(pKN.update) & (Match == 0)),
+                           c("Match", "pKN") := list(Match.update, pKN.update)]
+          private$..scores[, c('pKN.update', 'Match.update') := NULL]
+        }
+        i <- i - 1
+      }
+
+    },
+
+
+    buildTestNGrams = function() {
+      document <- private$..test$getDocuments()[[1]]
+      nGrams <- unlist(NLPStudio::tokenize(document$content, tokenType = 'word',
                                            nGrams = private$..modelSize,
                                            lowercase = FALSE))
-      nGramScores <- lapply(nGrams, function(n) {
-        private$..nGram <- private$..nGram + 1
-        s <- private$scoreNGram(n, private$..modelSize)
-        score <- list()
-        score$nSentence <- private$..nSentence
-        score$nGramNum <- private$..nGram
-        score$nGram <- n
-        score$match <- s$nGramOrder
-        score$pKN <- s$prob
-        score
-      })
-    },
-
-    scoreTestData = function() {
-      document <- private$..test$getDocuments()[[1]]
-      scores <- rbindlist(lapply(document$content, function(d) {
-        private$..nSentence <- private$..nSentence + 1
-        private$..nGram <- 0
-        private$scoreSentence(d)
-      }))
+      nBackOff <- 1
+      private$..scores <- data.table(nGrams = nGrams)
+      while (nBackOff < private$..modelSize) {
+        nGrams <- gsub(pattern = "^([\\w'\\-]+) ",
+                       replacement = "",x = nGrams, perl = TRUE)
+        private$..scores <- cbind(private$..scores, nGrams)
+        nBackOff <- nBackOff + 1
+      }
+      modelTypes <- private$..modelTypes[1:private$..modelSize]
+      modelTypes <- rev(modelTypes)
+      names(private$..scores) <- modelTypes[seq(1:private$..modelSize)]
+      private$..scores <- cbind(private$..scores, Match = 0, pKN = 0)
+      return(TRUE)
     }
+
   ),
 
   public = list(
@@ -87,7 +148,7 @@ KNEvaluate <- R6::R6Class(
       private$..params <- list()
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list(c('KNModel'))
+      private$..params$classes$valid <- list(c('KN'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize', event = v$msg, level = "Error")
@@ -98,6 +159,7 @@ KNEvaluate <- R6::R6Class(
       private$..test <- x$getTest()
       private$..nGrams <- x$getNGrams()
       private$..modelSize <- x$getModelSize()
+      private$..modelTypes <- x$getModelTypes()
 
       invisible(self)
 
@@ -106,11 +168,21 @@ KNEvaluate <- R6::R6Class(
       invisible(self)
     },
 
-    evaluate = function() {
+    build = function() {
 
-      private$scoreTestData()
-      private$perplexity()
+      private$buildTestNGrams()
+      private$computeProbs()
+      private$score()
+      private$..model$setScores(private$..scores)
+      private$..model$setEval(private$..evaluation)
 
+      # Remove temporary members
+      private$..test <- NULL
+      private$..nGrams <- NULL
+      private$..modelSize <- NULL
+      private$..modelTypes <- NULL
+      private$..scores <- NULL
+      private$..evaluation <- NULL
 
       return(private$..model)
     },
