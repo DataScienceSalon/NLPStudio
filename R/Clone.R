@@ -81,16 +81,16 @@ Clone <- R6::R6Class(
     },
 
     cloneFileSet = function(x, reference, path) {
-      out <- FileSet$new(path)
+      name <- x$getName()
+      out <- FileSet$new(name = name)
       out <- private$cloneMeta(x, out)
-      out$setMeta(key = 'path', value = path) # Overwritten by above statement
       if (reference) {
         files <- x$getFiles()
         if (length(files) > 0) {
           for (i in 1:length(files)) {
-            filename <- basename(files[[i]]$getPath())
-            filepath <- file.path(path, filename)
-            file <- private$cloneFile(files[[i]], filepath)
+            fileName <- files[[i]]$getFileName()
+            filePath <- file.path(path,fileName)
+            file <- private$cloneFile(files[[i]], filePath)
             out$addFile(file)
           }
         }
@@ -103,8 +103,9 @@ Clone <- R6::R6Class(
     cloneFile = function(x, path) {
       out <- File$new(path)
       out <- private$cloneMeta(x, out)
-      out$setMeta(key = 'path', value = path) # Overwritten by above statement
-      x$copy(path)
+      out$setFilePath(path)
+      fs <- FileStudio$new()
+      fs$copy(x, path)
       event <- paste0("File, ", out$getName(), ", cloned.")
       out$message(event = event)
       return(out)
@@ -117,7 +118,7 @@ Clone <- R6::R6Class(
     #                              Core Methods                               #
     #-------------------------------------------------------------------------#
     initialize = function() {
-      private$loadDependencies()
+      private$loadServices()
       invisible(self)
     },
     #-------------------------------------------------------------------------#

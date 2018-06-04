@@ -29,7 +29,7 @@ IOCSV <- R6::R6Class(
     #                           Core Methods                                  #
     #-------------------------------------------------------------------------#
     initialize = function() {
-      private$loadDependencies()
+      private$loadServices()
       invisible(self)
     },
 

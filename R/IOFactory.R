@@ -37,7 +37,7 @@ IOFactory <- R6::R6Class(
     #                      Object Creation and Read                           #
     #-------------------------------------------------------------------------#
     initialize = function() {
-      private$loadDependencies()
+      private$loadServices()
       invisible(self)
     },
 
@@ -55,7 +55,7 @@ IOFactory <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                           Visitor Methods                               #
+    #                           Visitor Method                                #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
       visitor$IOFactory(self)

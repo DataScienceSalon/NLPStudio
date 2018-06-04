@@ -9,12 +9,7 @@
 Meta
 }
 \description{
-\code{Meta} Generic or default Metadata class.
-
-Contains object metadata and the methods for creating, managing, and reporting
-metadata. The core metadata includes metadata used to identify an object
-as well as metadata regarding the current and historical admin of an
-object.
+\code{Meta} Base class for metadata objects.
 
 \itemize{
   \item{\code{new()}}{Not implemented for this base class.}
@@ -55,13 +50,14 @@ object.
  as a list of lists, or a list of data frames. Valid values are:
  c('list', 'data.frame')
 }
-\section{Meta Methods}{
+\details{
+Provides the methods for creating, managing, and reporting metadata. This
+base functionality is shared by all the Metadata family classes.
+}
+\section{Meta methods}{
 
 }
 
-\seealso{
-Other Metadata Classes: \code{\link{Meta0}}
-}
 \author{
 John James, \email{jjames@datasciencesalon.org}
 }

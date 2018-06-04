@@ -1,29 +1,19 @@
-#==============================================================================#
-#                               FileStudio                                     #
-#==============================================================================#
+#------------------------------------------------------------------------------#
+#                                    FileStudio                                #
+#------------------------------------------------------------------------------#
 #' FileStudio
 #'
-#' \code{FileStudio} Class for performing file cleaning and preprocessing
+#' \code{FileStudio}  Class responsible for performing operations on files.
 #'
-#' @template fileStudioClasses
+#' Class registers files and filesets, and manipulates them, usually at raw binary files.
 #'
-#' @section FileStudio methods:
-#' \strong{Core Methods:}
-#'  \itemize{
-#'   \item{\code{new()}}{Method for instantiating a FileStudio.}
-#'   \item{\code{addCommand()}}{Method that adds a file processing command to the queue. }
-#'   \item{\code{removeCommand()}}{Method that removes a command from the queue.}
-#'   \item{\code{execute()}}{Method that executes the job queue. }
-#'   \item{\code{getResult()}}{Method that returns the object following execution of the job queue. }
-#'  }
-#'
-#' @section Parameters:
-#' @param x The object to be processed.
-#' @param queue The job queue containing file processing commands.
+#' @param x File or FileSet object
+#' @param path Character string containing a relative path to a file or
+#' directory.  It may also contain a glob expression that resolves to one
+#' or several files.
 #'
 #' @docType class
-#' @author John James, \email{jjames@@datasciencesalon.org}
-#' @family FileStudio classes
+#' @author John James, \email{jjames@@dataScienceSalon.org}
 #' @export
 FileStudio <- R6::R6Class(
   classname = "FileStudio",
@@ -32,111 +22,162 @@ FileStudio <- R6::R6Class(
   inherit = Super,
 
   private = list(
-    ..in = character(),
-    ..out = character()
+
+    ..fileSet = character(),
+
+    inspectFile = function(f) {
+
+      # Read Data
+      path <- f$getMeta(key = 'path')
+      text <- readLines(path)
+
+      # Inspect encodings
+      e <- as.list(as.data.frame(table(stringi::stri_enc_mark(text))))
+      encodings <- as.list(e$Freq)
+      names(encodings) <- e$Var1
+
+      # Capture quantitative rsults
+      quant <- list()
+      quant$size <- file.info(path)[['size']]
+      quant$lines <- length(text)
+      quant <- c(quant, encodings)
+      return(quant)
+
+    },
+
+    repairFile = function(file, codes = NLPStudio:::nonPrintables) {
+
+      path <- file$getFilePath()
+
+      ioBin <- IOBin$new()
+      ioTxt <- IOText$new()
+
+      # Read and FileStudio content
+      content <- ioBin$read(path = path)
+      for (i in 1:length(codes)) {
+        content[content == as.raw(codes[i])] = as.raw(0x20)
+      }
+
+      # Save to temp file, then re-read
+      d <- tempfile(fileext = '.txt')
+      ioBin$write(path = d, content = content)
+      content <- ioTxt$read(path = d)
+      unlink(d)
+
+      # Save as text file
+      ioTxt$write(path = path, content = content)
+
+      return(TRUE)
+    },
+
+    getFilePaths = function(path) {
+      if (isDirectory(path)) {
+        files <- list.files(path, full.names = TRUE)
+      } else {
+        glob <- basename(path)
+        dir <- dirname(path)
+        files <- list.files(dir, pattern = glob2rx(glob), full.names = TRUE)
+      }
+      return(files)
+    },
+
+    validate = function(x, methodName) {
+      private$..params <- list()
+      private$..params$classes$name <- list('x')
+      private$..params$classes$objects <- list(x)
+      private$..params$classes$valid <- list(c('File', 'FileSet'))
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = methodName, event = v$msg, level = "Error")
+        stop()
+      }
+    }
   ),
 
   public = list(
 
-    #-------------------------------------------------------------------------#
-    #                           Core Methods                                  #
-    #-------------------------------------------------------------------------#
-    initialize = function(x, path, name = NULL) {
-
-      private$loadDependencies()
-
-      private$..params <- list()
-      private$..params$classes$name <- list("x")
-      private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list(c("FileSet", "File"))
-      v <- private$validator$validate(self)
-      if (v$code == FALSE) {
-        private$logR$log(method = 'initialize',
-                         event = v$msg, level = "Error")
-        stop()
-      }
-
-      # Initialize objects
-      private$..in <- x
-      private$..out <- Clone$new()$this(x = x, path = path)
-      if (is.null(name)) name <- paste0(x$getName(), " (clone)")
-      private$..out$setName(name)
-      private$..out$setMeta(key = 'path', value = path)
+    initialize = function() {
 
 
-      # Create log entry
-      event <- paste0("FileStudio object instantiated.")
-      private$logR$log(method = 'initialize', event = event)
-
-      return(private$..out)
-
-      #invisible(self)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                           Command Management                            #
-    #-------------------------------------------------------------------------#
-    add = function(cmd) {
-
-      if (!c("FileStudio0") %in% class(cmd)) {
-        event <- paste0("Invalid FileStudio object. Object must be ",
-                                  "of the FileStudio0 classes.  See ?FileStudio0",
-                                  " for further assistance.")
-        private$logR$log(method = 'add', event = event, level = "Error")
-        stop()
-      }
-
-      name <- class(cmd)[1]
-      private$..jobQueue[[name]] <- cmd
-
-      event <- paste0("Added ", name, " to ", private$..out$getName(),
-                                " job queue." )
-      private$logR$log(method = 'add', event = event)
-
+      private$loadServices()
       invisible(self)
     },
 
-    remove = function(cmd) {
+    build = function(path, name = NULL) {
 
-      name <- class(cmd)[1]
-      private$..jobQueue[[name]] <- NULL
+      fileSet <- FileSet$new(name = name)
 
-      event <- paste0("Removed ", name, " from ", private$..out$getName(),
-                                " job queue." )
-      private$logR$log(method = 'remove', event = event)
-      invisible(self)
-
+      filePaths <- private$getFilePaths(path)
+      for (i in 1:length(filePaths)) {
+        file <- File$new(path = filePaths[i])
+        fileSet$addFile(file)
+      }
+      return(fileSet)
     },
 
-    #-------------------------------------------------------------------------#
-    #                       Execute and Return Results                        #
-    #-------------------------------------------------------------------------#
-    execute = function() {
+    copy = function(x, to) {
 
-      if (length(private$..jobQueue) > 0) {
+      private$validate(x, methodName = 'copy')
 
-        for (i in 1:length(private$..jobQueue)) {
-          private$..out <- private$..jobQueue[[i]]$execute(private$..out)
-        }
+      if (class(x)[1] == 'File') {
+        path <- x$getFilePath()
+        file.copy(from = path, to = to, recursive = TRUE, overwrite = TRUE)
 
-        event <- paste0("Executed FileStudio commands on ",
-                                  private$..out$getName(), "." )
-        private$logR$log(method = 'execute', event = event)
-
-        invisible(private$..out)
       } else {
-        event <- paste0("FileStudio job queue is empty.")
-        private$logR$log(method = 'execute', event = event, level = 'Error')
-        stop()
+        files <- x$getFiles()
+        for (i in 1:length(files)) {
+          path <- files[[i]]$getFilePath()
+          file.copy(from = path, to = to, recursive = TRUE, overwrite = TRUE)
+        }
       }
-
     },
 
-    #-------------------------------------------------------------------------#
-    #                           Visitor Methods                               #
-    #-------------------------------------------------------------------------#
-    accept = function(visitor)  {
-      visitor$fileStudio(self)
+    move = function(x, to) {
+
+      private$validate(x, methodName = 'move')
+
+      if (class(x)[1] == 'File') {
+        path <- x$getFilePath()
+        file.rename(from = path, to = to)
+
+      } else {
+        files <- x$getFiles()
+        for (i in 1:length(files)) {
+          path <- files[[i]]$getFilePath()
+          file.rename(from = path, to = to)
+        }
+      }
+    },
+
+    inspect = function(fileSet) {
+      files <- fileSet$getFiles()
+      quant <- rbindlist(lapply(files, function(f) {
+        quant <- private$inspectFile(f)
+        f$setQuant(quant)
+        fileSet$addFile(f)
+        quant
+      }))
+      fileSet$setQuant(quant)
+      return(fileSet)
+    },
+
+    repair = function(fileSet, newPath, codes = NLPStudio:::nonPrintables) {
+
+      newFileSet <- Clone$new()$this(x = fileSet, reference = FALSE, path = newPath)
+
+      files <- newFileSet$getFiles()
+      for (i in 1:length(files)) {
+        private$repairFile(files[[i]],codes)
+      }
+
+      name <- fileSet$getName()
+      name <- paste0(name, " (repaired)")
+      newFileSet$setName(name)
+      # Log it
+      event <- paste0("Executed ", class(self)[1], " on FileSet ", name, ". ")
+      private$logR$log(method = 'execute', event = event)
+
+      return(newFileSet)
     }
   )
 )

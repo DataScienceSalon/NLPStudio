@@ -15,7 +15,7 @@ ValidationVisitor
 \code{ValidationVisitor} Visitor class responsible for validation
 }
 \details{
-\strong{ValidationVisitor Methods:}
+\strong{ValidationVisitor Method :}
 The ValidationVisitor methods are as follows:
  \itemize{
   \item{\code{nlpStudio(object)}}{Method for validating the instantiation of the NLPStudio object}

@@ -9,37 +9,19 @@
 FileStudio
 }
 \arguments{
-\item{x}{The object to be processed.}
+\item{x}{File or FileSet object}
 
-\item{queue}{The job queue containing file processing commands.}
+\item{path}{Character string containing a relative path to a file or
+directory.  It may also contain a glob expression that resolves to one
+or several files.}
 }
 \description{
-\code{FileStudio} Class for performing file cleaning and preprocessing
+\code{FileStudio}  Class responsible for performing operations on files.
 }
-\section{TextStudio Family of Classes Overview}{
-
-The TextStudio family of classes include four types of classes. The manager classes which
-are responsible for executing one or more core class objects through the implementation
-of a command class object, supported by support class objects.
+\details{
+Class registers files and filesets, and manipulates them, usually at raw binary files.
 }
-
-\section{FileStudio methods}{
-
-\strong{Core Methods:}
- \itemize{
-  \item{\code{new()}}{Method for instantiating a FileStudio.}
-  \item{\code{addCommand()}}{Method that adds a file processing command to the queue. }
-  \item{\code{removeCommand()}}{Method that removes a command from the queue.}
-  \item{\code{execute()}}{Method that executes the job queue. }
-  \item{\code{getResult()}}{Method that returns the object following execution of the job queue. }
- }
-}
-
-\section{Parameters}{
-
-}
-
 \author{
-John James, \email{jjames@datasciencesalon.org}
+John James, \email{jjames@dataScienceSalon.org}
 }
 \keyword{datasets}

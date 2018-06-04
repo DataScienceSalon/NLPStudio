@@ -27,10 +27,12 @@ Super <- R6::R6Class(
 
     ..params = list(),
 
+    meta = character(),
     logR =  character(),
     validator = character(),
 
-    loadDependencies = function() {
+    loadServices = function(name = NULL) {
+      private$meta <- Meta$new(x = self, name)
       private$logR <- LogR$new(x = self)
       private$validator <- Validator$new()
       return(TRUE)

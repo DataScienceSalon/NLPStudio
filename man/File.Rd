@@ -6,42 +6,18 @@
 \title{File}
 \format{An object of class \code{R6ClassGenerator} of length 24.}
 \usage{
-finance <- File$new(path = "./finance.txt", name = 'Financial Report')
+File
 }
 \arguments{
-\item{name}{Character string containing the name for the File object.}
-
-\item{path}{Character string containing the file path.}
-
-\item{x}{Variable containing the file content.}
-
-\item{overwrite}{Logical. If yes, the write, move, and copy methods
-overwrite the file in the location designated by the path variable.}
+\item{path}{Character string containing a relative path to a file.}
 }
 \description{
-\code{File} Class containinig a file's attributes, content and content management methods.
+\code{File} Class respresenting an individual file.
 }
-\details{
-Class contains file attributes, its content as well as basic read, write, encoding
-and repair methods.
-}
-\section{Core Methods}{
-
- \itemize{
-  \item{\code{new(path, name = NULL)}}{Initializes an object of the File class.}
-  \item{\code{read()}}{Reads the file into memory.}
-  \item{\code{readBin()}}{Reads the file in raw binary format into memory.}
-  \item{\code{write(x)}}{Writes content to the file.}
-  \item{\code{writeBin(x)}}{Writes content to the file in raw binary format.}
-  \item{\code{ctrl(x)}}{Removes nonprintable control characters from the file at the
-  binary level.}
- }
-}
-
 \seealso{
 Other File Classes: \code{\link{FileSet}}
 }
 \author{
-John James, \email{jjames@datasciencesalon.org}
+John James, \email{jjames@dataScienceSalon.org}
 }
 \keyword{datasets}

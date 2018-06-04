@@ -6,59 +6,18 @@
 \title{FileSet}
 \format{An object of class \code{R6ClassGenerator} of length 24.}
 \usage{
-rawFiles <- FileSet$new(name = 'rawSet', path = './raw')
+FileSet
 }
 \arguments{
-\item{name}{Character string containing the name for the FileSet object.}
-
-\item{purpose}{Character string used to indicate how the document will be used, e.g. 'train', 'test'.}
-
-\item{note}{Character string containing a comment associated with a call to the
-text method. The texts of the note variable are written to the FileSets
-log. This is used to track changes to the text, perhaps made during preprocessing.}
-}
-\value{
-FileSet object, containing the FileSet text, the metadata and
-the methods to manage both.
+\item{file}{File object.}
 }
 \description{
-\code{FileSet} Class representation of a collection of files.
-
-@param x The principal object
- @param key Character string or a vector of strings containing a key or
- keys for metadata key/value pair(s).
- @param value Character or numeric, or a vector thereof, containing a value
- or values for metadata key/value pair(s).
- @param format Character string used in the metadata method. Indicates
- whether to return the metadata as  list of lists, or a data.frame.This method
- returns metadata in a list if no key/value pair is provided. The list
- may contain other lists or data frames associated with the type of
- metadata. This parameter specifies whether to return the metadata
- as a list of lists, or a list of data frames. Valid values are:
- c('list', 'data.frame')
+\code{FileSet} Class respresenting a set or collection of File objects.
 }
-\details{
-Class representing a collection of files. FileSets are created from
-raw text and undergo treatments to address anamolies at the file level
-before Corpus creation and preprocessing.
-}
-\section{Core Methods}{
-
- \itemize{
-  \item{\code{new(name = NULL)}}{Initializes an object of the FileSet class.}
-  \item{\code{text(x, note = NULL)}}{Method for obtaining/adding/updating text. If no
-  parameters are presented, the current text is returned.  Otherwise, the text
-  is updated with the texts of the character vector 'x'. Sentence, word, token, type,
-  sentence and word length statistics are also computed and the metadata is updated
-  accordingly.}
-  \item{\code{summary()}}{Summarizes the FileSet object.}
- }
-}
-
 \seealso{
 Other File Classes: \code{\link{File}}
 }
 \author{
-John James, \email{jjames@datasciencesalon.org}
+John James, \email{jjames@dataScienceSalon.org}
 }
 \keyword{datasets}

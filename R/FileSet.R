@@ -1,154 +1,67 @@
+#------------------------------------------------------------------------------#
+#                                    FileSet                                   #
+#------------------------------------------------------------------------------#
 #' FileSet
 #'
-#' \code{FileSet} Class representation of a collection of files.
+#' \code{FileSet} Class respresenting a set or collection of File objects.
 #'
-#' Class representing a collection of files. FileSets are created from
-#' raw text and undergo treatments to address anamolies at the file level
-#' before Corpus creation and preprocessing.
-#'
-#' @usage rawFiles <- FileSet$new(name = 'rawSet', path = './raw')
-#'
-#' @section Core Methods:
-#'  \itemize{
-#'   \item{\code{new(name = NULL)}}{Initializes an object of the FileSet class.}
-#'   \item{\code{text(x, note = NULL)}}{Method for obtaining/adding/updating text. If no
-#'   parameters are presented, the current text is returned.  Otherwise, the text
-#'   is updated with the texts of the character vector 'x'. Sentence, word, token, type,
-#'   sentence and word length statistics are also computed and the metadata is updated
-#'   accordingly.}
-#'   \item{\code{summary()}}{Summarizes the FileSet object.}
-#'  }
-#'
-#' @param name Character string containing the name for the FileSet object.
-#' @param purpose Character string used to indicate how the document will be used, e.g. 'train', 'test'.
-#' @param note Character string containing a comment associated with a call to the
-#' text method. The texts of the note variable are written to the FileSets
-#' log. This is used to track changes to the text, perhaps made during preprocessing.
-#' @template metadataParams
-#'
-#' @return FileSet object, containing the FileSet text, the metadata and
-#' the methods to manage both.
+#' @param file File object.
 #'
 #' @docType class
-#' @author John James, \email{jjames@@datasciencesalon.org}
+#' @author John James, \email{jjames@@dataScienceSalon.org}
 #' @family File Classes
 #' @export
 FileSet <- R6::R6Class(
   classname = "FileSet",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = Set0,
+  inherit = Primitive0,
 
-  public = list(
-
-    #-------------------------------------------------------------------------#
-    #                           Core Methods                                  #
-    #-------------------------------------------------------------------------#
-    initialize = function(path, name = NULL) {
-
-      private$loadDependencies()
-      private$meta <- Meta$new(x = self, name = name)
-      private$meta$set(key = 'name', value = ifelse(is.null(name),
-                                                    basename(path),
-                                                    name),
-                       type = 'identity')
-
-      private$meta$set(key = 'path', value = path, type = 'functional')
-
-      private$logR$log(method = 'initialize',
-                       event = "Initialization complete.")
-      invisible(self)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                           File Management                               #
-    #-------------------------------------------------------------------------#
-    getFiles = function() { private$..documents },
-    getPath = function() {private$meta$get(key = 'path')},
-    addFile = function(x) {
-
-      # Validate class of object.
+  private = list(
+    validate = function(file, methodName) {
       private$..params <- list()
-      private$..params$classes$name <- list('x')
-      private$..params$classes$objects <- list(x)
+      private$..params$classes$name <- list('file')
+      private$..params$classes$objects <- list(file)
       private$..params$classes$valid <- list(c('File'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
-        private$logR$log(method = 'addFile',
-                         event = v$msg, level = "Error")
+        private$logR$log(method = methodName, event = v$msg, level = "Error")
         stop()
       }
-      private$attach(x)
+    }
+  ),
 
-      invisible(self)
-
-    },
-    removeFile = function(x) {
-      private$detach(x)
-      invisible(self)
+  public = list(
+    initialize = function(name = NULL) {
+      loadServices(name = name)
     },
 
     #-------------------------------------------------------------------------#
-    #                           Move/Copy Methods                             #
+    #                           Composite Methods                             #
     #-------------------------------------------------------------------------#
-    move = function(path, overwrite = FALSE) {
-      if (length(private$..documents) > 0) {
-        for (i in 1:length(private$..documents)) {
-          filePath <- file.path(path, private$..documents[[i]]$getFileName())
-          private$..documents[[i]]$move(path = filePath, overwrite = overwrite)
-        }
-        event <- paste0("Moved FileSet, ", self$getName(), ", from ",
-                        self$getPath(), " to ", path, ".")
-        private$meta$modified(event = event)
-        private$logR$log(method = 'move', event = event)
-        private$meta$set(key = 'path', value = path, type = 'f')
-      }
+    getFiles = function() {
+      private$..children
+    },
+
+    addFile = function(file)  {
+      private$validate(file, methodName = 'addFile')
+      private$attach(file)
       invisible(self)
     },
 
-    copy = function(path, overwrite = FALSE) {
+    removeFile = function(file) {
+      private$validate(file, methodName = 'removeFile')
+      private$detach(file)
+      invisible(self)
+    },
 
-      if (length(private$..documents) > 0) {
-        for (i in 1:length(private$..documents)) {
-          filePath <- file.path(path, private$..documents[[i]]$getFileName())
-          private$..documents[[i]]$copy(path = filePath, overwrite = overwrite)
-        }
-        event <- paste0("Copied FileSet, ", self$getName(), ", from ",
-                        self$getPath(), " to ", path, ".")
-        private$logR$log(method = 'copy', event = event)
-      }
+    purgeFiles = function() {
+      private$..children <- NULL
       invisible(self)
     },
 
     #-------------------------------------------------------------------------#
-    #                              IO Methods                                 #
-    #-------------------------------------------------------------------------#
-    read = function() {
-      content <- lapply(private$..documents, function(f) {
-        f$read()
-      })
-      return(content)
-    },
-
-    write = function(x) {
-      if (length(x) != length(private$..documents)) {
-        event <- paste0("Unable to write 'x' to files. The variable length ",
-                        length(x), ", must match the number ",
-                        "of files in the FileSet, which is ",
-                        length(private$..documents), ". See ?", class(self)[1],
-                        " for further assistance.")
-        private$logR$log(method = 'write', event = event, level = 'Error')
-        stop()
-      } else {
-        for (i in 1:length(private$..documents)) {
-          private$..documents[[i]]$write(x[[1]])
-        }
-      }
-      invisible(self)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                           Visitor Methods                               #
+    #                           Visitor Method                                #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
       visitor$fileSet(self)

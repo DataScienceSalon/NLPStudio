@@ -2,7 +2,7 @@
 #'
 #' \code{ValidationVisitor} Visitor class responsible for validation
 #'
-#' \strong{ValidationVisitor Methods:}
+#' \strong{ValidationVisitor Method :}
 #' The ValidationVisitor methods are as follows:
 #'  \itemize{
 #'   \item{\code{nlpStudio(object)}}{Method for validating the instantiation of the NLPStudio object}
@@ -88,26 +88,14 @@ ValidationVisitor <- R6::R6Class(
       return(private$validate(object))
     },
 
-    file = function(object) {
-      return(private$validate(object))
-    },
-
-    fileSet = function(object) {
+    app = function(object) {
       return(private$validate(object))
     },
 
     #-------------------------------------------------------------------------#
-    #                      File and Corpus Sourcing Classes                   #
+    #                      Corpus Sourcing Classes                            #
     #-------------------------------------------------------------------------#
-    fssourceDir = function(object) {
-      return(private$validate(object))
-    },
-
     csourceDir = function(object) {
-      return(private$validate(object))
-    },
-
-    csourceFileSet = function(object) {
       return(private$validate(object))
     },
 
