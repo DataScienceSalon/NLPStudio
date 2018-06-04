@@ -101,11 +101,11 @@ Clone <- R6::R6Class(
     },
 
     cloneFile = function(x, path) {
+      fs <- FileStudio$new()
+      fs$copy(x, path)
       out <- File$new(path)
       out <- private$cloneMeta(x, out)
       out$setFilePath(path)
-      fs <- FileStudio$new()
-      fs$copy(x, path)
       event <- paste0("File, ", out$getName(), ", cloned.")
       out$message(event = event)
       return(out)

@@ -7,7 +7,7 @@
 #'
 #' Class registers files and filesets, and manipulates them, usually at raw binary files.
 #'
-#' @param x File or FileSet object
+#' @param x FileSet object
 #' @param path Character string containing a relative path to a file or
 #' directory.  It may also contain a glob expression that resolves to one
 #' or several files.
@@ -24,7 +24,9 @@ FileStudio <- R6::R6Class(
   private = list(
 
     ..fileSet = character(),
-
+    #-------------------------------------------------------------------------#
+    #                          Inspect File Method                            #
+    #-------------------------------------------------------------------------#
     inspectFile = function(f) {
 
       # Read Data
@@ -38,13 +40,15 @@ FileStudio <- R6::R6Class(
 
       # Capture quantitative rsults
       quant <- list()
-      quant$size <- file.info(path)[['size']]
+      quant$bytes <- file.info(path)[['size']]
       quant$lines <- length(text)
       quant <- c(quant, encodings)
       return(quant)
 
     },
-
+    #-------------------------------------------------------------------------#
+    #                          Repair File Method                             #
+    #-------------------------------------------------------------------------#
     repairFile = function(file, codes = NLPStudio:::nonPrintables) {
 
       path <- file$getFilePath()
@@ -69,7 +73,9 @@ FileStudio <- R6::R6Class(
 
       return(TRUE)
     },
-
+    #-------------------------------------------------------------------------#
+    #                          Get File Paths Method                          #
+    #-------------------------------------------------------------------------#
     getFilePaths = function(path) {
       if (isDirectory(path)) {
         files <- list.files(path, full.names = TRUE)
@@ -80,104 +86,154 @@ FileStudio <- R6::R6Class(
       }
       return(files)
     },
-
-    validate = function(x, methodName) {
+    #-------------------------------------------------------------------------#
+    #                        Validate Object Method                           #
+    #-------------------------------------------------------------------------#
+    validateObject = function(param, paramName, methodName) {
       private$..params <- list()
-      private$..params$classes$name <- list('x')
-      private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list(c('File', 'FileSet'))
+      private$..params$classes$name <- list(paramName)
+      private$..params$classes$objects <- list(param)
+      private$..params$classes$valid <- list(c('FileSet', 'File'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = methodName, event = v$msg, level = "Error")
         stop()
       }
+      return(TRUE)
+    },
+    #-------------------------------------------------------------------------#
+    #                       Validate Character Method                         #
+    #-------------------------------------------------------------------------#
+    validateChar = function(param, paramName, methodName) {
+      private$..params <- list()
+      private$..params$classes$name <- list(paramName)
+      private$..params$classes$objects <- list(param)
+      private$..params$classes$valid <- list(c('character'))
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = methodName, event = v$msg, level = "Error")
+        stop()
+      } else if (length(param) > 1) {
+        event <- paste0("Invalid ", paramName, " parameter.  Must be a single character string.")
+        private$logR$log(method = methodName, event = event, level = "Error")
+        stop()
+      }
+      return(TRUE)
     }
   ),
 
   public = list(
-
+    #-------------------------------------------------------------------------#
+    #                             Constructor                                 #
+    #-------------------------------------------------------------------------#
     initialize = function() {
-
-
       private$loadServices()
       invisible(self)
     },
-
+    #-------------------------------------------------------------------------#
+    #                             Build Method                                #
+    #-------------------------------------------------------------------------#
     build = function(path, name = NULL) {
 
-      fileSet <- FileSet$new(name = name)
+      # Validation
+      if (!file.exists(path)) {
+        event = paste0("Invalid path, ", path, " does not exist.")
+        private$logR$log(method = 'build', event = event, level = "Error")
+        stop()
+      }
+      if (!is.null(name)) private$validateChar(param = name, paramName = 'name', methodName = 'build')
 
+      fileSet <- FileSet$new(name = name)
       filePaths <- private$getFilePaths(path)
+
       for (i in 1:length(filePaths)) {
         file <- File$new(path = filePaths[i])
         fileSet$addFile(file)
       }
       return(fileSet)
     },
-
+    #-------------------------------------------------------------------------#
+    #                              Copy Method                                #
+    #-------------------------------------------------------------------------#
     copy = function(x, to) {
 
-      private$validate(x, methodName = 'copy')
+      private$validateObject(param = x, paramName = 'x', methodName = 'copy')
+      private$validateChar(param = to, paramName = 'to', methodName = 'copy')
 
-      if (class(x)[1] == 'File') {
-        path <- x$getFilePath()
-        file.copy(from = path, to = to, recursive = TRUE, overwrite = TRUE)
+      if (!file.exists(to)) dir.create(to, recursive = TRUE)
 
-      } else {
-        files <- x$getFiles()
-        for (i in 1:length(files)) {
-          path <- files[[i]]$getFilePath()
-          file.copy(from = path, to = to, recursive = TRUE, overwrite = TRUE)
-        }
+      files <- x$getFiles()
+      for (i in 1:length(files)) {
+        path <- files[[i]]$getFilePath()
+        file.copy(from = path, to = to, recursive = FALSE, overwrite = TRUE)
       }
-    },
 
+      # Create new FileSet object
+      fileSet <- self$build(path = to, name = paste0(x$getName(), " (Copy)"))
+      return(fileSet)
+    },
+    #-------------------------------------------------------------------------#
+    #                             Move Method                                 #
+    #-------------------------------------------------------------------------#
     move = function(x, to) {
 
-      private$validate(x, methodName = 'move')
+      private$validateObject(param = x, paramName = 'x', methodName = 'move')
+      private$validateChar(param = to, paramName = 'to', methodName = 'move')
 
-      if (class(x)[1] == 'File') {
-        path <- x$getFilePath()
-        file.rename(from = path, to = to)
+      if (!file.exists(to)) dir.create(to, recursive = TRUE)
 
-      } else {
-        files <- x$getFiles()
-        for (i in 1:length(files)) {
-          path <- files[[i]]$getFilePath()
-          file.rename(from = path, to = to)
-        }
+      files <- x$getFiles()
+      for (i in 1:length(files)) {
+        filePath <- files[[i]]$getFilePath()
+        fileName <- files[[i]]$getFileName()
+        newPath <- file.path(to, fileName)
+        file.rename(from = filePath, to = newPath)
+        file <- files[[i]]$setFilePath(newPath)
+        x$addFile(file)
+        if (length(list.files(path = dirname(filePath))) == 0) unlink(dirname(filePath), recursive = TRUE)
       }
+      return(x)
     },
-
+    #-------------------------------------------------------------------------#
+    #                           Inspect Method                                #
+    #-------------------------------------------------------------------------#
     inspect = function(fileSet) {
       files <- fileSet$getFiles()
-      quant <- rbindlist(lapply(files, function(f) {
+      lapply(files, function(f) {
         quant <- private$inspectFile(f)
         f$setQuant(quant)
         fileSet$addFile(f)
-        quant
-      }))
-      fileSet$setQuant(quant)
-      return(fileSet)
+        f$summary(section = c('i', 'q'))
+      })
+      invisible(fileSet)
     },
-
+    #-------------------------------------------------------------------------#
+    #                           Repair Method                                 #
+    #-------------------------------------------------------------------------#
     repair = function(fileSet, newPath, codes = NLPStudio:::nonPrintables) {
 
-      newFileSet <- Clone$new()$this(x = fileSet, reference = FALSE, path = newPath)
+      name = paste0(fileSet$getName(), " (Repaired)")
+      newFileSet <- self$copy(fileSet, newPath)
+      newFileSet <- NLPStudio::cloneMeta(fileSet, newFileSet)
+      newFileSet$setName(name = name)
 
       files <- newFileSet$getFiles()
       for (i in 1:length(files)) {
         private$repairFile(files[[i]],codes)
       }
 
-      name <- fileSet$getName()
-      name <- paste0(name, " (repaired)")
-      newFileSet$setName(name)
       # Log it
       event <- paste0("Executed ", class(self)[1], " on FileSet ", name, ". ")
       private$logR$log(method = 'execute', event = event)
 
       return(newFileSet)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                           Visitor Method                                #
+    #-------------------------------------------------------------------------#
+    accept = function(visitor)  {
+      visitor$fileStudio(self)
     }
   )
 )

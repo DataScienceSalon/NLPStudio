@@ -99,6 +99,9 @@ Primitive0 <- R6::R6Class(
       NLPStudio::printHeading(text = paste0(id, " Administrative Metadata"), symbol = "-")
       admin <- private$meta$get(type = 'admin')
       adminDf <- as.data.frame(admin, stringsAsFactors = FALSE, row.names = NULL)
+      if (admin$nModified == 0) {
+        adminDf <- adminDf[, !names(adminDf) %in% c("modified", "nModified", "modifiedBy")]
+      }
       print(adminDf, row.names = FALSE)
       return(admin)
     },

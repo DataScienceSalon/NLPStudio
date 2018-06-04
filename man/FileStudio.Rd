@@ -9,7 +9,7 @@
 FileStudio
 }
 \arguments{
-\item{x}{File or FileSet object}
+\item{x}{FileSet object}
 
 \item{path}{Character string containing a relative path to a file or
 directory.  It may also contain a glob expression that resolves to one

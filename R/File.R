@@ -27,15 +27,19 @@ File <- R6::R6Class(
         stop()
       }
       private$meta$set(key = 'path', value = path, type = 'f')
-      private$meta$set(key = 'fileName', value = basename(path), type = 'f')
       invisible(self)
     },
 
-    getFileName = function() private$meta$get(key = 'fileName'),
+    getFileName = function() basename(private$meta$get(key = 'path')),
     getFilePath = function() private$meta$get(key = 'path'),
+    setFilePath = function(path) {
+      private$meta$set(key = 'path', value = path, type = 'f')
+      invisible(self)
+    },
     getQuant = function() private$meta$get(type = 'q'),
     setQuant = function(quant) {
       private$meta$set(key = names(quant), value = unlist(quant), type = 'q')
+      invisible(self)
     },
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #
