@@ -80,14 +80,19 @@ ValidationVisitor <- R6::R6Class(
     nlpStudio = function(object) {
       return(private$validate(object))
     },
+    file = function(object) {
+      return(private$validate(object))
+    },
+    fileSet = function(object) {
+      return(private$validate(object))
+    },
+
     corpus = function(object) {
       return(private$validate(object))
-
     },
     document = function(object) {
       return(private$validate(object))
     },
-
     app = function(object) {
       return(private$validate(object))
     },

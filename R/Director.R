@@ -1,60 +1,44 @@
 #==============================================================================#
-#                               TextStudio                                     #
+#                               Director                                       #
 #==============================================================================#
-#' TextStudio
+#' Director
 #'
-#' \code{TextStudio} Class for performing text cleaning and preprocessing
+#' \code{Director} Class responsible for executing an NLP Pipeline
 #'
-#' @template textStudioClasses
-#'
-#' @section TextStudio methods:
-#' \strong{Core Methods:}
+#' @section Director methods:
 #'  \itemize{
-#'   \item{\code{new()}}{Method for instantiating a TextStudio.}
+#'   \item{\code{new()}}{Method for instantiating a Director.}
 #'   \item{\code{addCommand()}}{Method that adds a text processing command to the queue. }
 #'   \item{\code{removeCommand()}}{Method that removes a command from the queue.}
 #'   \item{\code{execute()}}{Method that executes the job queue. }
 #'   \item{\code{getResult()}}{Method that returns the object following execution of the job queue. }
 #'  }
 #'
-#' @section Parameters:
-#' @param object The object to be processed.
-#' @param queue The job queue containing text processing commands.
+#' @param cmd The class encapsulating a particular command.
 #'
 #' @docType class
 #' @author John James, \email{jjames@@datasciencesalon.org}
-#' @family TextStudio classes
+#' @family Director classes
 #' @export
-TextStudio <- R6::R6Class(
-  classname = "TextStudio",
+Director <- R6::R6Class(
+  classname = "Director",
   lock_objects = FALSE,
   lock_class = FALSE,
   inherit = Super,
+
+  private = list(
+    ..jobLog = data.frame()
+  ),
 
   public = list(
 
     #-------------------------------------------------------------------------#
     #                           Constructor                                   #
     #-------------------------------------------------------------------------#
-    initialize = function(x) {
+    initialize = function() {
 
-      private$loadDependencies()
-
-      private$..params <- list()
-      private$..params$classes$name <- list("x")
-      private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list(c("Corpus", "Document"))
-      v <- private$validator$validate(self)
-      if (v$code == FALSE) {
-        private$logR$log(method = 'initialize',
-                         event = v$msg, level = "Error")
-        stop()
-      }
-
-      private$..x <- Clone$new()$this(x = x)
-
-      # Create log entry
-      event <- paste0("TextStudio object instantiated.")
+      private$loadServices()
+      event <- paste0("Director object instantiated.")
       private$logR$log(method = 'initialize', event = event)
 
       invisible(self)
@@ -65,19 +49,18 @@ TextStudio <- R6::R6Class(
     #-------------------------------------------------------------------------#
     add = function(cmd) {
 
-      if (!c("TextStudio0") %in% class(cmd)) {
-        event <- paste0("Invalid TextStudio object. Object must be ",
-                                  "of the TextStudio0 classes.  See ?TextStudio0",
+      if (!c("App0") %in% class(cmd)) {
+        event <- paste0("Invalid Application object. Object must be derived ",
+                                  "from the App0 class.  See ?", class(self)[1],
                                   " for further assistance.")
         private$logR$log(method = 'add', event = event, level = "Error")
         stop()
       }
 
-      name <- class(cmd)[1]
-      private$..jobQueue[[name]] <- cmd
+      id <- cmd$getId()
+      private$..jobQueue[[id]] <- cmd
 
-      event <- paste0("Added ", name, " to ", private$..x$getName(),
-                                " job queue." )
+      event <- paste0("Added ", class(cmd)[1], " (", id, ") to job queue." )
       private$logR$log(method = 'add', event = event)
 
       invisible(self)
@@ -85,12 +68,10 @@ TextStudio <- R6::R6Class(
 
     remove = function(cmd) {
 
-      name <- class(cmd)[1]
-      private$..jobQueue[[name]] <- NULL
+      id <- cmd$getMeta(key = 'id')
+      private$..jobQueue[[id]] <- NULL
 
-      event <- paste0("Removed ", name, " from ", private$..x$getName(),
-                                " job queue." )
-      private$logR$log(method = 'remove', event = event)
+      event <- paste0("Removed ", class(cmd)[1], " (", id, ") from job queue." )
       invisible(self)
 
     },
@@ -106,24 +87,23 @@ TextStudio <- R6::R6Class(
           private$..x <- private$..jobQueue[[i]]$execute(private$..x)
         }
 
-        event <- paste0("Executed TextStudio commands on ",
-                                  private$..x$getName(), "." )
+        event <- paste0("Director pipeline complete." )
         private$logR$log(method = 'execute', event = event)
 
         invisible(private$..x)
       } else {
-        event <- paste0("TextStudio job queue is empty.")
-        private$logR$log(method = 'execute', event = event, level = 'Error')
-        stop()
+        event <- paste0("Director job queue is empty.")
+        private$logR$log(method = 'execute', event = event, level = 'Warn')
       }
+      invisible(self)
 
     },
 
     #-------------------------------------------------------------------------#
-    #                           Visitor Methods                               #
+    #                           Visitor Method                                #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$textStudio(self)
+      visitor$Director(self)
     }
   )
 )

@@ -25,7 +25,7 @@
 #'  metadata value associated with the key(s) parameter.
 #'
 #'
-#' @childType class
+#' @docType class
 #' @author John James, \email{jjames@@datasciencesalon.org}
 #' @family Child Classes
 #' @export
@@ -33,7 +33,7 @@ Composite0 <- R6::R6Class(
   classname = "Composite0",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = Primative0,
+  inherit = Primitive0,
 
   private = list(
     ..children = list(),
@@ -106,7 +106,7 @@ Composite0 <- R6::R6Class(
 
       heading <- paste0("Objects attached to ", self$getName())
       NLPStudio::printHeading(text = heading, symbol = "-")
-      childMeta <- self$getChildMeta(classname)
+      childMeta <- private$getChildMeta(classname)
       classes <- names(childMeta)
       lapply(seq_along(childMeta), function(x) {
 
@@ -228,7 +228,7 @@ Composite0 <- R6::R6Class(
       return(childMeta)
     },
     #-------------------------------------------------------------------------#
-    setChildMeta = function(childMeta, classname = "Primative0",
+    setChildMeta = function(childMeta, classname = "Primitive0",
                             type = 'descriptive') {
 
       # Validate class of object.
@@ -253,7 +253,7 @@ Composite0 <- R6::R6Class(
         stop()
       }
 
-      childs <- self$getChildren()
+      childs <- private$getChildren()
 
       if (nrow(childMeta) != length(childs)) {
         event <- paste0("The childMeta variable must be a data.frame or ",

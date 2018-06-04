@@ -15,7 +15,7 @@ FileSet <- R6::R6Class(
   classname = "FileSet",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = Primitive0,
+  inherit = Composite0,
 
   private = list(
     validate = function(file, methodName) {
@@ -33,7 +33,28 @@ FileSet <- R6::R6Class(
 
   public = list(
     initialize = function(name = NULL) {
-      loadServices(name = name)
+
+      private$loadServices(name = name)
+
+      # Validate class of object.
+      if (!is.null(name)) {
+        private$..params <- list()
+        private$..params$classes$name <- list('name')
+        private$..params$classes$objects <- list(name)
+        private$..params$classes$valid <- list(c('character'))
+        v <- private$validator$validate(self)
+        if (v$code == FALSE) {
+          private$logR$log(method = 'initialize',
+                           event = v$msg, level = "Error")
+          stop()
+        } else if (length(name) > 1) {
+          event <- "name must be a single character string"
+          private$logR$log(method = 'initialize',
+                           event = event, level = "Error")
+          stop()
+        }
+      }
+      invisible(self)
     },
 
     #-------------------------------------------------------------------------#

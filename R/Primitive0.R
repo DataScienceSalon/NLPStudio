@@ -1,15 +1,14 @@
 #------------------------------------------------------------------------------#
-#                               Document0                                      #
+#                               Primitive0                                     #
 #------------------------------------------------------------------------------#
-#' Document0
+#' Primitive0
 #'
-#' \code{Document0} Component class defining base methods for all documents.
+#' \code{Primitive0} Abstract class for all primative classes.
 #'
-#' This composite pattern component class defines members and methods common
-#' across all the document related classes, including without limitation,
-#' Corpus, Document, TermFreq, POS, NGram, and Tokens objects.
+#' Abstract class which defines the methods common to all primatives
+#' (and by inheritence, composite) objects.
 #'
-#' @section Document0 methods:
+#' @section Primitive0 methods:
 #'  \itemize{
 #'   \item{\code{new()}}{Method not implemented for this component class.}
 #'   \item{\code{summary()}}{Prints a summary of a Document family class object.}
@@ -19,60 +18,13 @@
 #' @author John James, \email{jjames@@datasciencesalon.org}
 #' @family Document Classes
 #' @export
-Document0 <- R6::R6Class(
-  classname = "Document0",
+Primitive0 <- R6::R6Class(
+  classname = "Primitive0",
   lock_objects = FALSE,
   lock_class = FALSE,
   inherit = Super,
 
   private = list(
-
-    ..parent = character(),
-    ..content = character(),
-
-    compress = function(x) {
-      memCompress(x, "g")
-    },
-
-    decompress = function(x) {
-      strsplit(memDecompress(x, "g", asChar = TRUE), "\n")[[1]]
-    },
-
-    setQuant = function(x) {
-      x <- paste0(unlist(x), sep = ' ')
-      vectors <- length(x)
-      sentences <- sum(tokenizers::count_sentences(x))
-      words <- sum(tokenizers::count_words(x))
-      types <- sum(quanteda::ntype(unlist(x)))
-      characters <- sum(tokenizers::count_characters(x))
-      k <- c("vectors", "sentences", "words", "types", "characters")
-      v <- c(vectors, sentences, words, types, characters)
-      private$meta$set(key = k, value = v, type = 'quant')
-      return(TRUE)
-    },
-
-    processContent = function(x, note = NULL) {
-
-      # Validate text
-      if (!is.null(x)) {
-        private$..params <- list()
-        private$..params$classes$name <- list('x')
-        private$..params$classes$objects <- list(x)
-        private$..params$classes$valid <- list(c('character', 'list'))
-        v <- private$validator$validate(self)
-        if (v$code == FALSE) {
-          private$logR$log(method = 'processContent',
-                           event = v$msg, level = "Error")
-          stop()
-        }
-
-        # Update text, compute statistics and update admin information
-        private$..content <- private$compress(x)
-        private$setQuant(x)
-        private$meta$modified(event = note)
-      }
-      return(TRUE)
-    },
 
     #-------------------------------------------------------------------------#
     #                           Summary Methods                               #
@@ -183,7 +135,7 @@ Document0 <- R6::R6Class(
         }
         if (length(value) != 1) {
           event <- paste0("The value parameter for the 'name' method ",
-                          "must be character a single string. See ?Document0 ",
+                          "must be character a single string. See ?Primitive0 ",
                           "for further assistance.")
           private$logR$log(method = 'name', event = v$msg, level = "Error")
           stop()
@@ -211,7 +163,7 @@ Document0 <- R6::R6Class(
         }
         if (length(value) != 1) {
           event <- paste0("The value parameter for the 'description' method ",
-                          "must be character a single string. See ?Document0 ",
+                          "must be character a single string. See ?Primitive0 ",
                           "for further assistance.")
           private$logR$log(method = 'description', event = v$msg, level = "Error")
           stop()
@@ -220,30 +172,13 @@ Document0 <- R6::R6Class(
         event <- paste0("Object description set to '", value, "' .")
         invisible(self)
       }
-    },
-
-    content = function(value) {
-
-      if (missing(value)) {
-        if (length(private$..content) > 0) {
-          if (is.raw(private$..content)) {
-            return(private$decompress(private$..content))
-          } else {
-            return(private$..content)
-          }
-        } else {
-          return(NULL)
-        }
-      } else {
-        private$processContent(value)
-      }
     }
   ),
 
 
 
   public = list(
-    initialize = function() {stop("This method is not implemented for this component class ")},
+    initialize = function() {stop("This method is not implemented for this abstract class ")},
 
     #-------------------------------------------------------------------------#
     #                             Metadata Methods                            #
@@ -255,20 +190,13 @@ Document0 <- R6::R6Class(
                                                        value = name,
                                                        type = 'i'))},
 
-    getMeta = function(key = NULL, type = NULL) {
-      return(private$meta$get(key = key, type = type))
-    },
-    setMeta = function(key, value, type = 'descriptive') {
-      private$meta$set(key = key, value = value, type = type)
-      invisible(self)
+    getMeta = function(key = NULL, type = NULL)  private$meta$get(key = key, type = type),
+    getQuant = function() private$meta$get(type = 'q'),
+    setQuant = function(quant) {
+      private$meta$set(key = names(quant), value = unlist(quant), type = 'q')
     },
 
     query = function(key, value) { return(private$meta$query(key, value)) },
-
-    setParent = function(x) {
-      private$..parent <- x
-      invisible(self)
-    },
 
     #-------------------------------------------------------------------------#
     #                            Message Method                               #
@@ -282,15 +210,19 @@ Document0 <- R6::R6Class(
     #                           Summary Method                                #
     #-------------------------------------------------------------------------#
     summary = function(section = NULL) {
+
       sd <- list()
 
       if (!is.null(section)) {
-        if (grepl("^i", section, ignore.case = TRUE)) sd$id <- private$summarizeIdMeta()
-        if (grepl("^d", section, ignore.case = TRUE)) sd$descriptive <- private$summarizeDescriptiveMeta()
-        if (grepl("^q", section, ignore.case = TRUE)) sd$quant <- private$summarizeQuantMeta()
-        if (grepl("^f", section, ignore.case = TRUE)) sd$functional  <- private$summarizeFunctionalMeta()
-        if (grepl("^a", section, ignore.case = TRUE)) sd$admin <- private$summarizeAdminMeta()
+        if ("i" %in% section) sd$id <- private$summarizeIdMeta()
+        if ("d" %in% section) sd$descriptive <- private$summarizeDescriptiveMeta()
+        if ("q" %in% section) sd$quant <- private$summarizeQuantMeta()
+        if ("f" %in% section) sd$functional  <- private$summarizeFunctionalMeta()
+        if ("a" %in% section) sd$admin <- private$summarizeAdminMeta()
+        if ("t" %in% section) sd$tech <- private$summarizeTechMeta()
+
       } else {
+
         sd$id <- private$summarizeIdMeta()
         sd$descriptive <- private$summarizeDescriptiveMeta()
         sd$quant <- private$summarizeQuantMeta()
@@ -298,7 +230,7 @@ Document0 <- R6::R6Class(
         sd$admin <- private$summarizeAdminMeta()
         sd$tech <- private$summarizeTechMeta()
       }
-      invisible(sd)
+      return(sd)
     },
 
     #-------------------------------------------------------------------------#
