@@ -19,7 +19,7 @@ RepairApp <- R6::R6Class(
   classname = "RepairApp",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = App0,
+  inherit = Cmd0,
 
   private = list(
     ..x = character(),

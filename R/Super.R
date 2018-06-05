@@ -41,6 +41,8 @@ Super <- R6::R6Class(
 
   public = list(
     initialize = function() { stop("This method is not implemented for this base class.")},
+    getId = function() private$meta$get(key = 'id', type = 'i'),
+    getName = function() private$meta$get(key = 'name', type = 'i'),
     getParams = function() { private$..params }
   )
 )

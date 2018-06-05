@@ -93,7 +93,15 @@ ValidationVisitor <- R6::R6Class(
     document = function(object) {
       return(private$validate(object))
     },
-    app = function(object) {
+
+    #-------------------------------------------------------------------------#
+    #                      Command Pattern Classes                            #
+    #-------------------------------------------------------------------------#
+    cmd = function(object) {
+      return(private$validate(object))
+    },
+
+    director = function(object) {
       return(private$validate(object))
     },
 

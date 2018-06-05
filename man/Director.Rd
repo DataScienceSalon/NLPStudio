@@ -20,7 +20,9 @@ Director
   \item{\code{new()}}{Method for instantiating a Director.}
   \item{\code{addCommand()}}{Method that adds a text processing command to the queue. }
   \item{\code{removeCommand()}}{Method that removes a command from the queue.}
+  \item{\code{validate()}}{Method that validates inputs/outputs at each stage of pipeline}
   \item{\code{execute()}}{Method that executes the job queue. }
+  \item{\code{printTasks()}}{Prints task list. }
   \item{\code{getResult()}}{Method that returns the object following execution of the job queue. }
  }
 }
