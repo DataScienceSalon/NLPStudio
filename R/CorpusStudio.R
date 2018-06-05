@@ -17,7 +17,7 @@
 #' which to split the Corpus object.
 #' @param n Numeric parameter used by the sample method. It contains the number
 #' of samples to obtain or the proportion of the Corpus to sample.
-#' @param stratified Logical. If TRUE (default), splits and sampling will
+#' @param stratify Logical. If TRUE (default), splits and sampling will
 #' be stratefied.
 #' @param replace Logical. If TRUE, sampling is conducted with replacement. The
 #' default is FALSE.
@@ -31,9 +31,11 @@
 #' @param test Numeric indicating the proportion of the Corpus to allocate
 #' to the test set. Acceptable values are between 0 and 1. The total of the
 #' values for the train, validation and test parameters must equal 1.
+#' @param seed Numeric used to initialize a pseudorandom number generator.
 #'
 #' @docType class
 #' @author John James, \email{jjames@@dataScienceSalon.org}
+#' @family CorpusStudio Family of Classes
 #' @export
 CorpusStudio <- R6::R6Class(
   classname = "CorpusStudio",
@@ -147,17 +149,30 @@ CorpusStudio <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                        Corpus Sample Method                             #
     #-------------------------------------------------------------------------#
-    sample = function(corpus, n, stratified = TRUE, replace = FALSE) {},
+    sample = function(corpus, n, name = NULL, stratify = TRUE, replace = FALSE,
+                      seed = NULL) {
+      sampler <- Sample$new()
+      corpus <- sampler$this(x = corpus, n = n, name = name, stratify = stratify,
+                             replace = replace, seed = seed)
+      return(corpus)
+    },
 
     #-------------------------------------------------------------------------#
     #                         Corpus Split Method                             #
     #-------------------------------------------------------------------------#
-    split = function(corpus, train, validation = 0, test, stratified = TRUE) {},
+    split = function(corpus, name = NULL, train = 0.75, validation = 0,
+                     test = 0.25,  stratify = TRUE, seed = NULL) {
+      splitter <- Split$new()
+      cvSet <- splitter$execute(corpus, name, train, validation, test,
+                                stratify, seed)
+      return(cvSet)
+    },
 
     #-------------------------------------------------------------------------#
     #                   Corpus kFold Split Method                             #
     #-------------------------------------------------------------------------#
-    kFold = function(corpus, k, stratified = TRUE) {},
+    kFold = function(corpus, k = 10, name = NULL, train = 0.75, validation = 0,
+                     test = 0.25,  stratify = TRUE, seed = NULL)  {},
 
     #-------------------------------------------------------------------------#
     #                         Corpus Load Method                              #
