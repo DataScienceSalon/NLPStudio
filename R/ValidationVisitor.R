@@ -108,6 +108,10 @@ ValidationVisitor <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                      Corpus Sourcing Classes                            #
     #-------------------------------------------------------------------------#
+    fileSource = function(object) {
+      return(private$validate(object))
+    },
+
     csourceDir = function(object) {
       return(private$validate(object))
     },

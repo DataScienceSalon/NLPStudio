@@ -25,6 +25,21 @@ FileStudio <- R6::R6Class(
 
     ..fileSet = character(),
     #-------------------------------------------------------------------------#
+    #                           Source File Method                            #
+    #-------------------------------------------------------------------------#
+    sourceFile = function(path) {
+      ext <- tolower(tools::file_ext(path))
+      file <- switch(ext,
+             csv = FileSourceCsv$new()$source(path),
+             docx = FileSourceDocx$new()$source(path),
+             html = FileSourceHtml$new()$source(path),
+             json = FileSourceJSON$new()$source(path),
+             txt  = FileSourceTxt$new()$source(path),
+             xml = FileSourceXml$new()$source(path)
+             )
+      return(file)
+    },
+    #-------------------------------------------------------------------------#
     #                          Inspect File Method                            #
     #-------------------------------------------------------------------------#
     inspectFile = function(f) {
@@ -147,7 +162,7 @@ FileStudio <- R6::R6Class(
       filePaths <- private$getFilePaths(path)
 
       for (i in 1:length(filePaths)) {
-        file <- File$new(path = filePaths[i])
+        file <- private$sourceFile(filePaths[i])
         fileSet$addFile(file)
       }
       return(fileSet)
