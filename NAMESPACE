@@ -3,6 +3,7 @@
 export(BuildFileSetCmd)
 export(Cmd0)
 export(Composite0)
+export(CorpusStudio)
 export(Director)
 export(File)
 export(FileSet)

@@ -156,7 +156,8 @@ FileStudio <- R6::R6Class(
         private$logR$log(method = 'build', event = event, level = "Error")
         stop()
       }
-      if (!is.null(name)) private$validateChar(param = name, paramName = 'name', methodName = 'build')
+      if (!is.null(name)) private$validateChar(param = name, paramName = 'name',
+                                               methodName = 'build')
 
       fileSet <- FileSet$new(name = name)
       filePaths <- private$getFilePaths(path)
@@ -228,8 +229,8 @@ FileStudio <- R6::R6Class(
     repair = function(fileSet, newPath, codes = NLPStudio:::nonPrintables) {
 
       name = paste0(fileSet$getName(), " (Repaired)")
-      newFileSet <- self$copy(fileSet, newPath)
-      newFileSet <- NLPStudio::cloneMeta(fileSet, newFileSet)
+      newFileSet <- Clone$new()$this(x = fileSet, reference = TRUE,
+                                     path = newPath)
       newFileSet$setName(name = name)
 
       files <- newFileSet$getFiles()
