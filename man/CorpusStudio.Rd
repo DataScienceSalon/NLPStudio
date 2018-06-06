@@ -12,11 +12,48 @@ CorpusStudio
 \item{x}{a FileSet object containing .txt files or a character string
 containing the directory containing .txt files.}
 
+\item{corpus}{Corpus object}
+
 \item{name}{Character string containing the name to assign to the Corpus
 object.}
+
+\item{path}{Character string containing a relative path to a directory
+containing text files or a relative file path for a Corpus object. This
+parameter is used in the load and save methods.}
+
+\item{k}{Numeric used by the kFold method. Indicates number of folds in
+which to split the Corpus object.}
+
+\item{n}{Numeric parameter used by the sample method. It contains the number
+of samples to obtain or the proportion of the Corpus to sample.}
+
+\item{stratify}{Logical. If TRUE (default), splits and sampling will
+be stratefied.}
+
+\item{replace}{Logical. If TRUE, sampling is conducted with replacement. The
+default is FALSE.
+object.}
+
+\item{train}{Numeric indicating the proportion of the Corpus to allocate
+to the training set. Acceptable values are between 0 and 1. The total of the
+values for the train, validation and test parameters must equal 1.}
+
+\item{validation}{Numeric indicating the proportion of the Corpus to allocate
+to the validation set. Acceptable values are between 0 and 1. The total of the
+values for the train, validation and test parameters must equal 1.}
+
+\item{test}{Numeric indicating the proportion of the Corpus to allocate
+to the test set. Acceptable values are between 0 and 1. The total of the
+values for the train, validation and test parameters must equal 1.}
+
+\item{seed}{Numeric used to initialize a pseudorandom number generator.}
 }
 \description{
 \code{CorpusStudio}  Class responsible for building and manipulating Corpus objects.
+}
+\seealso{
+Other CorpusStudio Family of Classes: \code{\link{SplitKFold}},
+  \code{\link{Split}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

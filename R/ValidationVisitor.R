@@ -106,9 +106,16 @@ ValidationVisitor <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                      Corpus Sourcing Classes                            #
+    #                       File Sourcing Classes                             #
     #-------------------------------------------------------------------------#
     fileSource = function(object) {
+      return(private$validate(object))
+    },
+
+    #-------------------------------------------------------------------------#
+    #                      Corpus Sourcing Classes                            #
+    #-------------------------------------------------------------------------#
+    csourceFileSet = function(object) {
       return(private$validate(object))
     },
 
@@ -131,11 +138,15 @@ ValidationVisitor <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                      Cross-Validation Classes                           #
     #-------------------------------------------------------------------------#
-    cvSet = function(object) {
+    split = function(object) {
       return(private$validate(object))
     },
 
-    cvHoldOut = function(object) {
+    splitKFold = function(object) {
+      return(private$validate(object))
+    },
+
+    cvSet = function(object) {
       return(private$validate(object))
     },
 
@@ -208,11 +219,11 @@ ValidationVisitor <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                             Studio Classes                              #
     #-------------------------------------------------------------------------#
-    fileStudio0 = function(object) {
+    fileStudio = function(object) {
       return(private$validate(object))
     },
 
-    fileStudio = function(object) {
+    corpusStudio = function(object) {
       return(private$validate(object))
     },
 

@@ -43,39 +43,6 @@ CorpusStudio <- R6::R6Class(
   lock_class = FALSE,
   inherit = Super,
 
-  private = list(
-    #-------------------------------------------------------------------------#
-    #                          Get File Paths Method                          #
-    #-------------------------------------------------------------------------#
-    getFilePaths = function(x) {
-
-      if ("FileSet" %in% class(x)) {
-        files <- x$getFiles()
-        filePaths <- unlist(lapply(files, function(f) { f$getFilePath() }))
-      } else if (isDirectory(x)) {
-        filePaths <- list.files(x, full.names = TRUE)
-      } else {
-        glob <- basename(x)
-        dir <- dirname(x)
-        filePaths <- list.files(dir, pattern = glob2rx(glob), full.names = TRUE)
-      }
-      return(filePaths)
-    },
-    #-------------------------------------------------------------------------#
-    #                         Quant Summation Method                          #
-    #-------------------------------------------------------------------------#
-    sumQuant = function(corpus) {
-      # Update quantitative metadata
-      quant <- corpus$getDocMeta(type = 'q')[[1]]
-      if (nrow(quant) > 0) {
-        keys <- c(names(quant), 'documents')
-        values <- c(colSums(quant), nrow(quant))
-        corpus$setMeta(key = keys, value = values, type = 'q')
-      }
-      return(corpus)
-    }
-  ),
-
   public = list(
     #-------------------------------------------------------------------------#
     #                             Constructor                                 #
@@ -89,48 +56,17 @@ CorpusStudio <- R6::R6Class(
     #-------------------------------------------------------------------------#
     build = function(x, name = NULL) {
 
-      # Validate class of object.
-      private$..params <- list()
-      private$..params$classes$name <- list('x')
-      private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list(c('FileSet', 'character'))
-      v <- private$validator$validate(self)
-      if (v$code == FALSE) {
-        private$logR$log(method = 'build', event = v$msg, level = "Error")
-        stop()
-      }
-
-      # Ascertain corpus source
-      if ("FileSet" %in% class(x)) {
-        corpusSource <- paste0(class(x)[1], " (", x$getName(), ")")
+      classname <- class(x)[1]
+      if (isDirectory(x)) {
+        corpus <- CSourceDir$new()$source(x, name)
       } else {
-        corpusSource <- x
+        corpus <- switch(classname,
+                         FileSet = CSourceFileSet$new()$source(x, name),
+                         corpus = CSourceQuanteda$new()$source(x, name),
+                         tm = CSourceTM$new()$source(x, name),
+                         character = CSourceVector$new()$source(x, name))
+
       }
-
-      # Instantiate Corpus
-      corpus <- Corpus$new(name = name)
-      corpus$setMeta(key = 'source', value = corpusSource, type = 'f')
-
-      # Obtain file paths and create Document objects.
-      filePaths <- private$getFilePaths(x)
-      lapply(filePaths, function(p) {
-
-        # Obtain content and extract document name from filepath
-        io <- IOFactory$new()$strategy(p)
-        content <- io$read(p)
-        name <- tools::file_path_sans_ext(basename(p))
-
-        # Create document object and update metadata
-        doc <- Document$new(x = content, name = name)
-        doc$setMeta(key = 'source', value = p, type = 'f')
-
-        # Add Document object to Corpus
-        corpus$addDocument(x = doc)
-      })
-
-      # Summarize quantitative data
-      corpus <- private$sumQuant(corpus)
-
       return(corpus)
     },
 

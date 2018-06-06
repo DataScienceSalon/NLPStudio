@@ -194,6 +194,10 @@ Primitive0 <- R6::R6Class(
                                                        type = 'i'))},
 
     getMeta = function(key = NULL, type = NULL)  private$meta$get(key = key, type = type),
+    setMeta = function(key, value, type = 'd') {
+      private$meta$set(key = key, value = value, type = type)
+      invisible(self)
+    },
     getQuant = function() private$meta$get(type = 'q'),
     setQuant = function(quant) {
       private$meta$set(key = names(quant), value = unlist(quant), type = 'q')

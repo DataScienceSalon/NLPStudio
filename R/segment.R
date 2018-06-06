@@ -20,11 +20,10 @@
 #'
 #' @return List of Corpus objects
 #'
-#' @docType function
 #' @author John James, \email{jjames@@datasciencesalon.org}
 #' @export
-segment <- function(corpus, n = 2, weights = c(0.75, 0.25), stratify = TRUE,
-                    seed = NULL){
+segment <- function(corpus, n = 3, weights = NULL, stratify = TRUE,
+                    seed = NULL) {
 
   splitDocument = function(document, n, weights, seed) {
 
@@ -39,10 +38,8 @@ segment <- function(corpus, n = 2, weights = c(0.75, 0.25), stratify = TRUE,
 
     splits <- list()
     for (i in 1:n) {
-      name <- paste(document$getName(), "Segment", i)
       splits[[i]] <- Clone$new()$this(x = document, reference = FALSE)
-      splits[[i]]$setName(name)
-      splits[[i]]$content <- x$content[idx == i]
+      splits[[i]]$content <- document$content[idx == i]
     }
 
     return(splits)
@@ -52,11 +49,13 @@ segment <- function(corpus, n = 2, weights = c(0.75, 0.25), stratify = TRUE,
     if (!(class(corpus)[1] == 'Corpus')) {
       stop("Invalid Corpus class object.")
     }
-    if (!(class(n)[1] == 'numeric')) {
+    if (!(class(n)[1] %in% c('numeric', 'integer'))) {
       stop("Invalid 'n' parameter.  Must be numeric.")
     }
-    if (!(class(weights)[1] == 'numeric')) {
-      stop("Invalid 'weights' parameter.  Must be numeric vector of length n.")
+    if (!is.null(weights)) {
+      if (!(class(weights)[1] == 'numeric')) {
+        stop("Invalid 'weights' parameter.  Must be numeric vector of length n.")
+      }
     }
     if (!(class(stratify)[1] == 'logical')) {
       stop("Invalid 'stratify' parameter.  Must be logical.")
@@ -70,6 +69,17 @@ segment <- function(corpus, n = 2, weights = c(0.75, 0.25), stratify = TRUE,
         stop("Weights vector must be of length n.")
       }
     }
+  }
+
+  sumQuant = function(corpus) {
+    # Update quantitative metadata
+    quant <- corpus$getDocMeta(type = 'q')[[1]]
+    if (nrow(quant) > 0) {
+      keys <- c(names(quant), 'documents')
+      values <- c(colSums(quant), nrow(quant))
+      corpus$setMeta(key = keys, value = values, type = 'q')
+    }
+    return(corpus)
   }
 
   getDocuments = function(corpus, stratify) {
@@ -90,7 +100,7 @@ segment <- function(corpus, n = 2, weights = c(0.75, 0.25), stratify = TRUE,
 
   # segment Documents
   docSegments <- lapply(documents, function(d) {
-    private$splitDocument(d, n, weights, seed)
+    splitDocument(d, n, weights, seed)
   })
 
   # Combine Document objects into Corpus objects
@@ -98,10 +108,11 @@ segment <- function(corpus, n = 2, weights = c(0.75, 0.25), stratify = TRUE,
   corpora <- list()
   for (i in 1:n) {
     corpora[[i]] <- Clone$new()$this(corpus, reference = FALSE)
-    corpora[[i]]$setName(name = paste(name, "Segment", i))
-    for (j in 1:length(docsegments)) {
+    for (j in 1:length(docSegments)) {
       corpora[[i]]$addDocument(docSegments[[j]][[i]])
     }
+    corpora[[i]] <- sumQuant(corpora[[i]])
   }
+
   return(corpora)
 }

@@ -23,6 +23,10 @@ Abstract class which defines the methods common to all primatives
  }
 }
 
+\seealso{
+Other Document Classes: \code{\link{Corpus}},
+  \code{\link{Document}}
+}
 \author{
 John James, \email{jjames@datasciencesalon.org}
 }

@@ -4,7 +4,7 @@
 #' tokenize
 #'
 #' \code{tokenize} Creates sentence, word and character tokens. A wrapper for
-#' \code{\link[tokenizers]{tokenize}}
+#' the tokenize functions inte tokenizer package.
 #' Source \url{https://cran.r-project.org/web/packages/tokenizers/tokenizers.pdf}
 #'
 #' @param x Character vector containing texts

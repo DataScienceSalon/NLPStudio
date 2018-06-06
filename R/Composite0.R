@@ -302,7 +302,7 @@ Composite0 <- R6::R6Class(
         sd$admin <- private$summarizeAdminMeta()
         sd$tech <- private$summarizeTechMeta()
       }
-      return(sd)
+      invisible(sd)
     }
   )
 )
