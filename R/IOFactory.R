@@ -44,12 +44,21 @@ IOFactory <- R6::R6Class(
     strategy = function(path) {
 
       type <- tolower(tools::file_ext(path))
+      supportedTypes <- c('txt', 'csv', 'rdata', 'rds')
+
+      if (!(type %in% supportedTypes)) {
+        event <- paste0("File type, ", type, ", is not currently supported. ",
+                       "Supported file types include ", supportedTypes, ".",
+                       "See ", class(self)[1], " for further assistance.")
+        private$logR$log(method = 'strategy', event = event, level = "Error")
+        stop()
+      }
 
       io <- switch(type,
                    txt = IOText$new(),
                    csv = IOCSV$new(),
                    rdata = IORdata$new(),
-                   rds = IORDS$new())
+                   rds = IORds$new())
 
       return(io)
     },

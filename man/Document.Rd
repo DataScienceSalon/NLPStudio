@@ -9,6 +9,9 @@
 skiReport <- Document$new(name = "skiReport", purpose = 'Train')
 }
 \arguments{
+\item{x}{Character string containing either a File object, a path to a single file, or a
+character vector containing text.}
+
 \item{name}{Character string containing the name for the Document object.}
 
 \item{purpose}{Character string used to indicate how the document will be used, e.g. 'train', 'test'.}

@@ -31,7 +31,8 @@ of TRUE is returned if the write was successful, FALSE otherwise.
 
 \seealso{
 Other Input / Output Classes: \code{\link{IOBin}},
-  \code{\link{IORdata}}, \code{\link{IOText}}
+  \code{\link{IORdata}}, \code{\link{IORds}},
+  \code{\link{IOText}}
 }
 \author{
 John James, \email{jjames@DataScienceSalon.org}

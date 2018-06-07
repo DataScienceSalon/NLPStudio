@@ -21,6 +21,9 @@ object.}
 containing text files or a relative file path for a Corpus object. This
 parameter is used in the load and save methods.}
 
+\item{mode}{Character string indicating the mode for writing a Corpus object.
+Valid values are c("text", "binary", "object"). Abbreviations are permitted.}
+
 \item{k}{Numeric used by the kFold method. Indicates number of folds in
 which to split the Corpus object.}
 

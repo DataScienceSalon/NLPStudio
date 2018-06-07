@@ -80,7 +80,7 @@ CSourceFileSet <- R6::R6Class(
 
       corpus <- private$sumQuant(corpus)
 
-      event <- paste0("Corpus ", corpus$getName(), " sourced from ", x)
+      event <- paste0("Corpus ", corpus$getName(), " sourced from ", x$getName())
       corpus$message(event = event)
 
       return(corpus)

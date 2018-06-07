@@ -59,15 +59,8 @@ CSourceDir <- R6::R6Class(
       corpus <- Corpus$new(name = name)
       corpus$setMeta(key = 'source', value = x, type = 'f')
 
-      # Get paths for individual documents
-      if (isDirectory(x)) {
-        paths <- list.files(x, full.names = TRUE)
-      } else {
-        glob <- basename(x)
-        dir <- dirname(x)
-        paths <- list.files(dir, pattern = glob2rx(glob), full.names = TRUE)
-      }
-
+      # Create Document objects from file paths.
+      paths <- NLPStudio:::listFiles(x)
       lapply(paths, function(p) {
 
         io <- IOFactory$new()$strategy(p)

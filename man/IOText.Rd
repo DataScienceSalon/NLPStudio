@@ -30,7 +30,8 @@ returns TRUE if the write was sucessful, FALSE otherwise.
 
 \seealso{
 Other Input / Output Classes: \code{\link{IOBin}},
-  \code{\link{IOCSV}}, \code{\link{IORdata}}
+  \code{\link{IOCSV}}, \code{\link{IORdata}},
+  \code{\link{IORds}}
 }
 \author{
 John James, \email{jjames@DataScienceSalon.org}
