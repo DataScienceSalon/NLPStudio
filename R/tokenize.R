@@ -22,6 +22,10 @@ tokenize = function(x, tokenUnit = 'word', nGrams = NULL, lowercase = FALSE, rem
   if (!is.null(nGrams)) {
     tokens <- tokenizers::tokenize_ngrams(x, lowercase = lowercase, n = nGrams, n_min = nGrams)
 
+  } else if (grepl("^c", tokenUnit, ignore.case = TRUE)) {
+    tokens <- tokenizers::tokenize_characters(x = x, lowercase = lowercase,
+                                         simplify = FALSE)
+
   } else if (grepl("^w", tokenUnit, ignore.case = TRUE)) {
     tokens <- tokenizers::tokenize_words(x = x, lowercase = lowercase,
                                          strip_punct = removePunct,

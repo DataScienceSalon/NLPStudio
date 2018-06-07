@@ -53,7 +53,7 @@ are combined into a single cross-validation set or CVSet object.
 Other Corpus Split Family of Classes: \code{\link{SplitKFold}}
 
 Other CorpusStudio Family of Classes: \code{\link{CorpusStudio}},
-  \code{\link{SplitKFold}}
+  \code{\link{SplitKFold}}, \code{\link{Tokenizer}}
 }
 \author{
 John James, \email{jjames@datasciencesalon.org}

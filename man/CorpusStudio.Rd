@@ -56,7 +56,7 @@ values for the train, validation and test parameters must equal 1.}
 }
 \seealso{
 Other CorpusStudio Family of Classes: \code{\link{SplitKFold}},
-  \code{\link{Split}}
+  \code{\link{Split}}, \code{\link{Tokenizer}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

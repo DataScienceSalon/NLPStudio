@@ -90,6 +90,11 @@ ValidationVisitor <- R6::R6Class(
     corpus = function(object) {
       return(private$validate(object))
     },
+
+    token = function(object) {
+      return(private$validate(object))
+    },
+
     document = function(object) {
       return(private$validate(object))
     },

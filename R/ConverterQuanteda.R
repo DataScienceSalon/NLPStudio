@@ -89,7 +89,7 @@ ConverterQuanteda <- R6::R6Class(
       for (i in 1:length(x$documents$texts)) {
         doc <- Document$new(x = x$documents$texts[i], name = docNames[i])
         doc$setMeta(key = 'source',
-                    value = paste0('Quanteda Corpus, ', docNames[i], ", Text."),
+                    value = paste0('Quanteda Corpus, ', docNames[i]),
                     type = 'f')
         corpus$addDocument(doc)
       }

@@ -121,10 +121,10 @@ Composite0 <- R6::R6Class(
         # Combine data into a single data frame
         childSummary <- sections[[1]]
         for (i in 2:length(sections)) {
-          if (nrow(sections[[i]]) > 0)  childSummary <- cbind(childSummary, sections[[i]])
+         if (nrow(sections[[i]]) > 0)  childSummary <- cbind(childSummary, sections[[i]])
         }
 
-        # Remove non-essential data, replace NAs with spaces and print
+        #Remove non-essential data, replace NAs with spaces and print
         childSummary <- childSummary %>% select(-modified, -modifiedBy, -nModified,
                                             -lastState, -hardware, -os,
                                             -release, -version)
