@@ -38,11 +38,13 @@ Sample <- R6::R6Class(
 
   private = list(
     ..x = character(),
+    ..sample = character(),
     ..n = numeric(),
     ..name = character(),
     ..stratify = logical(),
     ..replace = logical(),
-    ..seed = numeric(),
+    ..seed = integer(),
+    ..unseed = integer(),
 
     validate = function(x, n, unit, stratify, replace) {
 
@@ -50,7 +52,7 @@ Sample <- R6::R6Class(
       private$..params <- list()
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list(c('Document', 'Corpus'))
+      private$..params$classes$valid <- list(c('Corpus', 'Token'))
       private$..params$logicals$variables <- c('stratify', 'replace')
       private$..params$logicals$values <- c(stratify, replace)
       v <- private$validator$validate(self)
@@ -76,12 +78,19 @@ Sample <- R6::R6Class(
     sampleDocument = function(x) {
 
       size <- private$..n
-      if (size <= 1) size <- floor(size * length(x$content))
+      content <- unlist(x$content)
 
-      if (length(private$..seed) > 0) set.seed(private$..seed)
+      if (size <= 1) size <- floor(size * length(content))
 
-      idx <- sample(1:length(x$content), size = size, replace = private$..replace)
-      samples <- x$content[idx]
+      if (length(private$..seed) > 0)  {
+        set.seed(private$..seed)
+        private$..unseed <- private$..unseed + 1
+      }
+
+      idx <- sample(1:length(content), size = size, replace = private$..replace)
+      if (length(private$..seed) > 0)  set.seed(private$..unseed)
+
+      samples <- content[idx]
 
       # Create Document
       name <- paste0(x$getName(), " (sample)")
@@ -91,10 +100,9 @@ Sample <- R6::R6Class(
 
     sampleCorpus = function() {
 
-      # Create corpus
-      corpus <- Clone$new()$this(x = private$..x, reference = FALSE)
+      # Create private$..sample
       if (is.null(private$..name)) private$..name <- paste0(private$..x$getName(), " (sample)")
-      corpus$setName(private$..name)
+      private$..sample$setName(private$..name)
 
       # Extract and if stratify is false, combine documents
       documents <- private$..x$getDocuments()
@@ -105,13 +113,13 @@ Sample <- R6::R6Class(
                                                                   private$..x$getName(), " document"))
       }
 
-      # Sample documents and add to corpus
+      # Sample documents and add to private$..sample
       for (i in 1:length(documents)) {
         doc <- private$sampleDocument(documents[[i]])
-        corpus$addDocument(doc)
+        private$..sample$addDocument(doc)
       }
 
-      return(corpus)
+      return(TRUE)
     }
   ),
 
@@ -132,23 +140,20 @@ Sample <- R6::R6Class(
                     replace = FALSE, seed = NULL) {
 
       private$validate(x, n, unit, stratify, replace)
-      private$..x <- Clone$new()$this(x, reference = TRUE)
+      private$..x <- x
+      private$..sample <- Clone$new()$this(x, reference = FALSE)
       private$..n <- n
       private$..name <- name
       private$..stratify <- stratify
       private$..replace <- replace
       private$..seed <- seed
+      private$..unseed <- seed
 
-
-      if (class(x)[1] == 'Corpus') {
-        sample <- private$sampleCorpus()
-      } else {
-        sample <- private$sampleDocument(private$..x)
-      }
+      private$sampleCorpus()
 
       event <- paste0("Sampled ", class(x)[1], ", ", x$getName(), ".")
       private$logR$log(method = 'this', event = event)
-      return(sample)
+      return(private$..sample)
     },
 
     #-------------------------------------------------------------------------#

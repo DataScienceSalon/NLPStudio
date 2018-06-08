@@ -253,47 +253,54 @@ CorpusStudio <- R6::R6Class(
       # Validate
       private$validate(corpus, methodName = 'write')
 
+      # Validate mode
+      if ((grepl("^t", mode, ignore.case = TRUE))) mode <- 'text'
+      if ((grepl("^b", mode, ignore.case = TRUE))) mode <- 'binary'
+      if ((grepl("^o", mode, ignore.case = TRUE))) mode <- 'object'
       private$..params <- list()
       private$..params$discrete$variables = list('mode')
       private$..params$discrete$values = list(mode)
-      private$..params$discrete$valid = list(c('text', 'binary', 'object',
-                                               't', 'b', 'o'))
+      private$..params$discrete$valid = list(c('text', 'binary', 'object'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'write', event = v$msg, level = "Error")
         stop()
       }
 
-      # Write text or binary format
-      if (mode %in% c('t', 'b')) {
+      # Validate that directories are provided for text and binary modes.
+      if (mode %in% c('text', 'binary')) {
         if (tools::file_ext(path) != "") {
           event <- paste0("Invalid path parameter. Path must be a directory. ",
                           "See ?", class(self)[1], " for further assistance.")
           private$logR$log(method = 'writeText', event = event, level = "Error")
           stop()
         }
-        if (mode == 't') {
-          io <- IOText$new()
-          ext <- ".txt"
-        } else {
-          io <- IOBin$new()
-          ext <- ".bin"
-        }
-        documents <- corpus$getDocuments()
-        lapply(documents, function(d) {
-          name <- d$getName()
-          p <- file.path(path, paste0(name, ext))
-          io$write(path = p, content = d$content)
-        })
-      # Else serialize the object
-      } else {
+      }
+
+      if (mode == 'object') {
         if (tools::file_ext(path) == "") {
           path <- file.path(path, paste0(corpus$getName(), ".Rds"))
         }
-        io <- IOFactory$new()$strategy(path)
+        io <- IORds$new()
         io$write(path = path, content = corpus)
+      } else {
+        documents <- corpus$getDocuments()
+        if (mode == 'binary') {
+          io <- IOBin$new()
+          lapply(documents, function(d) {
+            name <- d$getName()
+            path <- file.path(path, paste0(name, ".bin"))
+            io$write(path = path, content = d$content)
+          })
+        } else {
+          io <- IOText$new()
+          lapply(documents, function(d) {
+            name <- d$getName()
+            path <- file.path(path, paste0(name, ".txt"))
+            io$write(path = path, content = d$content)
+          })
+        }
       }
-
       invisible(self)
     },
 

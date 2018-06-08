@@ -27,19 +27,22 @@ segment <- function(corpus, n = 3, weights = NULL, stratify = TRUE,
 
   splitDocument = function(document, n, weights, seed) {
 
-    # Set seed (if requested) and sampling probabilities
-    if (!is.null(seed)) set.seed(seed)
+    # Set weights
     if (is.null(weights)) weights <- rep(1/n, n)
 
+    content <- unlist(document$content)
+
+    # Set seed
+    if (length(seed) > 0)  set.seed(seed)
 
     # Create indices and splits
-    idx <- sample(n, size = length(document$content), replace = TRUE,
+    idx <- sample(n, size = length(content), replace = TRUE,
                   prob = weights)
 
     splits <- list()
     for (i in 1:n) {
       splits[[i]] <- Clone$new()$this(x = document, reference = FALSE)
-      splits[[i]]$content <- document$content[idx == i]
+      splits[[i]]$content <- content[idx == i]
     }
 
     return(splits)
@@ -83,15 +86,15 @@ segment <- function(corpus, n = 3, weights = NULL, stratify = TRUE,
   }
 
   getDocuments = function(corpus, stratify) {
-      docs <- corpus$getDocuments()
-      # Create single Document object if stratify is FALSE
-      if (stratify == FALSE) {
-        content <- unlist(lapply(docs, function(d) {
-          d$content
-        }))
-        docs <- list(Document$new(x = content, name = paste(corpus$getName(), "Document")))
-      }
-      return(docs)
+    docs <- corpus$getDocuments()
+    # Create single Document object if stratify is FALSE
+    if (stratify == FALSE) {
+      content <- unlist(lapply(docs, function(d) {
+        d$content
+      }))
+      docs <- list(Document$new(x = content, name = paste(corpus$getName(), "Document")))
+    }
+    return(docs)
   }
 
   # Perform validation and obtain documents.

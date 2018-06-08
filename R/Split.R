@@ -43,6 +43,7 @@ Split <- R6::R6Class(
   private = list(
 
     ..corpus = character(),
+    ..unseed = integer(),
 
     splitCorpus = function(name, train, validation, test,  stratify, seed) {
 
@@ -55,6 +56,10 @@ Split <- R6::R6Class(
 
       # Segment private$..corpus
       corpora <- NLPStudio::segment(private$..corpus, nSets, weights, stratify, seed)
+      if (length(seed) > 0) {
+        private$..unseed <- private$..unseed + 1
+        set.seed(private$..unseed)
+      }
 
       # Create CVSet
       cvSetName <- name
@@ -128,6 +133,7 @@ Split <- R6::R6Class(
 
       private$validate(corpus, train, validation, test, stratify, seed)
       private$..corpus <- corpus
+      private$..unseed <- seed
       cvSet <- private$splitCorpus(name, train, validation, test,  stratify, seed)
       private$..corpus <- NULL
       return(cvSet)

@@ -74,9 +74,10 @@ Meta <- R6::R6Class(
 
       # Setup Identity Metadata
       private$..meta$identity$classname <- class(x)[1]
-      settings <- hashids::hashid_settings(salt = 'this is my salt', min_length = 8)
-      private$..meta$identity$id <- toupper(hashids::encode(as.integer(Sys.time()) * 1000000 +
-                                                      sample(1:1000, 1, replace = TRUE), settings))
+      settings <- hashids::hashid_settings(salt = "some salt, or garlic sliced thinly",
+                                           min_length = 12)
+      private$..meta$identity$id <- hashids::encode(as.integer(Sys.time()) * 1000 +
+                                                      sample(1:10000, 1, replace = TRUE), settings)
 
       # Setup Descriptive Metadata
       if (!is.null(name)) {
