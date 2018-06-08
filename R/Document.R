@@ -18,8 +18,7 @@
 #'   \item{\code{overview()}}{Provides a subset of the metadata in a one-row data.frame format.
 #'   This is used by the parent class's summary method.  }
 #'  }
-#' @param x Character string containing either a File object, a path to a single file, or a
-#' character vector containing text.
+#' @param x Character vector of text.
 #' @param name Character string containing the name for the Document object.
 #' @param purpose Character string used to indicate how the document will be used, e.g. 'train', 'test'.
 #' @param note Character string containing a comment associated with a call to the
@@ -92,50 +91,6 @@ Document <- R6::R6Class(
         private$..content <- private$compress(x)
         private$setQuant(x)
         private$meta$modified(event = note)
-      }
-      return(TRUE)
-    },
-
-    obtainContent = function(x) {
-
-      if (class(x)[1] == 'list') {
-        private$processContent(x, note = "Content added to Document object.")
-        return(TRUE)
-      } else if (class(x)[1] == 'character') {
-        if (sum(grepl(" ", x, fixed = TRUE)) > 0) {
-          private$processContent(x, note = "Content added to Document object.")
-          return(TRUE)
-        } else {
-          path <- NLPStudio:::listFiles(x)
-        }
-      } else {
-        path <- x$getFilePath()
-      }
-
-      # Validate path
-      if (length(path) > 1) {
-        event <- paste0("Invalid 'x' parameter. If 'x' is a path to a file, ",
-                        "it must resolve to a single file.")
-        private$logR$log(method = 'name', event = event, level = "Error")
-        stop()
-      } else if (length(path) == 0) {
-        event <- paste0("Invalid 'x' parameter. File does not exist.")
-        private$logR$log(method = 'name', event = event, level = "Error")
-        stop()
-      }
-
-      # Load content from file path
-      io <- IOFactory$new()$strategy(path)
-      content <- io$read(path)
-      private$processContent(content,
-                             note = paste0("Content added from ", path, "."))
-
-      # Update name
-      id <- private$meta$get(key = 'id')
-      name <- private$meta$get(key = 'name')
-      if (id == name) {
-        name <- tools::file_path_sans_ext(basename(path))
-        private$meta$set(key = 'name', value = name, type = 'i')
       }
       return(TRUE)
     }
@@ -240,7 +195,7 @@ Document <- R6::R6Class(
         stop()
       }
 
-      private$obtainContent(x)
+      private$processContent(x)
 
       private$logR$log(method = 'initialize',
                        event = "Initialization complete.")

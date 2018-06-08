@@ -75,8 +75,6 @@ CSourceDir <- R6::R6Class(
         corpus$addDocument(x = doc)
       })
 
-      corpus <- private$sumQuant(corpus)
-
       event <- paste0("Corpus ", corpus$getName(), " sourced from ", x)
       corpus$message(event = event)
 

@@ -50,6 +50,16 @@ Corpus <- R6::R6Class(
   inherit = Composite0,
 
   private = list(
+    sumQuant = function() {
+      # Update quantitative metadata
+      quant <- self$getDocMeta(type = 'q')[[1]]
+      if (nrow(quant) > 0) {
+        keys <- c(names(quant), 'documents')
+        values <- c(colSums(quant), nrow(quant))
+        self$setMeta(key = keys, value = values, type = 'q')
+      }
+      return(TRUE)
+    },
 
     setQuant = function() {
 
@@ -143,6 +153,7 @@ Corpus <- R6::R6Class(
         stop()
       }
       private$attach(x)
+      private$sumQuant()
 
       invisible(self)
 
@@ -150,12 +161,14 @@ Corpus <- R6::R6Class(
 
     removeDocument = function(x) {
       private$detach(x)
+      private$sumQuant()
       invisible(self)
     },
 
     purgeDocuments = function() {
       private$..children <- list()
       private$..inventory <- data.frame()
+      private$sumQuant()
       invisible(self)
     },
 

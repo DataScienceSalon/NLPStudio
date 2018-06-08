@@ -72,9 +72,8 @@ Clone <- R6::R6Class(
     },
 
     cloneDocument = function(x) {
-      out <- Document$new()
+      out <- Document$new(x$content)
       out <- private$cloneMeta(x, out)
-      out$content <- x$content
       event <- paste0("Document, ", x$getName(), ", cloned.")
       x$message(event = event)
       return(out)

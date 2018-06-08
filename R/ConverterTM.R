@@ -30,7 +30,7 @@ ConverterTM <- R6::R6Class(
     to = function(x) {
 
       # Obtain metadata
-      cMeta <- x$getMeta()$descriptive
+      cMeta <- c(x$getMeta()$descriptive, x$getMeta()$functional)
       cMetaVars <- names(cMeta)
       docMeta <- x$getDocMeta(classname = 'Document')$Document
 

@@ -37,6 +37,12 @@ Sample <- R6::R6Class(
   inherit = Super,
 
   private = list(
+    ..x = character(),
+    ..n = numeric(),
+    ..name = character(),
+    ..stratify = logical(),
+    ..replace = logical(),
+    ..seed = numeric(),
 
     validate = function(x, n, unit, stratify, replace) {
 
@@ -72,7 +78,7 @@ Sample <- R6::R6Class(
       size <- private$..n
       if (size <= 1) size <- floor(size * length(x$content))
 
-      if (!is.null(private$..seed)) set.seed(private$..seed)
+      if (length(private$..seed) > 0) set.seed(private$..seed)
 
       idx <- sample(1:length(x$content), size = size, replace = private$..replace)
       samples <- x$content[idx]
@@ -126,7 +132,7 @@ Sample <- R6::R6Class(
                     replace = FALSE, seed = NULL) {
 
       private$validate(x, n, unit, stratify, replace)
-      private$..x <- x
+      private$..x <- Clone$new()$this(x, reference = TRUE)
       private$..n <- n
       private$..name <- name
       private$..stratify <- stratify

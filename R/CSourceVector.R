@@ -88,9 +88,6 @@ CSourceVector <- R6::R6Class(
         corpus$addDocument(x = doc)
       }
 
-
-      corpus <- private$sumQuant(corpus)
-
       event <- paste0("Corpus ", corpus$getName(), " instantiated from ",
                       "a vector source.")
       corpus$message(event = event)

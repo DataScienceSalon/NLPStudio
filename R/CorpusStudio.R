@@ -112,7 +112,10 @@ CorpusStudio <- R6::R6Class(
       filePaths <- NLPStudio:::listFiles(path)
       if (length(filePaths > 0)) {
         for (i in 1:length(filePaths)) {
-          document <- Document$new(filePaths[i])
+          name <- tools::file_path_sans_ext(basename(filePaths[i]))
+          io <- IOFactory$new()$strategy(filePaths[i])
+          content <- io$read(filePaths[i])
+          document <- Document$new(x = content, name = name)
           document$setMeta(key = 'source', value = filePaths[i], type = 'f')
           corpus$addDocument(document)
         }
