@@ -3,7 +3,7 @@
 #------------------------------------------------------------------------------#
 #' FileSourceJSON
 #'
-#' \code{FileSourceTxt} Class creates a File object from .JSON file.
+#' \code{FileSourceJSON} Class creates a File object from .JSON file.
 #'
 #' @template fileSourceParams
 #'
@@ -21,12 +21,12 @@ FileSourceJSON <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                             Constructor                                 #
     #-------------------------------------------------------------------------#
-    initialize = function() { stop("This class is not implemented.") },
+    initialize = function(path) {
+      private$loadServices()
+      private$..path <- path
+      invisible(self)
+    },
 
-    #-------------------------------------------------------------------------#
-    #                             Build Method                                #
-    #-------------------------------------------------------------------------#
-    source = function(path) { stop("This class is not implemented.") },
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #
     #-------------------------------------------------------------------------#

@@ -12,13 +12,12 @@ FileSourceJSON
 \item{path}{Character string containing a relative path to a file.}
 }
 \description{
-\code{FileSourceTxt} Class creates a File object from .JSON file.
+\code{FileSourceJSON} Class creates a File object from .JSON file.
 }
 \seealso{
 Other FileSource Family of Classes: \code{\link{FileSource0}},
   \code{\link{FileSourceCsv}},
-  \code{\link{FileSourceDocx}},
-  \code{\link{FileSourceHtml}},
+  \code{\link{FileSourceHTML}},
   \code{\link{FileSourceTxt}}, \code{\link{FileSourceXml}}
 }
 \author{

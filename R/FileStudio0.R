@@ -1,74 +1,40 @@
 #------------------------------------------------------------------------------#
-#                                    FileSource0                               #
+#                                    FileStudio0                               #
 #------------------------------------------------------------------------------#
-#' FileSource0
+#' FileStudio0
 #'
-#' \code{FileSource0}  Abstract class for the FileSource family of classes.
+#' \code{FileStudio0}  Abstract class for the FileStudio family of classes.
 #'
-#' Abstract strategy class which defines the methods common to the FileSource
+#' Abstract strategy class which defines the methods common to the FileStudio
 #' family of classes.
-#'
-#' @template fileSourceParams
 #'
 #' @docType class
 #' @author John James, \email{jjames@@dataScienceSalon.org}
-#' @family FileSource Family of Classes
+#' @family FileStudio Family of Classes
 #' @export
-FileSource0 <- R6::R6Class(
-  classname = "FileSource0",
+FileStudio0 <- R6::R6Class(
+  classname = "FileStudio0",
   lock_objects = FALSE,
   lock_class = FALSE,
   inherit = Super,
 
   private = list(
-    ..x = character(),
-    ..path = character(),
     #-------------------------------------------------------------------------#
     #                          Get File Paths Method                          #
     #-------------------------------------------------------------------------#
-    getFilePaths = function() {
-      if (isDirectory(private$..x)) {
-        files <- list.files(private$..x, full.names = TRUE)
+    getFilePaths = function(path) {
+      if (isDirectory(path)) {
+        files <- list.files(path, full.names = TRUE)
       } else {
-        glob <- basename(private$..x)
-        dir <- dirname(private$..x)
+        glob <- basename(path)
+        dir <- dirname(path)
         files <- list.files(dir, pattern = glob2rx(glob), full.names = TRUE)
       }
       return(files)
     },
-    #-------------------------------------------------------------------------#
-    #                              Copy Method                                #
-    #-------------------------------------------------------------------------#
-    copy = function() {
 
-      if (!file.exists(private$..path)) dir.create(private$..path, recursive = TRUE)
-
-      files <- private$getFilePaths()
-      for (i in 1:length(files)) {
-        file.copy(from = private$..x, to = private$..path, recursive = FALSE, overwrite = TRUE)
-      }
-
-      return(TRUE)
-    },
     #-------------------------------------------------------------------------#
-    #                             Move Method                                 #
-    #-------------------------------------------------------------------------#
-    move = function() {
-
-      if (!file.exists(private$..path)) dir.create(private$..path, recursive = TRUE)
-
-      files <- private$getFilePaths()
-      for (i in 1:length(files)) {
-        filePath <- dirname(files[i])
-        fileName <- basename(files[i])
-        newPath <- file.path(private$..path, fileName)
-        file.rename(from = file[i], to = newPath)
-        if (length(list.files(path = filePath)) == 0) unlink(filePath, recursive = TRUE)
-      }
-      return(TRUE)
-    },
-    #-------------------------------------------------------------------------#
-    #                       Validate Character Method                         #
+    #                         Validate Path Method                            #
     #-------------------------------------------------------------------------#
     validatePath = function(param, paramName, methodName) {
       private$..params <- list()
@@ -97,13 +63,11 @@ FileSource0 <- R6::R6Class(
   public = list(
     initialize = function(x) { stop(paste("This method is not for this abstract",
                                          "class.")) },
-    getPath = function() private$..path,
-
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$fileSource(self)
+      visitor$fileStudio(self)
     }
   )
 )

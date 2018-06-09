@@ -20,8 +20,7 @@ family of classes.
 }
 \seealso{
 Other FileSource Family of Classes: \code{\link{FileSourceCsv}},
-  \code{\link{FileSourceDocx}},
-  \code{\link{FileSourceHtml}},
+  \code{\link{FileSourceHTML}},
   \code{\link{FileSourceJSON}},
   \code{\link{FileSourceTxt}}, \code{\link{FileSourceXml}}
 }

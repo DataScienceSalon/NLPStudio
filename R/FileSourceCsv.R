@@ -3,7 +3,7 @@
 #------------------------------------------------------------------------------#
 #' FileSourceCsv
 #'
-#' \code{FileSourceTxt} Class creates a File object from .csv file.
+#' \code{FileSourceCsv} Class creates a File object from .Csv file.
 #'
 #' @template fileSourceParams
 #'
@@ -21,12 +21,12 @@ FileSourceCsv <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                             Constructor                                 #
     #-------------------------------------------------------------------------#
-    initialize = function() { stop("This class is not implemented.") },
+    initialize = function(path) {
+      private$loadServices()
+      private$..path <- path
+      invisible(self)
+    },
 
-    #-------------------------------------------------------------------------#
-    #                             Build Method                                #
-    #-------------------------------------------------------------------------#
-    source = function(path) { stop("This class is not implemented.") },
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #
     #-------------------------------------------------------------------------#

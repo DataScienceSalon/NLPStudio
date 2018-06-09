@@ -19,26 +19,11 @@ FileStudio <- R6::R6Class(
   classname = "FileStudio",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = Super,
+  inherit = FileStudio0,
 
   private = list(
 
-    ..fileSet = character(),
-    #-------------------------------------------------------------------------#
-    #                           Source File Method                            #
-    #-------------------------------------------------------------------------#
-    sourceFile = function(path) {
-      ext <- tolower(tools::file_ext(path))
-      file <- switch(ext,
-             csv = FileSourceCsv$new()$source(path),
-             docx = FileSourceDocx$new()$source(path),
-             html = FileSourceHtml$new()$source(path),
-             json = FileSourceJSON$new()$source(path),
-             txt  = FileSourceTxt$new()$source(path),
-             xml = FileSourceXml$new()$source(path)
-             )
-      return(file)
-    },
+    ..fileSource = character(),
     #-------------------------------------------------------------------------#
     #                          Inspect File Method                            #
     #-------------------------------------------------------------------------#
@@ -89,26 +74,13 @@ FileStudio <- R6::R6Class(
       return(TRUE)
     },
     #-------------------------------------------------------------------------#
-    #                          Get File Paths Method                          #
+    #                         Validate FileSet                                #
     #-------------------------------------------------------------------------#
-    getFilePaths = function(path) {
-      if (isDirectory(path)) {
-        files <- list.files(path, full.names = TRUE)
-      } else {
-        glob <- basename(path)
-        dir <- dirname(path)
-        files <- list.files(dir, pattern = glob2rx(glob), full.names = TRUE)
-      }
-      return(files)
-    },
-    #-------------------------------------------------------------------------#
-    #                        Validate Object Method                           #
-    #-------------------------------------------------------------------------#
-    validateObject = function(param, paramName, methodName) {
+    validateFileSet = function(param, paramName, methodName) {
       private$..params <- list()
       private$..params$classes$name <- list(paramName)
       private$..params$classes$objects <- list(param)
-      private$..params$classes$valid <- list(c('FileSet', 'File'))
+      private$..params$classes$valid <- list(c('FileSet'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = methodName, event = v$msg, level = "Error")
@@ -116,24 +88,39 @@ FileStudio <- R6::R6Class(
       }
       return(TRUE)
     },
+
     #-------------------------------------------------------------------------#
-    #                       Validate Character Method                         #
+    #                         Validate FileSource                             #
     #-------------------------------------------------------------------------#
-    validateChar = function(param, paramName, methodName) {
+
+    validateFileSource = function(param, paramName, methodName) {
       private$..params <- list()
       private$..params$classes$name <- list(paramName)
       private$..params$classes$objects <- list(param)
-      private$..params$classes$valid <- list(c('character'))
+      private$..params$classes$valid <- list(c('FileSourceTxt', 'FileSourceCsv',
+                                               'FileSourceXml', 'FileSourceHTML',
+                                               'FileSourceJSON'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = methodName, event = v$msg, level = "Error")
         stop()
-      } else if (length(param) > 1) {
-        event <- paste0("Invalid ", paramName, " parameter.  Must be a single character string.")
-        private$logR$log(method = methodName, event = event, level = "Error")
-        stop()
       }
       return(TRUE)
+    },
+
+    createFileSet = function(path, name = NULL) {
+
+      private$validatePath(param = path, paramName = 'path',
+                           methodName = 'createFileSet')
+
+      fileSet <- FileSet$new(name)
+      fileSet$setMeta(key = 'path', value = path, type = 'f')
+      files <- private$getFilePaths(path)
+      for (i in 1:length(files)) {
+        file <- File$new(files[[i]])
+        fileSet$addFile(file)
+      }
+      return(fileSet)
     }
   ),
 
@@ -146,35 +133,53 @@ FileStudio <- R6::R6Class(
       invisible(self)
     },
     #-------------------------------------------------------------------------#
-    #                             Build Method                                #
+    #                             Source Method                               #
     #-------------------------------------------------------------------------#
-    build = function(path, name = NULL) {
+    source = function(fileSource, name = NULL) {
 
-      # Validation
-      if (!file.exists(path)) {
-        event = paste0("Invalid path, ", path, " does not exist.")
-        private$logR$log(method = 'build', event = event, level = "Error")
-        stop()
-      }
-      if (!is.null(name)) private$validateChar(param = name, paramName = 'name',
-                                               methodName = 'build')
+      private$validateFileSource(param = fileSource, paramName = 'fileSource',
+                                 methodName = 'source')
+      path <- fileSource$source()
+      fileSet <- private$createFileSet(path, name)
 
-      fileSet <- FileSet$new(name = name)
-      filePaths <- private$getFilePaths(path)
-
-      for (i in 1:length(filePaths)) {
-        file <- private$sourceFile(filePaths[i])
-        fileSet$addFile(file)
-      }
       return(fileSet)
     },
+    #-------------------------------------------------------------------------#
+    #                              Read Method                                #
+    #-------------------------------------------------------------------------#
+    read = function(x) {
+      private$validateFileSet(param = x, paramName = 'x', methodName = 'read')
+      files <- x$getFiles()
+      content <- lapply(files, function(f) {
+        file <- f$getFilePath()
+        io <- IOFactory$new()$strategy(file)
+        io$read(file)
+      })
+      return(content)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                             Write Method                                #
+    #-------------------------------------------------------------------------#
+    write = function(x, content, fileName) {
+      private$validateFileSet(param = x, paramName = 'x', methodName = 'read')
+      io <- IOFactory$new()$strategy(fileName)
+      filePath <- x$getFilePath()
+      filePath <- file.path(filePath, fileName)
+      io@write(path = filePath, content = content)
+      file <- File$new(filePath)
+      x$addFile(file)
+      return(x)
+    },
+
+
     #-------------------------------------------------------------------------#
     #                              Copy Method                                #
     #-------------------------------------------------------------------------#
     copy = function(x, to) {
 
-      private$validateObject(param = x, paramName = 'x', methodName = 'copy')
-      private$validateChar(param = to, paramName = 'to', methodName = 'copy')
+      private$validateFileSet(param = x, paramName = 'x', methodName = 'copy')
+      private$validatePath(param = to, paramName = 'to', methodName = 'copy')
 
       if (!file.exists(to)) dir.create(to, recursive = TRUE)
 
@@ -183,9 +188,9 @@ FileStudio <- R6::R6Class(
         path <- files[[i]]$getFilePath()
         file.copy(from = path, to = to, recursive = FALSE, overwrite = TRUE)
       }
+      name <- paste0("Copy of ", x$getName())
+      fileSet <- private$createFileSet(to, name)
 
-      # Create new FileSet object
-      fileSet <- self$build(path = to, name = paste0(x$getName(), " (Copy)"))
       return(fileSet)
     },
     #-------------------------------------------------------------------------#
@@ -193,7 +198,7 @@ FileStudio <- R6::R6Class(
     #-------------------------------------------------------------------------#
     move = function(x, to) {
 
-      private$validateObject(param = x, paramName = 'x', methodName = 'move')
+      private$validateFileSet(param = x, paramName = 'x', methodName = 'move')
       private$validateChar(param = to, paramName = 'to', methodName = 'move')
 
       if (!file.exists(to)) dir.create(to, recursive = TRUE)
@@ -213,36 +218,33 @@ FileStudio <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Inspect Method                                #
     #-------------------------------------------------------------------------#
-    inspect = function(fileSet) {
-      files <- fileSet$getFiles()
+    inspect = function(x) {
+      files <- x$getFiles()
       lapply(files, function(f) {
         quant <- private$inspectFile(f)
         f$setQuant(quant)
         fileSet$addFile(f)
         f$summary(section = c('i', 'q'))
       })
-      invisible(fileSet)
+      invisible(x)
     },
     #-------------------------------------------------------------------------#
     #                           Repair Method                                 #
     #-------------------------------------------------------------------------#
-    repair = function(fileSet, newPath, codes = NLPStudio:::nonPrintables) {
+    repair = function(x, codes = NLPStudio:::nonPrintables) {
 
-      name = paste0(fileSet$getName(), " (Repaired)")
-      newFileSet <- Clone$new()$this(x = fileSet, reference = TRUE,
-                                     path = newPath)
-      newFileSet$setName(name = name)
+      name <- x$getName()
 
-      files <- newFileSet$getFiles()
+      files <- x$getFiles()
       for (i in 1:length(files)) {
         private$repairFile(files[[i]],codes)
       }
 
       # Log it
-      event <- paste0("Executed ", class(self)[1], " on FileSet ", name, ". ")
+      event <- paste0("Repaired FileSet ", name, ". ")
       private$logR$log(method = 'execute', event = event)
 
-      return(newFileSet)
+      return(x)
     },
 
     #-------------------------------------------------------------------------#

@@ -12,13 +12,12 @@ FileSourceXml
 \item{path}{Character string containing a relative path to a file.}
 }
 \description{
-\code{FileSourceTxt} Class creates a File object from .xml file.
+\code{FileSourceXml} Class creates a File object from .Xml file.
 }
 \seealso{
 Other FileSource Family of Classes: \code{\link{FileSource0}},
   \code{\link{FileSourceCsv}},
-  \code{\link{FileSourceDocx}},
-  \code{\link{FileSourceHtml}},
+  \code{\link{FileSourceHTML}},
   \code{\link{FileSourceJSON}}, \code{\link{FileSourceTxt}}
 }
 \author{

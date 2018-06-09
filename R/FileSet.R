@@ -60,6 +60,10 @@ FileSet <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Composite Methods                             #
     #-------------------------------------------------------------------------#
+    getFilePath = function() {
+      private$meta$get(key = 'path', type = 'f')
+    },
+
     getFiles = function() {
       private$..children
     },

@@ -12,12 +12,11 @@ FileSourceCsv
 \item{path}{Character string containing a relative path to a file.}
 }
 \description{
-\code{FileSourceTxt} Class creates a File object from .csv file.
+\code{FileSourceCsv} Class creates a File object from .Csv file.
 }
 \seealso{
 Other FileSource Family of Classes: \code{\link{FileSource0}},
-  \code{\link{FileSourceDocx}},
-  \code{\link{FileSourceHtml}},
+  \code{\link{FileSourceHTML}},
   \code{\link{FileSourceJSON}},
   \code{\link{FileSourceTxt}}, \code{\link{FileSourceXml}}
 }

@@ -20,7 +20,7 @@ to which the repaired file will be stored.}
 \code{RepairFileSetCmd} Encapsulates the command to execute to repair a FileSet object.
 }
 \seealso{
-Other FileStudio Command Classes: \code{\link{BuildFileSetCmd}}
+Other FileStudio Command Classes: \code{\link{BuildFileSet}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

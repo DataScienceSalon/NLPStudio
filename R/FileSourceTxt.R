@@ -15,32 +15,32 @@ FileSourceTxt <- R6::R6Class(
   classname = "FileSourceTxt",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = FileSource0,
+  inherit = FileStudio0,
 
   public = list(
     #-------------------------------------------------------------------------#
     #                             Constructor                                 #
     #-------------------------------------------------------------------------#
-    initialize = function() {
+    initialize = function(x) {
+
       private$loadServices()
-      invisible(self)
-    },
+      private$validatePath(param = x, paramName = 'x', methodName = 'initialize')
 
-    #-------------------------------------------------------------------------#
-    #                             Build Method                                #
-    #-------------------------------------------------------------------------#
-    source = function(path) {
-
-      # Validation
-      if (!file.exists(path)) {
-        event = paste0("Invalid path, ", path, " does not exist.")
-        private$logR$log(method = 'build', event = event, level = "Error")
+      if (!file.exists(x)) {
+        event <- paste0("File ", x, " does not exist.")
+        private$logR$log(method = 'initialize', event = event, level = "Error")
         stop()
       }
-
-      file <- File$new(path = path)
-      return(file)
+      private$..x <- x
+      invisible(self)
     },
+    #-------------------------------------------------------------------------#
+    #                           Source Method                                 #
+    #-------------------------------------------------------------------------#
+    source = function() {
+      return(private$..x)
+    },
+
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #
     #-------------------------------------------------------------------------#

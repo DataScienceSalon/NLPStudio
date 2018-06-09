@@ -1,9 +1,9 @@
 #------------------------------------------------------------------------------#
-#                             FileSourceHtml                                   #
+#                             FileSourceHTML                                   #
 #------------------------------------------------------------------------------#
-#' FileSourceHtml
+#' FileSourceHTML
 #'
-#' \code{FileSourceTxt} Class creates a File object from .html file.
+#' \code{FileSourceHTML} Class creates a File object from .HTML file.
 #'
 #' @template fileSourceParams
 #'
@@ -11,8 +11,8 @@
 #' @author John James, \email{jjames@@dataScienceSalon.org}
 #' @family FileSource Family of Classes
 #' @export
-FileSourceHtml <- R6::R6Class(
-  classname = "FileSourceHtml",
+FileSourceHTML <- R6::R6Class(
+  classname = "FileSourceHTML",
   lock_objects = FALSE,
   lock_class = FALSE,
   inherit = FileSource0,
@@ -21,12 +21,12 @@ FileSourceHtml <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                             Constructor                                 #
     #-------------------------------------------------------------------------#
-    initialize = function() { stop("This class is not implemented.") },
+    initialize = function(path) {
+      private$loadServices()
+      private$..path <- path
+      invisible(self)
+    },
 
-    #-------------------------------------------------------------------------#
-    #                             Build Method                                #
-    #-------------------------------------------------------------------------#
-    source = function(path) { stop("This class is not implemented.") },
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #
     #-------------------------------------------------------------------------#

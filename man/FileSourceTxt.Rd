@@ -17,8 +17,7 @@ FileSourceTxt
 \seealso{
 Other FileSource Family of Classes: \code{\link{FileSource0}},
   \code{\link{FileSourceCsv}},
-  \code{\link{FileSourceDocx}},
-  \code{\link{FileSourceHtml}},
+  \code{\link{FileSourceHTML}},
   \code{\link{FileSourceJSON}}, \code{\link{FileSourceXml}}
 }
 \author{
