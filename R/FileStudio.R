@@ -166,7 +166,7 @@ FileStudio <- R6::R6Class(
       io <- IOFactory$new()$strategy(fileName)
       filePath <- x$getFilePath()
       filePath <- file.path(filePath, fileName)
-      io@write(path = filePath, content = content)
+      io$write(path = filePath, content = content)
       file <- File$new(filePath)
       x$addFile(file)
       return(x)
@@ -199,7 +199,7 @@ FileStudio <- R6::R6Class(
     move = function(x, to) {
 
       private$validateFileSet(param = x, paramName = 'x', methodName = 'move')
-      private$validateChar(param = to, paramName = 'to', methodName = 'move')
+      private$validatePath(param = to, paramName = 'to', methodName = 'move')
 
       if (!file.exists(to)) dir.create(to, recursive = TRUE)
 
@@ -213,6 +213,9 @@ FileStudio <- R6::R6Class(
         x$addFile(file)
         if (length(list.files(path = dirname(filePath))) == 0) unlink(dirname(filePath), recursive = TRUE)
       }
+      event <- paste0("Moved files to ", to, ".")
+      private$logR$log(method = 'execute', event = event)
+      x$setFilePath(to)
       return(x)
     },
     #-------------------------------------------------------------------------#

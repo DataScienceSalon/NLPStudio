@@ -63,6 +63,10 @@ FileSet <- R6::R6Class(
     getFilePath = function() {
       private$meta$get(key = 'path', type = 'f')
     },
+    setFilePath = function(path) {
+      private$meta$set(key = 'path', value = path, type = 'f')
+      invisible(self)
+    },
 
     getFiles = function() {
       private$..children
