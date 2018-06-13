@@ -9,7 +9,9 @@
 FileSource0
 }
 \arguments{
-\item{path}{Character string containing a relative path to a file.}
+\item{origin}{Character string containing the file path or URL for the origin content}
+
+\item{destination}{Character string specifying the directory in which the text files will be stored.}
 }
 \description{
 \code{FileSource0}  Abstract class for the FileSource family of classes.
@@ -19,10 +21,11 @@ Abstract strategy class which defines the methods common to the FileSource
 family of classes.
 }
 \seealso{
-Other FileSource Family of Classes: \code{\link{FileSourceCsv}},
-  \code{\link{FileSourceHTML}},
+Other FileSource Family of Classes: \code{\link{FileSourceCSV}},
+  \code{\link{FileSourceDOCX}},
   \code{\link{FileSourceJSON}},
-  \code{\link{FileSourceTxt}}, \code{\link{FileSourceXml}}
+  \code{\link{FileSourcePDF}}, \code{\link{FileSourceTXT}},
+  \code{\link{FileSourceURL}}, \code{\link{FileSourceXML}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

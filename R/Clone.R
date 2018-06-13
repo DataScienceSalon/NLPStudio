@@ -56,6 +56,19 @@ Clone <- R6::R6Class(
       return(out)
     },
 
+    cloneCVSet = function(x, reference) {
+      out <- CVSet$new()
+      out <- private$cloneMeta(x, out)
+      corpora <- x$getCorpus()
+      for (i in 1:length(corpora)) {
+        corpus <- private$cloneCorpus(corpora[[i]], reference)
+        out$addCorpus(corpora[[i]])
+      }
+      event <- paste0("CVSet, ", x$getName(), ", cloned.")
+      out$message(event = event)
+      return(out)
+    },
+
     cloneCorpus = function(x, reference) {
       out <- Corpus$new()
       out <- private$cloneMeta(x, out)
@@ -66,7 +79,7 @@ Clone <- R6::R6Class(
           out$addDocument(doc)
         }
       }
-      event <- paste0("Corpus, ", out$getName(), ", cloned.")
+      event <- paste0("Corpus, ", x$getName(), ", cloned.")
       out$message(event = event)
       return(out)
     },
@@ -94,7 +107,7 @@ Clone <- R6::R6Class(
           }
         }
       }
-      event <- paste0("FileSet, ", out$getName(), ", cloned.")
+      event <- paste0("FileSet, ", x$getName(), ", cloned.")
       x$message(event = event)
       return(out)
     },
@@ -132,7 +145,7 @@ Clone <- R6::R6Class(
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
       private$..params$classes$valid <- list(c('Corpus','Document',
-                                               "FileSet", "File"))
+                                               "FileSet", "File", "CVSet"))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'this',
@@ -150,6 +163,7 @@ Clone <- R6::R6Class(
 
       classname <- class(x)[1]
       out <- switch(classname,
+                    CVSet = private$cloneCVSet(x, reference),
                     Corpus = private$cloneCorpus(x, reference),
                     Document = private$cloneDocument(x),
                     FileSet = private$cloneFileSet(x, reference, path),

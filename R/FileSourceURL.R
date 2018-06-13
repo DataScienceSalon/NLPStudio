@@ -1,9 +1,9 @@
 #------------------------------------------------------------------------------#
-#                             FileSourceTXT                                    #
+#                             FileSourceURL                                    #
 #------------------------------------------------------------------------------#
-#' FileSourceTXT
+#' FileSourceURL
 #'
-#' \code{FileSourceTXT} Class creates a File object from .txt file.
+#' \code{FileSourceURL} Class creates a File object from .txt file.
 #'
 #' @template fileSourceParams
 #'
@@ -11,18 +11,22 @@
 #' @author John James, \email{jjames@@dataScienceSalon.org}
 #' @family FileSource Family of Classes
 #' @export
-FileSourceTXT <- R6::R6Class(
-  classname = "FileSourceTXT",
+FileSourceURL <- R6::R6Class(
+  classname = "FileSourceURL",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = FileSource0,
+  inherit = FileStudio0,
 
   private = list(
     #-------------------------------------------------------------------------#
-    #                          Source Files Method                            #
+    #                       Validate URL Method                               #
     #-------------------------------------------------------------------------#
-    sourceFiles = function(origin, destination, overwrite) {
-      private$copyFiles(origin, destination, overwrite)
+    validateURL = function(param, paramName, methodName) {
+
+      if (!url.exists(param)) {
+        event <- paste0("URL , ", param, ", does not exist.")
+        private$logR$log(method = methodName, event = event, level = "Error")
+      }
       return(TRUE)
     }
   ),
@@ -31,18 +35,16 @@ FileSourceTXT <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                             Constructor                                 #
     #-------------------------------------------------------------------------#
-    initialize = function() {
+    initialize = function(x, name = NULL) {
 
-      private$loadServices(name = 'FileSourceTXT')
+      private$loadServices(name = 'FileSourceURL')
+      private$..path <- x
+      private$..name <- name
+
       invisible(self)
     },
-
-    buildFileSet = function(origin, destination, name = NULL, overwrite = FALSE) {
-
-      private$sourceFiles(origin = origin, destination = destination,
-                          overwrite= overwrite)
-      fileSet <- private$createFileSet(destination = destination, name = name)
-
+    buildFileSet = function(path) {
+      fileSet <- private$createFileSet(path)
       return(fileSet)
     },
     #-------------------------------------------------------------------------#

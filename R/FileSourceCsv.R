@@ -1,9 +1,9 @@
 #------------------------------------------------------------------------------#
-#                             FileSourceCsv                                    #
+#                             FileSourceCSV                                    #
 #------------------------------------------------------------------------------#
-#' FileSourceCsv
+#' FileSourceCSV
 #'
-#' \code{FileSourceCsv} Class creates a File object from .Csv file.
+#' \code{FileSourceCSV} Class creates a File object from .txt file.
 #'
 #' @template fileSourceParams
 #'
@@ -11,22 +11,50 @@
 #' @author John James, \email{jjames@@dataScienceSalon.org}
 #' @family FileSource Family of Classes
 #' @export
-FileSourceCsv <- R6::R6Class(
-  classname = "FileSourceCsv",
+FileSourceCSV <- R6::R6Class(
+  classname = "FileSourceCSV",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = FileSource0,
+  inherit = FileStudio0,
+
+  private = list(
+
+    copyFiles = function(path) {
+      file.copy(from = private$..path, to = path, recursive = TRUE)
+      return(TRUE)
+    },
+
+    createFileSet = function(path) {
+
+      private$copyFiles(path)
+
+      fileSet <- FileSet$new(private$..name)
+      fileSet$setMeta(key = 'path', value = path, type = 'f')
+      files <- private$getFilePaths(path)
+      for (i in 1:length(files)) {
+        file <- File$new(files[[i]])
+        fileSet$addFile(file)
+      }
+      return(fileSet)
+    }
+  ),
 
   public = list(
     #-------------------------------------------------------------------------#
     #                             Constructor                                 #
     #-------------------------------------------------------------------------#
-    initialize = function(path) {
-      private$loadServices()
-      private$..path <- path
+    initialize = function(x, name = NULL) {
+
+      private$loadServices(name = 'FileSourceCSV')
+      private$..path <- x
+      private$..name <- name
+
       invisible(self)
     },
-
+    buildFileSet = function(path) {
+      fileSet <- private$createFileSet(path)
+      return(fileSet)
+    },
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #
     #-------------------------------------------------------------------------#

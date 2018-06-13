@@ -16,7 +16,11 @@
 #'   \item{\code{getResult()}}{Method that returns the object following execution of the job queue. }
 #'  }
 #'
-#' @param cmd The class encapsulating a particular command.
+#'  @param x Character vector containing a directory,a Corpus object, quanteda corpus, tm
+#'  VCorpus object, a FileSet or a series of character vectors containing text. This is
+#'  the seed object for the Director - the initial object that serves as input for the
+#'  first command.
+#'  @param cmd The class encapsulating a particular command.
 #'
 #' @docType class
 #' @author John James, \email{jjames@@datasciencesalon.org}
@@ -40,15 +44,15 @@ Director <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Constructor                                   #
     #-------------------------------------------------------------------------#
-    initialize = function() {
+    initialize = function(x) {
 
-      private$loadServices()
+      private$loadServices(name = 'Director')
       private$..log <- data.table(n = integer(0),
                                   task = character(0),
                                   receiver = character(0),
-                                  input = character(0),
+                                  inputClass = character(0),
                                   inputName = character(0),
-                                  output = character(0),
+                                  outputClass = character(0),
                                   outputName = character(0),
                                   start = character(0),
                                   end = character(0),
@@ -56,6 +60,7 @@ Director <- R6::R6Class(
                                   user = character(0))
 
       private$..tasks <- 0
+      private$..target <- x
       event <- paste0("Director object instantiated.")
       private$logR$log(method = 'initialize', event = event)
 
@@ -91,9 +96,9 @@ Director <- R6::R6Class(
       df <- data.table(n = private$..tasks,
                        task = task,
                        receiver = receiver,
-                       input = "",
+                       inputClass = "",
                        inputName = "",
-                       output = "",
+                       outputClass = "",
                        outputName = "",
                        start = "",
                        end = "",
@@ -107,7 +112,9 @@ Director <- R6::R6Class(
       invisible(self)
     },
 
-    printTasks = function() {
+    log = function() {
+      label <- "Director Task Log"
+      NLPStudio::printHeading(text = label, symbol = "=", newlines = 2)
       print(private$..log)
       invisible(private$..log)
     },
@@ -121,19 +128,23 @@ Director <- R6::R6Class(
 
         for (i in 1:length(private$..queue)) {
           inClass <- class(private$..target)[1]
-          inName <- ifelse(length(private$..target) == 0, "", private$..target$getName())
+          inName <- ifelse(length(private$..target) == 0, "",
+                           ifelse(class(private$..target)[1] == 'character', "",
+                                  private$..target$getName()))
           startTime <- Sys.time()
 
           private$..target <- private$..queue[[i]]$execute(private$..target)
 
           stopTime <- Sys.time()
           outClass <- class(private$..target)[1]
-          outName <- ifelse(length(private$..target) == 0, "", private$..target$getName())
+          outName <- ifelse(length(private$..target) == 0, "",
+                           ifelse(class(private$..target)[1] == 'character', "",
+                                  private$..target$getName()))
           duration <- round(as.numeric(difftime(stopTime, startTime, units = 'min')), 4)
 
-          private$..log[n == i, input := inClass]
+          private$..log[n == i, inputClass := inClass]
           private$..log[n == i, inputName := inName]
-          private$..log[n == i, output := outClass]
+          private$..log[n == i, outputClass := outClass]
           private$..log[n == i, outputName := outName]
           private$..log[n == i, start := as.character(startTime)]
           private$..log[n == i, end := as.character(stopTime)]
@@ -151,6 +162,8 @@ Director <- R6::R6Class(
         invisible(self)
       }
     },
+    setTarget = function(target) private$..target <- target,
+    getTarget = function() private$..target,
 
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #

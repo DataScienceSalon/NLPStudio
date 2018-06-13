@@ -9,16 +9,19 @@
 FileSourceJSON
 }
 \arguments{
-\item{path}{Character string containing a relative path to a file.}
+\item{origin}{Character string containing the file path or URL for the origin content}
+
+\item{destination}{Character string specifying the directory in which the text files will be stored.}
 }
 \description{
-\code{FileSourceJSON} Class creates a File object from .JSON file.
+\code{FileSourceJSON} Class creates a File object from .txt file.
 }
 \seealso{
 Other FileSource Family of Classes: \code{\link{FileSource0}},
-  \code{\link{FileSourceCsv}},
-  \code{\link{FileSourceHTML}},
-  \code{\link{FileSourceTxt}}, \code{\link{FileSourceXml}}
+  \code{\link{FileSourceCSV}},
+  \code{\link{FileSourceDOCX}},
+  \code{\link{FileSourcePDF}}, \code{\link{FileSourceTXT}},
+  \code{\link{FileSourceURL}}, \code{\link{FileSourceXML}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

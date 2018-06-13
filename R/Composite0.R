@@ -98,7 +98,7 @@ Composite0 <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                     Summary Children Method                            #
+    #                     Summary Children Method                             #
     #-------------------------------------------------------------------------#
     summarizeChildMeta = function(classname = NULL) {
 

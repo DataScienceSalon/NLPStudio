@@ -18,86 +18,18 @@ FileSource0 <- R6::R6Class(
   classname = "FileSource0",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = Super,
+  inherit = FileStudio0,
 
   private = list(
-    ..x = character(),
-    ..path = character(),
-    #-------------------------------------------------------------------------#
-    #                          Get File Paths Method                          #
-    #-------------------------------------------------------------------------#
-    getFilePaths = function() {
-      if (isDirectory(private$..x)) {
-        files <- list.files(private$..x, full.names = TRUE)
-      } else {
-        glob <- basename(private$..x)
-        dir <- dirname(private$..x)
-        files <- list.files(dir, pattern = glob2rx(glob), full.names = TRUE)
-      }
-      return(files)
-    },
-    #-------------------------------------------------------------------------#
-    #                              Copy Method                                #
-    #-------------------------------------------------------------------------#
-    copy = function() {
-
-      if (!file.exists(private$..path)) dir.create(private$..path, recursive = TRUE)
-
-      files <- private$getFilePaths()
-      for (i in 1:length(files)) {
-        file.copy(from = private$..x, to = private$..path, recursive = FALSE, overwrite = TRUE)
-      }
-
-      return(TRUE)
-    },
-    #-------------------------------------------------------------------------#
-    #                             Move Method                                 #
-    #-------------------------------------------------------------------------#
-    move = function() {
-
-      if (!file.exists(private$..path)) dir.create(private$..path, recursive = TRUE)
-
-      files <- private$getFilePaths()
-      for (i in 1:length(files)) {
-        filePath <- dirname(files[i])
-        fileName <- basename(files[i])
-        newPath <- file.path(private$..path, fileName)
-        file.rename(from = file[i], to = newPath)
-        if (length(list.files(path = filePath)) == 0) unlink(filePath, recursive = TRUE)
-      }
-      return(TRUE)
-    },
-    #-------------------------------------------------------------------------#
-    #                       Validate Character Method                         #
-    #-------------------------------------------------------------------------#
-    validatePath = function(param, paramName, methodName) {
-      private$..params <- list()
-      private$..params$classes$name <- list(paramName)
-      private$..params$classes$objects <- list(param)
-      private$..params$classes$valid <- list(c('character'))
-      v <- private$validator$validate(self)
-      if (v$code == FALSE) {
-        private$logR$log(method = methodName, event = v$msg, level = "Error")
-        stop()
-      } else if (length(param) > 1) {
-        event <- paste0("Invalid ", paramName, " parameter. ",
-                        "Must be a single character string.")
-        private$logR$log(method = methodName, event = event, level = "Error")
-        stop()
-      } else if (grepl(" ", param, perl = TRUE)) {
-        event <- paste0("Invalid ", paramName, " parameter. ",
-                        "Must be a valid file path without spaces.")
-        private$logR$log(method = methodName, event = event, level = "Error")
-        stop()
-      }
-      return(TRUE)
-    }
+    ..origin = character(),
+    ..destination = character()
   ),
 
   public = list(
-    initialize = function(x) { stop(paste("This method is not for this abstract",
-                                         "class.")) },
-    getPath = function() private$..path,
+    initialize = function() { stop(paste("This method is not implemented for ",
+                                         "this abstract class.")) },
+    getOrigin = function() private$..origin,
+    getDestination = function() private$..destination,
 
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #

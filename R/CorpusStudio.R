@@ -5,8 +5,10 @@
 #'
 #' \code{CorpusStudio}  Class responsible for building and manipulating Corpus objects.
 #'
-#' @param x a FileSet object containing .txt files or a character string
-#' containing the directory containing .txt files.
+#' @param x a series of character vectors, each containing the text for a single
+#' document, a FileSet object containing .txt files, a character string
+#' containing the directory containing .txt files, a quanteda corpus object, or
+#' a tm VCorpus, or tm SimpleCorpus object.
 #' @param corpus Corpus object
 #' @param name Character string containing the name to assign to the Corpus
 #' object.
@@ -23,7 +25,8 @@
 #' be stratefied.
 #' @param replace Logical. If TRUE, sampling is conducted with replacement. The
 #' default is FALSE.
-#' object.
+#' @param overWrite Logical, Used in the read method. If TRUE, any text or binary
+#' files read will overwrite existing versions of the same document source.
 #' @param train Numeric indicating the proportion of the Corpus to allocate
 #' to the training set. Acceptable values are between 0 and 1. The total of the
 #' values for the train, validation and test parameters must equal 1.
@@ -66,7 +69,7 @@ CorpusStudio <- R6::R6Class(
     #                             Constructor                                 #
     #-------------------------------------------------------------------------#
     initialize = function() {
-      private$loadServices()
+      private$loadServices(name = 'CorpusStudio')
       invisible(self)
     },
     #-------------------------------------------------------------------------#
@@ -99,43 +102,17 @@ CorpusStudio <- R6::R6Class(
                        SimpleCorpus = CSourceTM$new()$source(x, name),
                        character = CSourceVector$new()$source(x, name),
                        directory = CSourceDir$new()$source(x, name))
-      return(corpus)
-    },
 
-    #-------------------------------------------------------------------------#
-    #                        Add Documents Method                             #
-    #-------------------------------------------------------------------------#
-    addDocuments = function(corpus, path) {
-
-      private$validate(corpus, methodName = 'addDocuments')
-
-      filePaths <- NLPStudio:::listFiles(path)
-      if (length(filePaths > 0)) {
-        for (i in 1:length(filePaths)) {
-          name <- tools::file_path_sans_ext(basename(filePaths[i]))
-          io <- IOFactory$new()$strategy(filePaths[i])
-          content <- io$read(filePaths[i])
-          document <- Document$new(x = content, name = name)
-          document$setMeta(key = 'source', value = filePaths[i], type = 'f')
-          corpus$addDocument(document)
-        }
-        quant <- corpus$getDocMeta(type = 'q')[[1]]
-        if (nrow(quant) > 0) {
-          keys <- c(names(quant), 'documents')
-          values <- c(colSums(quant), nrow(quant))
-          corpus$setMeta(key = keys, value = values, type = 'q')
-        }
-      } else {
-        event <- paste0("No files found at path or glob")
-        private$logR$log(method = 'addDocuments', event = event, level = "Warn")
-      }
+      event <- paste0("Constructed Corpus from ", sourceType, ".")
+      corpus$message(event)
+      private$logR$log(method = 'build', event = event, level = "Info")
       return(corpus)
     },
 
     #-------------------------------------------------------------------------#
     #                      Corpus Tokenize Method                             #
     #-------------------------------------------------------------------------#
-    tokenize = function(corpus, tokenUnit = 'sentence') {
+    tokenize = function(corpus, name = NULL, tokenUnit = 'sentence') {
 
       # Validation
       private$validate(corpus, methodName = 'tokenize')
@@ -152,7 +129,11 @@ CorpusStudio <- R6::R6Class(
       }
 
       # Obtain documents and tokenize
-      token <- Tokenizer$new()$execute(corpus, tokenUnit)
+      token <- Tokenizer$new()$execute(corpus, name, tokenUnit)
+
+      event <- paste0("Created ", tokenUnit, " object from Corpus.")
+      corpus$message(event)
+      private$logR$log(method = 'tokenize', event = event, level = "Info")
       return(token)
     },
 
@@ -175,8 +156,14 @@ CorpusStudio <- R6::R6Class(
 
       # Obtain samples
       sampler <- Sample$new()
-      corpus <- sampler$this(x = corpus, n = n, name = name, stratify = stratify,
-                             replace = replace, seed = seed)
+      corpus <- sampler$execute(x = corpus, n, name, stratify,
+                             replace, seed)
+
+      type <- ifelse(stratify == TRUE, 'stratified', 'non-stratified')
+      event <- paste0("Created ", type, " sample from Corpus.")
+      corpus$message(event)
+      private$logR$log(method = 'sample', event = event, level = "Info")
+
       return(corpus)
     },
 
@@ -210,6 +197,11 @@ CorpusStudio <- R6::R6Class(
       splitter <- Split$new()
       cvSet <- splitter$execute(corpus, name, train, validation, test,
                                 stratify, seed)
+
+      event <- paste0("Created cross-validation set from Corpus.")
+      cvSet$message(event)
+      private$logR$log(method = 'split', event = event, level = "Info")
+
       return(cvSet)
     },
 
@@ -242,66 +234,144 @@ CorpusStudio <- R6::R6Class(
       splitter <- SplitKFold$new()
       cvKFold <- splitter$execute(corpus, k, name, train, validation,
                                   test,  stratify, seed)
+
+      event <- paste0("Created k-fold cross-validation set from Corpus.")
+      cvKFold$message(event)
+      private$logR$log(method = 'kFold', event = event, level = "Info")
+
       return(cvKFold)
     },
+    #-------------------------------------------------------------------------#
+    #                        Corpus Clean Method                              #
+    #-------------------------------------------------------------------------#
+    clean = function(corpus, config, name = NULL) {
+
+      # Validation
+      private$validate(corpus, methodName = 'clean')
+      private$..params <- list()
+      private$..params$classes$name <- list('config')
+      private$..params$classes$objects <- list(config)
+      private$..params$classes$valid <- list(c('TextConfig'))
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = 'clean', event = v$msg, level = "Error")
+        stop()
+      }
+
+      ts <- TextStudio$new()
+      corpus <- ts$loadConfig(config)$execute(corpus, name)
+
+      return(corpus)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                        Read Documents Method                            #
+    #-------------------------------------------------------------------------#
+    read = function(corpus, path, overwrite = FALSE) {
+
+      private$validate(corpus, methodName = 'read')
+
+      filePaths <- NLPStudio:::listFiles(path)
+      if (length(filePaths > 0)) {
+        for (i in 1:length(filePaths)) {
+          if (overwrite) {
+            idx <- private$search(key = 'source', value = filePaths[[i]])
+            doc <- private$..children[[idx]]
+            corpus$removeDocument(doc)
+          }
+          name <- tools::file_path_sans_ext(basename(filePaths[i]))
+          io <- IOFactory$new()$strategy(filePaths[i])
+          content <- io$read(filePaths[i])
+          document <- Document$new(x = content, name = name)
+          document$setMeta(key = 'source', value = filePaths[i], type = 'f')
+          corpus$addDocument(document)
+        }
+        quant <- corpus$getDocMeta(type = 'q')[[1]]
+        if (nrow(quant) > 0) {
+          keys <- c(names(quant), 'documents')
+          values <- c(colSums(quant), nrow(quant))
+          corpus$setMeta(key = keys, value = values, type = 'q')
+        }
+      } else {
+        event <- paste0("No files found at path or glob")
+        private$logR$log(method = 'read', event = event, level = "Warn")
+      }
+
+      event <- paste0("Read and added documents to Corpus.")
+      corpus$message(event)
+      private$logR$log(method = 'read', event = event, level = "Info")
+
+      return(corpus)
+    },
+
 
     #-------------------------------------------------------------------------#
     #                        Corpus Write Method                              #
     #-------------------------------------------------------------------------#
-    write = function(corpus, path, mode = "text") {
+    write = function(corpus, path, format = "txt", overwrite = FALSE) {
 
       # Validate
       private$validate(corpus, methodName = 'write')
 
-      # Validate mode
-      if ((grepl("^t", mode, ignore.case = TRUE))) mode <- 'text'
-      if ((grepl("^b", mode, ignore.case = TRUE))) mode <- 'binary'
-      if ((grepl("^o", mode, ignore.case = TRUE))) mode <- 'object'
       private$..params <- list()
-      private$..params$discrete$variables = list('mode')
-      private$..params$discrete$values = list(mode)
-      private$..params$discrete$valid = list(c('text', 'binary', 'object'))
+      private$..params$discrete$variables = list('format')
+      private$..params$discrete$values = list(lower(format))
+      private$..params$discrete$valid = list(c('txt', 'csv', 'rdata',
+                                               'rds', 'bin'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'write', event = v$msg, level = "Error")
         stop()
       }
 
-      # Validate that directories are provided for text and binary modes.
-      if (mode %in% c('text', 'binary')) {
-        if (tools::file_ext(path) != "") {
-          event <- paste0("Invalid path parameter. Path must be a directory. ",
-                          "See ?", class(self)[1], " for further assistance.")
-          private$logR$log(method = 'writeText', event = event, level = "Error")
-          stop()
-        }
+      # Validate that path is a directory
+      if (tools::file_ext(path) != "") {
+        event <- paste0("Invalid path parameter. Path must be a directory. ",
+                        "See ?", class(self)[1], " for further assistance.")
+        private$logR$log(method = 'write', event = event, level = "Error")
+        stop()
       }
 
-      if (mode == 'object') {
-        if (tools::file_ext(path) == "") {
-          path <- file.path(path, paste0(corpus$getName(), ".Rds"))
-        }
-        io <- IORds$new()
-        io$write(path = path, content = corpus)
-      } else {
-        documents <- corpus$getDocuments()
-        if (mode == 'binary') {
-          io <- IOBin$new()
-          lapply(documents, function(d) {
-            name <- d$getName()
-            path <- file.path(path, paste0(name, ".bin"))
-            io$write(path = path, content = d$content)
-          })
+      io <- switch(format,
+                   txt = IOText$new(),
+                   csv = IOCSV$new(),
+                   rdata = IORdata$new(),
+                   rds = IORds$new(),
+                   bin = IOBin$new())
+
+      ext <- switch(format,
+                    txt = '.txt',
+                    csv = '.csv',
+                    rdata = '.RData',
+                    rds = '.Rds',
+                    bin = '.bin')
+
+      docs <- corpus$getDocuments()
+      lapply(docs, function(d) {
+        filePath <- d$getMeta(key = 'path')
+        if (length(filePath) == 0) {
+          filePath <- file.path(path, paste0(d$getName(), ext))
         } else {
-          io <- IOText$new()
-          lapply(documents, function(d) {
-            name <- d$getName()
-            path <- file.path(path, paste0(name, ".txt"))
-            io$write(path = path, content = d$content)
-          })
+          filePath <- file.path(path, paste0(basename(filePath), ext))
         }
-      }
-      invisible(self)
+        if (overwrite == FALSE) {
+          if (file.exists(filePath)) {
+            event <- paste0("File ", filePath, " already exists. Change the ",
+                            "path or set the 'overwrite' variable to TRUE ",
+                            "to overwrite the file.")
+            private$logR$log(method = 'write', event = event, level = "Error")
+            stop()
+          } else {
+            io$write(content = d$content, path = filePath)
+          }
+        }
+      })
+
+      event <- paste0("Wrote Corpus documents to ", path, ".")
+      corpus$message(event)
+      private$logR$log(method = 'write', event, level = "Info")
+
+      return(corpus)
     },
 
     #-------------------------------------------------------------------------#

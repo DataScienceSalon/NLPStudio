@@ -32,28 +32,111 @@ FileStudio0 <- R6::R6Class(
       }
       return(files)
     },
+    #-------------------------------------------------------------------------#
+    #                          Copy Files Method                              #
+    #-------------------------------------------------------------------------#
+    copyFiles = function(origin, destination, overwrite = FALSE) {
+      if (tools::file_ext(destination) == "") {
+        if (!file.exists(destination)) {
+          dir.create(destination, showWarnings = FALSE, recursive = TRUE)
+        }
+      }
+      files <- private$getFilePaths(origin)
+      if (length(files) == 0) {
+        event <- paste0("File path, ", origin, ", contains no files to copy.")
+        private$logR$log(method = 'copyFiles', event = event, level = "Warn")
+      } else {
+        for (i in 1:length(files)) {
+          to <- file.path(destination, basename(files[[i]]))
+          if (file.exists(to) & overwrite ==  FALSE) {
+            event <- paste0("Unable to copy files to ", path, " as files already ",
+                            "exist in that location. Change the path, delete ",
+                            "the existing files, or change the 'overwrite' parameter ",
+                            "to TRUE. See?", class(self)[1], " for further assistance.")
+            private$logR$log(method = 'copyFiles', event = event, level = "Error")
+            stop()
+          }
+          file.copy(from = files[[i]], to = to)
+        }
+      }
+      return(TRUE)
+    },
 
     #-------------------------------------------------------------------------#
-    #                         Validate Path Method                            #
+    #                          Move Files Method                              #
     #-------------------------------------------------------------------------#
-    validatePath = function(param, paramName, methodName) {
+    moveFiles = function(origin, destination, overwrite = FALSE) {
+      if (tools::file_ext(destination) == "") {
+        if (!file.exists(destination)) {
+          dir.create(destination, showWarnings = FALSE, recursive = TRUE)
+        }
+      }
+      files <- private$getFilePaths(origin)
+      if (length(files) == 0) {
+        event <- paste0("File path, ", origin, ", contains no files to move.")
+        private$logR$log(method = 'moveFiles', event = event, level = "Warn")
+      } else {
+        for (i in 1:length(files)) {
+          to <- file.path(destination, basename(files[[i]]))
+          if (file.exists(to) & overwrite ==  FALSE) {
+            event <- paste0("Unable to move files to ", path, " as files already ",
+                            "exist in that location. Change the path, delete ",
+                            "the existing files, or change the 'overwrite' parameter ",
+                            "to TRUE. See?", class(self)[1], " for further assistance.")
+            private$logR$log(method = 'moveFiles', event = event, level = "Error")
+            stop()
+          }
+          file.rename(from = files[[i]], to = to)
+        }
+      }
+      return(TRUE)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                           Create File Set                               #
+    #-------------------------------------------------------------------------#
+    createFileSet = function(destination, name = NULL) {
+
+      fileSet <- FileSet$new(name)
+      fileSet$setMeta(key = 'path', value = destination, type = 'f')
+      files <- private$getFilePaths(destination)
+      for (i in 1:length(files)) {
+        file <- File$new(files[[i]])
+        fileSet$addFile(file)
+      }
+      return(fileSet)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                         Validate FileSet                                #
+    #-------------------------------------------------------------------------#
+    validateFileSet = function(param, paramName, methodName) {
       private$..params <- list()
       private$..params$classes$name <- list(paramName)
       private$..params$classes$objects <- list(param)
-      private$..params$classes$valid <- list(c('character'))
+      private$..params$classes$valid <- list(c('FileSet'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = methodName, event = v$msg, level = "Error")
         stop()
-      } else if (length(param) > 1) {
-        event <- paste0("Invalid ", paramName, " parameter. ",
-                        "Must be a single character string.")
-        private$logR$log(method = methodName, event = event, level = "Error")
-        stop()
-      } else if (grepl(" ", param, perl = TRUE)) {
-        event <- paste0("Invalid ", paramName, " parameter. ",
-                        "Must be a valid file path without spaces.")
-        private$logR$log(method = methodName, event = event, level = "Error")
+      }
+      return(TRUE)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                         Validate FileSource                             #
+    #-------------------------------------------------------------------------#
+
+    validateFileSource = function(param, paramName, methodName) {
+      private$..params <- list()
+      private$..params$classes$name <- list(paramName)
+      private$..params$classes$objects <- list(param)
+      private$..params$classes$valid <- list(c('FileSourceTXT', 'FileSourceCSV',
+                                               'FileSourceXML', 'FileSourceURL',
+                                               'FileSourceJSON'))
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = methodName, event = v$msg, level = "Error")
         stop()
       }
       return(TRUE)

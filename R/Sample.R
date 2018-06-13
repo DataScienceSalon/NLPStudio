@@ -46,7 +46,7 @@ Sample <- R6::R6Class(
     ..seed = integer(),
     ..unseed = integer(),
 
-    validate = function(x, n, unit, stratify, replace) {
+    validate = function(x, n,  stratify, replace) {
 
       # Validate Source Object
       private$..params <- list()
@@ -136,10 +136,10 @@ Sample <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                               Sample                                    #
     #-------------------------------------------------------------------------#
-    this = function(x, n, name = NULL, stratify = TRUE,
+    execute = function(x, n, name = NULL, stratify = TRUE,
                     replace = FALSE, seed = NULL) {
 
-      private$validate(x, n, unit, stratify, replace)
+      private$validate(x, n, stratify, replace)
       private$..x <- x
       private$..sample <- Clone$new()$this(x, reference = FALSE)
       private$..n <- n

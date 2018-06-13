@@ -9,8 +9,10 @@
 CorpusStudio
 }
 \arguments{
-\item{x}{a FileSet object containing .txt files or a character string
-containing the directory containing .txt files.}
+\item{x}{a series of character vectors, each containing the text for a single
+document, a FileSet object containing .txt files, a character string
+containing the directory containing .txt files, a quanteda corpus object, or
+a tm VCorpus, or tm SimpleCorpus object.}
 
 \item{corpus}{Corpus object}
 
@@ -34,8 +36,10 @@ of samples to obtain or the proportion of the Corpus to sample.}
 be stratefied.}
 
 \item{replace}{Logical. If TRUE, sampling is conducted with replacement. The
-default is FALSE.
-object.}
+default is FALSE.}
+
+\item{overWrite}{Logical, Used in the read method. If TRUE, any text or binary
+files read will overwrite existing versions of the same document source.}
 
 \item{train}{Numeric indicating the proportion of the Corpus to allocate
 to the training set. Acceptable values are between 0 and 1. The total of the

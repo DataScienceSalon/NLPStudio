@@ -8,9 +8,6 @@
 \usage{
 Director
 }
-\arguments{
-\item{cmd}{The class encapsulating a particular command.}
-}
 \description{
 \code{Director} Class responsible for executing an NLP Pipeline
 }
@@ -25,6 +22,12 @@ Director
   \item{\code{printTasks()}}{Prints task list. }
   \item{\code{getResult()}}{Method that returns the object following execution of the job queue. }
  }
+
+ @param x Character vector containing a directory,a Corpus object, quanteda corpus, tm
+ VCorpus object, a FileSet or a series of character vectors containing text. This is
+ the seed object for the Director - the initial object that serves as input for the
+ first command.
+ @param cmd The class encapsulating a particular command.
 }
 
 \author{
