@@ -36,7 +36,9 @@ from a Corpus object.
 
 \seealso{
 Other CorpusStudio Family of Classes: \code{\link{CorpusStudio}},
-  \code{\link{SplitKFold}}, \code{\link{Split}}
+  \code{\link{Sample0}}, \code{\link{Sample}},
+  \code{\link{Segment}}, \code{\link{SplitKFold}},
+  \code{\link{Split}}
 }
 \author{
 John James, \email{jjames@datasciencesalon.org}

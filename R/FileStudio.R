@@ -24,6 +24,7 @@ FileStudio <- R6::R6Class(
   private = list(
 
     ..fileSource = character(),
+    ..fileSet = character(),
     #-------------------------------------------------------------------------#
     #                          Inspect File Method                            #
     #-------------------------------------------------------------------------#
@@ -79,154 +80,73 @@ FileStudio <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                             Constructor                                 #
     #-------------------------------------------------------------------------#
-    initialize = function() {
+    initialize = function(x) {
       private$loadServices(name = 'FileStudio')
+
+      if (!private$validateFileSource(param = x, paramName = 'fileSource',
+                                 methodName = 'initialize')) stop()
+
+      private$..fileSource <- x
+
       invisible(self)
     },
     #-------------------------------------------------------------------------#
     #                             Source Method                               #
     #-------------------------------------------------------------------------#
-    source = function(fileSource, origin, destination, name = NULL,
-                      overwrite = FALSE) {
+    buildFileSet = function(path, name = NULL, overwrite = FALSE) {
 
-      private$validateFileSource(param = fileSource, paramName = 'fileSource',
-                                 methodName = 'source')
+      private$..fileSet <- private$..fileSource$buildFileSet(destination = path,
+                                                             name = name,
+                                                             overwrite = overwrite)
 
-
-      fileSet <- fileSource$buildFileSet(origin, destination, name, overwrite)
-
-      event <- paste0("Sourced FileSet from ", origin, ".")
-      fileSet$message(event)
+      event <- paste0("Sourced FileSet from ", private$..fileSource$getOrigin(), ".")
+      private$..fileSet$message(event)
       private$logR$log(method = 'source', event = event, level = "Info")
+      invisible(self)
 
-      return(fileSet)
-    },
-    #-------------------------------------------------------------------------#
-    #                              Read Method                                #
-    #-------------------------------------------------------------------------#
-    read = function(x) {
-      private$validateFileSet(param = x, paramName = 'x', methodName = 'read')
-      files <- x$getFiles()
-      content <- lapply(files, function(f) {
-        file <- f$getFilePath()
-        io <- IOFactory$new()$strategy(file)
-        io$read(file)
-      })
-
-      event <- paste0("Read ", x$getName(), "from file.")
-      x$message(event)
-      private$logR$log(method = 'read', event = event, level = "Info")
-      return(content)
     },
 
-    #-------------------------------------------------------------------------#
-    #                             Write Method                                #
-    #-------------------------------------------------------------------------#
-    write = function(x, content, fileName) {
-      private$validateFileSet(param = x, paramName = 'x', methodName = 'read')
-      io <- IOFactory$new()$strategy(fileName)
-      filePath <- x$getFilePath()
-      filePath <- file.path(filePath, fileName)
-      io$write(path = filePath, content = content)
-      file <- File$new(filePath)
-      x$addFile(file)
-
-      event <- paste0("Wrote ", fileName, "to ", filePath,
-                      " and added it to the FileSet.")
-      x$message(event)
-      private$logR$log(method = 'read', event = event, level = "Info")
-      return(x)
-    },
-
-
-    #-------------------------------------------------------------------------#
-    #                              Copy Method                                #
-    #-------------------------------------------------------------------------#
-    copy = function(x, to, name = NULL, overwrite = FALSE) {
-
-      private$validateFileSet(param = x, paramName = 'x', methodName = 'copy')
-      private$validatePath(path = to, overwrite = overwrite)
-
-      if (!file.exists(to)) dir.create(to, recursive = TRUE)
-
-      files <- x$getFiles()
-      for (i in 1:length(files)) {
-        path <- files[[i]]$getFilePath()
-        file.copy(from = path, to = to, recursive = TRUE, overwrite = overwrite)
-      }
-      if (is.null(name)) name <- paste0("Copy of ", x$getName())
-      fileSet <- private$createFileSet(to, name)
-
-      event <- paste0("Copied FileSet object to ", to, ".")
-      x$message(event)
-      private$logR$log(method = 'copy', event = event, level = "Info")
-
-
-      return(fileSet)
-    },
-    #-------------------------------------------------------------------------#
-    #                             Move Method                                 #
-    #-------------------------------------------------------------------------#
-    move = function(x, to) {
-
-      private$validateFileSet(param = x, paramName = 'x', methodName = 'move')
-      private$validatePath(param = to, paramName = 'to', methodName = 'move')
-
-      if (!file.exists(to)) dir.create(to, recursive = TRUE)
-
-      files <- x$getFiles()
-      for (i in 1:length(files)) {
-        filePath <- files[[i]]$getFilePath()
-        fileName <- files[[i]]$getFileName()
-        newPath <- file.path(to, fileName)
-        file.rename(from = filePath, to = newPath)
-        file <- files[[i]]$setFilePath(newPath)
-        x$addFile(file)
-        if (length(list.files(path = dirname(filePath))) == 0) unlink(dirname(filePath), recursive = TRUE)
-      }
-      event <- paste0("Moved FileSet object to ", to, ".")
-      x$message(event)
-      private$logR$log(method = 'move', event = event, level = "Info")
-      x$setFilePath(to)
-      return(x)
-    },
     #-------------------------------------------------------------------------#
     #                           Inspect Method                                #
     #-------------------------------------------------------------------------#
-    inspect = function(x) {
-      files <- x$getFiles()
+    inspect = function() {
+      files <- private$..fileSet$getFiles()
+
       lapply(files, function(f) {
+        name <- f$getName()
         quant <- private$inspectFile(f)
         f$setQuant(quant)
-        fileSet$addFile(f)
-        f$summary(section = c('i', 'q'))
+        private$..fileSet$addFile(f)
       })
 
-      event <- paste0("Inspected FileSet ", x$getName(), ".")
-      x$message(event)
+      event <- paste0("Inspected FileSet ", private$..fileSet$getName(), ".")
+      private$..fileSet$message(event)
       private$logR$log(method = 'inspect', event = event, level = "Info")
-      return(x)
+      invisible(self)
     },
     #-------------------------------------------------------------------------#
     #                           Repair Method                                 #
     #-------------------------------------------------------------------------#
-    repair = function(x, codes = NLPStudio:::nonPrintables) {
+    repair = function(codes = NLPStudio:::nonPrintables) {
 
-      name <- x$getName()
+      name <- private$..fileSet$getName()
 
-      files <- x$getFiles()
+      files <- private$..fileSet$getFiles()
       for (i in 1:length(files)) {
         private$repairFile(files[[i]],codes)
       }
 
       # Log it
       event <- paste0("Repaired FileSet ", name, ". ")
-      x$message(event)
-      private$logR$log(method = 'execute', event = event)
+      private$..fileSet$message(event)
+      private$logR$log(method = 'repair', event = event)
 
-      return(x)
+      invisible(self)
     },
-
+    #-------------------------------------------------------------------------#
+    #                            Query Methods                                #
+    #-------------------------------------------------------------------------#
+    getFileSet = function() private$..fileSet,
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #
     #-------------------------------------------------------------------------#

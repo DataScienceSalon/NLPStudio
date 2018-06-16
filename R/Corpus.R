@@ -100,23 +100,6 @@ Corpus <- R6::R6Class(
       }
 
       return(TRUE)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                           Summary Methods                               #
-    #-------------------------------------------------------------------------#
-    summarizeQuantMeta = function(verbose = TRUE) {
-
-      private$setQuant()
-      quant <- private$meta$get(type = 'quant')
-      if (verbose) {
-        if (!is.null(quant)) {
-          NLPStudio::printHeading(text = "Quantitative Metadata", symbol = "-")
-          quantDf <- as.data.frame(quant, stringsAsFactors = FALSE, row.names = NULL)
-          print(quantDf, row.names = FALSE)
-        }
-      }
-      return(quant)
     }
   ),
 
@@ -127,8 +110,7 @@ Corpus <- R6::R6Class(
     #-------------------------------------------------------------------------#
     initialize = function(name = NULL) {
 
-      private$loadServices()
-      private$meta <- Meta$new(x = self, name = name)
+      private$loadServices(name)
       private$logR$log(method = 'initialize',
                        event = "Initialization complete.")
       invisible(self)

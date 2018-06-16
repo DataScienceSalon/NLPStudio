@@ -9,9 +9,9 @@
 FileSource0
 }
 \arguments{
-\item{origin}{Character string containing the file path or URL for the origin content}
+\item{x}{Character string containing the file path or URL for the source content}
 
-\item{destination}{Character string specifying the directory in which the text files will be stored.}
+\item{destination}{Character string indicating the file path for the resulting FileSet object.}
 }
 \description{
 \code{FileSource0}  Abstract class for the FileSource family of classes.

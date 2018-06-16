@@ -91,10 +91,6 @@ ValidationVisitor <- R6::R6Class(
       return(private$validate(object))
     },
 
-    token = function(object) {
-      return(private$validate(object))
-    },
-
     document = function(object) {
       return(private$validate(object))
     },
@@ -147,6 +143,14 @@ ValidationVisitor <- R6::R6Class(
       return(private$validate(object))
     },
 
+    sample = function(object) {
+      return(private$validate(object))
+    },
+
+    segment = function(object) {
+      return(private$validate(object))
+    },
+
     splitKFold = function(object) {
       return(private$validate(object))
     },
@@ -178,10 +182,6 @@ ValidationVisitor <- R6::R6Class(
     },
 
     counter = function(object) {
-      return(private$validate(object))
-    },
-
-    sample = function(object) {
       return(private$validate(object))
     },
 

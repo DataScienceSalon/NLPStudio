@@ -95,11 +95,11 @@ FileStudio0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Create File Set                               #
     #-------------------------------------------------------------------------#
-    createFileSet = function(destination, name = NULL) {
+    createFileSet = function(path, name = NULL) {
 
       fileSet <- FileSet$new(name)
-      fileSet$setMeta(key = 'path', value = destination, type = 'f')
-      files <- private$getFilePaths(destination)
+      fileSet$setMeta(key = 'path', value = path, type = 'f')
+      files <- private$getFilePaths(path)
       for (i in 1:length(files)) {
         file <- File$new(files[[i]])
         fileSet$addFile(file)
@@ -118,7 +118,7 @@ FileStudio0 <- R6::R6Class(
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = methodName, event = v$msg, level = "Error")
-        stop()
+        return(FALSE)
       }
       return(TRUE)
     },
@@ -137,7 +137,7 @@ FileStudio0 <- R6::R6Class(
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = methodName, event = v$msg, level = "Error")
-        stop()
+        return(FALSE)
       }
       return(TRUE)
     }

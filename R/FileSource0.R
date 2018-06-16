@@ -21,15 +21,13 @@ FileSource0 <- R6::R6Class(
   inherit = FileStudio0,
 
   private = list(
-    ..origin = character(),
-    ..destination = character()
+    ..origin = character()
   ),
 
   public = list(
     initialize = function() { stop(paste("This method is not implemented for ",
                                          "this abstract class.")) },
     getOrigin = function() private$..origin,
-    getDestination = function() private$..destination,
 
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #

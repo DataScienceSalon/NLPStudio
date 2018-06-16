@@ -49,6 +49,8 @@ CorpusStudio <- R6::R6Class(
   inherit = Super,
 
   private = list(
+    ..corpus = character(),
+
     validate = function(corpus, methodName) {
 
       private$..params <- list()
@@ -90,9 +92,9 @@ CorpusStudio <- R6::R6Class(
       }
 
       if (sourceType == 'character') {
-        if (isDirectory(x) | ((length(x) == 1) & sum(!grepl(" ", x, perl = TRUE)))) {
-              sourceType <- 'directory'
-            }
+        if (isDirectory(x)) {
+          sourceType <- 'directory'
+        }
       }
 
       corpus <- switch(sourceType,
@@ -106,8 +108,13 @@ CorpusStudio <- R6::R6Class(
       event <- paste0("Constructed Corpus from ", sourceType, ".")
       corpus$message(event)
       private$logR$log(method = 'build', event = event, level = "Info")
-      return(corpus)
+      invisible(self)
     },
+
+    #-------------------------------------------------------------------------#
+    #                      Corpus Tokenize Method                             #
+    #-------------------------------------------------------------------------#
+    addDocuments = function()
 
     #-------------------------------------------------------------------------#
     #                      Corpus Tokenize Method                             #
@@ -315,7 +322,7 @@ CorpusStudio <- R6::R6Class(
 
       private$..params <- list()
       private$..params$discrete$variables = list('format')
-      private$..params$discrete$values = list(lower(format))
+      private$..params$discrete$values = list(tolower(format))
       private$..params$discrete$valid = list(c('txt', 'csv', 'rdata',
                                                'rds', 'bin'))
       v <- private$validator$validate(self)

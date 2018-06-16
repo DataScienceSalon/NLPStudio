@@ -119,18 +119,18 @@ Composite0 <- R6::R6Class(
                          childMeta[[x]]$tech)
 
         # Combine data into a single data frame
-        childSummary <- sections[[1]]
+        childrenummary <- sections[[1]]
         for (i in 2:length(sections)) {
-         if (nrow(sections[[i]]) > 0)  childSummary <- cbind(childSummary, sections[[i]])
+         if (nrow(sections[[i]]) > 0)  childrenummary <- cbind(childrenummary, sections[[i]])
         }
 
         #Remove non-essential data, replace NAs with spaces and print
-        childSummary <- childSummary %>% select(-modified, -modifiedBy, -nModified,
+        childrenummary <- childrenummary %>% select(-modified, -modifiedBy, -nModified,
                                             -lastState, -hardware, -os,
                                             -release, -version)
-        childSummary[is.na(childSummary)] <- " "
+        childrenummary[is.na(childrenummary)] <- " "
         cat("\n")
-        print(childSummary, row.names = FALSE)
+        print(childrenummary, row.names = FALSE)
       })
 
       return(childMeta)
@@ -253,9 +253,8 @@ Composite0 <- R6::R6Class(
         stop()
       }
 
-      childs <- private$getChildren()
 
-      if (nrow(childMeta) != length(childs)) {
+      if (nrow(childMeta) != length(private$..children)) {
         event <- paste0("The childMeta variable must be a data.frame or ",
                         "data.table with one row for each child in ",
                         "the collection. See?", class(self)[1], " for ",
@@ -266,7 +265,7 @@ Composite0 <- R6::R6Class(
       vars <- names(childMeta)
       for (i in 1:nrow(childMeta)) {
         for (j in 1:length(childMeta))
-          childs[[i]]$setMeta(key = vars[j], value = childMeta[i,j], type = type)
+          private$..children[[i]]$setMeta(key = vars[j], value = childMeta[i,j], type = type)
       }
 
       return(self)
@@ -284,13 +283,13 @@ Composite0 <- R6::R6Class(
       sd <- list()
 
       if (!is.null(section)) {
-        if ("i" %in% section) sd$id <- private$summarizeIdMeta()
-        if ("d" %in% section) sd$descriptive <- private$summarizeDescriptiveMeta()
-        if ("q" %in% section) sd$quant <- private$summarizeQuantMeta()
-        if ("f" %in% section) sd$functional  <- private$summarizeFunctionalMeta()
-        if ("c" %in% section) sd$children  <- private$summarizeChildlMeta()
-        if ("a" %in% section) sd$admin <- private$summarizeAdminMeta()
-        if ("t" %in% section) sd$tech <- private$summarizeTechMeta()
+        if (grepl("^i", section, ignore.case = TRUE)) sd$id <- private$summarizeIdMeta()
+        if (grepl("^d", section, ignore.case = TRUE)) sd$descriptive <- private$summarizeDescriptiveMeta()
+        if (grepl("^q", section, ignore.case = TRUE)) sd$quant <- private$summarizeQuantMeta()
+        if (grepl("^f", section, ignore.case = TRUE)) sd$functional  <- private$summarizeFunctionalMeta()
+        if (grepl("^c", section, ignore.case = TRUE)) sd$children  <- private$summarizeChildlMeta()
+        if (grepl("^a", section, ignore.case = TRUE)) sd$admin <- private$summarizeAdminMeta()
+        if (grepl("^t", section, ignore.case = TRUE)) sd$tech <- private$summarizeTechMeta()
 
       } else {
 

@@ -80,7 +80,7 @@ Meta <- R6::R6Class(
                                                       sample(1:10000, 1, replace = TRUE), settings)
 
       # Setup Descriptive Metadata
-      if (!is.null(name)) {
+      if (length(name) > 0) {
         private$..meta$identity$name <- name
       } else {
         private$..meta$identity$name <- private$..meta$identity$id

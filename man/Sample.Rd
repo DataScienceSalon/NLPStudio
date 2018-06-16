@@ -6,44 +6,42 @@
 \title{Sample}
 \format{An object of class \code{R6ClassGenerator} of length 24.}
 \usage{
-Sample <- Sample$new()
+Sample
 }
 \arguments{
-\item{x}{The source Document or Corpus object.}
+\item{x}{Corpus object.}
 
-\item{n}{Numeric. If n <= 1, the proportion of 'unit' to sample. If n>1, the number
-of 'unit' to sample.}
+\item{n}{Numeric of length one, or numeric vector of length equal to
+the number of documents  in the Corpus.}
 
-\item{unit}{Character indicating the units to sample. Values
-include c('word', 'sentence', 'vector'). The default is 'sentence'}
+\item{stratify}{Logical. If TRUE (default), samples will be taken from
+each document in accordance with the proportions or counts indicated
+in the 'n' parameter.}
 
-\item{stratify}{Logical. Applies to Corpus objects with with two or more documents.
-If TRUE, stratified sampling will occur within each document; otherwise, samples
-will be taken from a single combined document. Default is TRUE}
-
-\item{replace}{Logical. If TRUE, samples will be taken with replacement. Default is FALSE.}
-
-\item{seed}{Numeric. Seed for sampling reproducibility. Default is NULL}
-}
-\value{
-Sample object, containing the Sample for a single Document object.
+\item{seed}{Numeric used to initialize a pseudorandom number generator.}
 }
 \description{
-\code{Sample} Class representing sampled Document objects.
+\code{Sample} Creates Corpus from a Corpus sample.
 }
 \details{
-Class containing the sampled representation of a Document object.
+Creates a Corpus object from a sample of a Corpus object.
 }
-\section{Core Methods}{
+\section{Methods}{
 
  \itemize{
-  \item{\code{new(x)}}{Initializes an object of the Sample class.}
-  \item{\code{content}}{Active binding used to set and retrieve Sample content. Sample
-  content may be changed via assignment. Referencing this method retrieves the current
-  Sample content.}
+  \item{\code{new()}}{Not implemented.}
  }
 }
 
+\seealso{
+Other Corpus Sample Family of Classes: \code{\link{Sample0}},
+  \code{\link{Segment}}
+
+Other CorpusStudio Family of Classes: \code{\link{CorpusStudio}},
+  \code{\link{Sample0}}, \code{\link{Segment}},
+  \code{\link{SplitKFold}}, \code{\link{Split}},
+  \code{\link{Tokenizer}}
+}
 \author{
 John James, \email{jjames@datasciencesalon.org}
 }

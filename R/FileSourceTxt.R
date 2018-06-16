@@ -31,17 +31,21 @@ FileSourceTXT <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                             Constructor                                 #
     #-------------------------------------------------------------------------#
-    initialize = function() {
+    initialize = function(x) {
 
       private$loadServices(name = 'FileSourceTXT')
+      private$..origin <- x
       invisible(self)
     },
 
-    buildFileSet = function(origin, destination, name = NULL, overwrite = FALSE) {
+    #-------------------------------------------------------------------------#
+    #                            BuildFileSet                                 #
+    #-------------------------------------------------------------------------#
+    buildFileSet = function(destination, name = NULL, overwrite = FALSE) {
 
-      private$sourceFiles(origin = origin, destination = destination,
+      private$sourceFiles(origin = private$..origin, destination = destination,
                           overwrite= overwrite)
-      fileSet <- private$createFileSet(destination = destination, name = name)
+      fileSet <- private$createFileSet(path = destination, name = name)
 
       return(fileSet)
     },

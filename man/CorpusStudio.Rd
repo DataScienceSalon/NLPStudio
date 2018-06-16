@@ -59,8 +59,10 @@ values for the train, validation and test parameters must equal 1.}
 \code{CorpusStudio}  Class responsible for building and manipulating Corpus objects.
 }
 \seealso{
-Other CorpusStudio Family of Classes: \code{\link{SplitKFold}},
-  \code{\link{Split}}, \code{\link{Tokenizer}}
+Other CorpusStudio Family of Classes: \code{\link{Sample0}},
+  \code{\link{Sample}}, \code{\link{Segment}},
+  \code{\link{SplitKFold}}, \code{\link{Split}},
+  \code{\link{Tokenizer}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

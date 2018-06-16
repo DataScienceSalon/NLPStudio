@@ -55,7 +55,9 @@ a training, test and an optional validation set.
 Other Corpus Split Family of Classes: \code{\link{Split}}
 
 Other CorpusStudio Family of Classes: \code{\link{CorpusStudio}},
-  \code{\link{Split}}, \code{\link{Tokenizer}}
+  \code{\link{Sample0}}, \code{\link{Sample}},
+  \code{\link{Segment}}, \code{\link{Split}},
+  \code{\link{Tokenizer}}
 }
 \author{
 John James, \email{jjames@datasciencesalon.org}
