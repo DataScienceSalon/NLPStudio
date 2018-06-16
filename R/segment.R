@@ -30,16 +30,27 @@ Segment <- R6::R6Class(
 
     ..segments = list(),
 
-    processSegment = function(s, inDocs) {
+    processSegment = function(s, corpusDocs) {
 
-      outDocs <- private$..segments[[s]]$getDocuments()
+      segment <- Clone$new()$this(x = private$..corpus, reference = FALSE)
+      name <- paste0(private$..corpus$getName(), " (Segment ",s, ")")
+      segment$setName(name)
 
-      for (j in 1:length(inDocs)) {
-        id <- inDocs[[j]]$getId()
+      for (i in 1:length(corpusDocs)) {
+        id <- corpusDocs[[i]]$getId()
         idx <- private$..indices$n[private$..indices$document == id & private$..indices$label == s]
-        outDocs[[j]]$content <- inDocs[[j]]$content[idx]
-        private$..segments[[s]]$addDocument(outDocs[[j]])
+        segmentDocument <- Clone$new()$this(x = corpusDocs[[i]], content = FALSE)
+        segmentDocument$content <- corpusDocs[[i]]$content[idx]
+        name <- paste0(corpusDocs[[i]]$getName(), " (Segment ",s, ")")
+        segmentDocument$setName(name)
+        segment$addDocument(segmentDocument)
       }
+
+      event <- paste0("Segment created from Corpus object ", private$..corpus$getName(), ".")
+      segment$message(event)
+      private$logR$log(method = 'processSegment', event = event, level = "Info")
+
+      private$attach(segment)
       return(TRUE)
     },
 
@@ -83,15 +94,12 @@ Segment <- R6::R6Class(
       if (!private$validate(x, n, stratify)) stop()
 
       private$..corpus <- x
-      private$..n <- n
 
-      # Build Segment Corpora sans content. Content will be added in getSegments
-      for (i in 1:n) {
-        private$..segments[[i]] <- Clone$new()$this(x = private$..corpus)
-        private$..segments[[i]]$setName(paste0(private$..segments[[i]]$getName(),
-                                               " Segment ", i))
-      }
       private$segment(n, stratify, seed)
+      corpusDocs <- x$getDocuments()
+      for (i in 1:n) { private$processSegment(i, corpusDocs) }
+
+      private$..corpus <- NULL
 
       invisible(self)
     },
@@ -99,17 +107,10 @@ Segment <- R6::R6Class(
     #                           Get Training Set                              #
     #-------------------------------------------------------------------------#
     getSegments = function(n = NULL) {
-
-      inDocs <- private$..corpus$getDocuments()
-
       if (is.null(n)) {
-        for (i in 1:private$..n) {
-          private$processSegment(s = i, inDocs = inDocs)
-        }
-        return(private$..segments)
+        return(private$..children)
       } else {
-        private$processSegment(s = n, inDocs = inDocs)
-        return(private$..segments[[n]])
+        return(private$..children[[n]])
       }
     },
     #-------------------------------------------------------------------------#

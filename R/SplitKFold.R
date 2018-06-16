@@ -26,38 +26,57 @@ SplitKFold <- R6::R6Class(
   inherit = Sample0,
 
   private = list(
-    ..folds = list(),
 
-    initKFolds = function() {
+    processFold = function(k, corpusDocs, name) {
 
-      name <- private$..corpus$getName()
+      # Instantiate Fold and Training and Test Corpus objects
+      fold <- Fold$new(name)
+      fold <- Copy$new()$this(x = private$..corpus, to = fold)
+      train <- Clone$new()$this(x = private$..corpus, reference = FALSE)
+      test <- Clone$new()$this(x = private$..corpus, reference = FALSE)
 
-      for (i in 1:private$..k) {
-        private$..folds[[i]] <- list()
-        private$..folds[[i]]$training <- Clone$new()$this(x = private$..corpus)
-        private$..folds[[i]]$training$setName(paste0(name, " Fold ", i, " Training Set"))
-        private$..folds[[i]]$test <- Clone$new()$this(x = private$..corpus)
-        private$..folds[[i]]$test$setName(paste0(name, " Fold ", i, " Test Set"))
-      }
-      return(TRUE)
-    },
+      # Set names
+      if (is.null(name))  name <- private$..corpus$getName()
+      fold$setName(paste0(name, " Fold #", k))
+      train$setName(paste0(name, " Fold #", k, " Training Set"))
+      test$setName(paste0(name, " Fold #", k, " Test Set"))
 
-    processFold = function(k, inDocs) {
+      # Set cross-validation type
+      fold$setMeta(key = 'cv', value = paste0("Fold #", k), type = 'f')
+      train$setMeta(key = 'cv', value = 'training', type = 'f')
+      test$setMeta(key = 'cv', value = 'test', type = 'f')
 
-      trainDocs <- private$..folds[[k]]$training$getDocuments()
-      testDocs <- private$..folds[[k]]$test$getDocuments()
-
-      for (j in 1:length(inDocs)) {
-        id <- inDocs[[j]]$getId()
+      # Create and add training and test documents and add to Corpora objects
+      for (i in 1:length(corpusDocs)) {
+        id <- corpusDocs[[i]]$getId()
         trainIdx <- private$..indices$n[private$..indices$document == id & private$..indices$label != k]
         testIdx <- private$..indices$n[private$..indices$document == id & private$..indices$label == k]
 
-        trainDocs[[j]]$content <- inDocs[[j]]$content[trainIdx]
-        testDocs[[j]]$content <- inDocs[[j]]$content[testIdx]
+        trainDoc <- Clone$new()$this(x = corpusDocs[[i]], content = FALSE)
+        testDoc <- Clone$new()$this(x = corpusDocs[[i]], content = FALSE)
 
-        private$..folds[[k]]$training$addDocument(trainDocs[[j]])
-        private$..folds[[k]]$test$addDocument(testDocs[[j]])
+        trainDoc$setName(paste0(corpusDocs[[i]]$getName(), "Training Document"))
+        testDoc$setName(paste0(corpusDocs[[i]]$getName(), "Test Document"))
+
+        trainDoc$setMeta(key = 'cv', value = 'training', type = 'f')
+        testDoc$setMeta(key = 'cv', value = 'test', type = 'f')
+
+        trainDoc$content <- corpusDocs[[i]]$content[trainIdx]
+        testDoc$content <- corpusDocs[[i]]$content[testIdx]
+
+        train$addDocument(trainDoc)
+        test$addDocument(testDoc)
       }
+
+      fold$addSet(train)
+      fold$addSet(test)
+
+      private$attach(fold)
+
+      event <- paste0("Fold #", k, " created.")
+      fold$message(event)
+      private$logR$log(method = 'processFold', event = event, level = "Info")
+
       return(TRUE)
     },
 
@@ -94,7 +113,7 @@ SplitKFold <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                             SplitKFold Method                               #
+    #                             SplitKFold Method                           #
     #-------------------------------------------------------------------------#
     execute = function(x, k, name = NULL, stratify = TRUE, seed = NULL) {
 
@@ -103,33 +122,22 @@ SplitKFold <- R6::R6Class(
       private$..corpus <- x
       private$..k <- k
 
-      private$initKFolds()
       private$segment(k, stratify, seed)
+      corpusDocs <- private$..corpus$getDocuments()
+      for (i in 1:private$..k) { private$processFold(k = i, corpusDocs = corpusDocs,
+                                                     name = name) }
 
       invisible(self)
     },
     #-------------------------------------------------------------------------#
     #                                Get KFolds                               #
     #-------------------------------------------------------------------------#
-    getKFolds = function(k = NULL, set = NULL) {
-
-      inDocs <- private$..corpus$getDocuments()
+    getFolds = function(k = NULL) {
 
       if (is.null(k)) {
-        for (i in 1:private$..k) {
-          private$processFold(k = i, inDocs = inDocs)
-        }
-        return(private$..folds)
+        return(private$..children)
       } else {
-        private$processFold(k = k, inDocs = inDocs)
-
-        if (is.null(set)) {
-          return(private$..folds[[k]])
-        } else if (grepl("^tr", tolower(set), ignore.case = TRUE)) {
-          return(private$..folds[[k]]$training)
-        } else {
-          return(private$..folds[[k]]$test)
-        }
+        return(private$..children[[k]])
       }
     },
     #-------------------------------------------------------------------------#

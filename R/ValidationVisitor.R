@@ -95,6 +95,10 @@ ValidationVisitor <- R6::R6Class(
       return(private$validate(object))
     },
 
+    fold = function(object) {
+      return(private$validate(object))
+    },
+
     corpus = function(object) {
       return(private$validate(object))
     },

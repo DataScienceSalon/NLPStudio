@@ -29,7 +29,7 @@ contains the valid classes for each of the objects
 Other Validation Functions: \code{\link{validateDiscrete}},
   \code{\link{validateKeyValue}},
   \code{\link{validateLogical}},
-  \code{\link{validateRange}}
+  \code{\link{validatePath}}, \code{\link{validateRange}}
 }
 \author{
 John James, \email{jjames@DataScienceSalon.org}

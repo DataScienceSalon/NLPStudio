@@ -77,7 +77,7 @@ Copy <- R6::R6Class(
       private$..params$classes$objects <- list(x, to)
       private$..params$classes$valid <- list(c('Corpus','Document'),
                                              c('Corpus', 'Document',
-                                               'Token'))
+                                               'Token', 'Fold'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'this',

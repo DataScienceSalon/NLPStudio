@@ -135,10 +135,12 @@ Corpus <- R6::R6Class(
         stop()
       }
 
-      if (class(x)[1] != 'Document' & !file.exists(x)) {
-        event <- paste0("File path, ", x, ", does not exist.")
-        private$logR$log(method = 'addDocument', event = event, level = "Error")
-        stop()
+      if (class(x)[1] != 'Document') {
+        if (!file.exists(x)) {
+          event <- paste0("File path, ", x, ", does not exist.")
+          private$logR$log(method = 'addDocument', event = event, level = "Error")
+          stop()
+        }
       }
 
 
@@ -166,7 +168,7 @@ Corpus <- R6::R6Class(
       }
       private$sumQuant()
 
-      private$logR$log(method = 'addDocument', event = event, level = "Error")
+      private$logR$log(method = 'addDocument', event = event, level = "Info")
 
       invisible(self)
 

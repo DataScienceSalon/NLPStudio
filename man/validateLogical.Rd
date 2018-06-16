@@ -23,7 +23,7 @@ names, and (2) a vector containing the values.
 Other Validation Functions: \code{\link{validateClass}},
   \code{\link{validateDiscrete}},
   \code{\link{validateKeyValue}},
-  \code{\link{validateRange}}
+  \code{\link{validatePath}}, \code{\link{validateRange}}
 }
 \author{
 John James, \email{jjames@DataScienceSalon.org}

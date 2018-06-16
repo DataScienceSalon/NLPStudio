@@ -24,7 +24,7 @@ Sample0 <- R6::R6Class(
   classname = "Sample0",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = Super,
+  inherit = Composite0,
 
   private = list(
 
@@ -108,16 +108,13 @@ Sample0 <- R6::R6Class(
       }
 
       if (stratify) {
-        if (length(weights) != length(documents)) {
-          weights <- rep(weights, length(documents))
-        }
 
         private$..indices <- rbindlist(lapply(seq_along(documents), function(d) {
           split <- list()
           split$document <- rep(documents[[d]]$getId(), length(documents[[d]]$content))
           split$n <- seq(1:length(documents[[d]]$content))
           split$label <- sample(labels, size = length(documents[[d]]$content), replace = TRUE,
-                                  prob = weights[[d]])
+                                  prob = weights)
           split
         }))
       } else {
@@ -128,7 +125,7 @@ Sample0 <- R6::R6Class(
           split
         }))
         private$..indices$label <- sample(labels, size = nrow(private$..indices), replace = TRUE,
-                                         prob = weights[[1]])
+                                         prob = weights)
       }
 
       if (length(seed) > 0)  set.seed(unseed)

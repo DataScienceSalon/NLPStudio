@@ -22,7 +22,7 @@ All ranges are inclusive.
 Other Validation Functions: \code{\link{validateClass}},
   \code{\link{validateDiscrete}},
   \code{\link{validateKeyValue}},
-  \code{\link{validateLogical}}
+  \code{\link{validateLogical}}, \code{\link{validatePath}}
 }
 \author{
 John James, \email{jjames@DataScienceSalon.org}

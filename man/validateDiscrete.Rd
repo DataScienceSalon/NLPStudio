@@ -29,7 +29,7 @@ contains the valid values for each of the variables.
 Other Validation Functions: \code{\link{validateClass}},
   \code{\link{validateKeyValue}},
   \code{\link{validateLogical}},
-  \code{\link{validateRange}}
+  \code{\link{validatePath}}, \code{\link{validateRange}}
 }
 \author{
 John James, \email{jjames@DataScienceSalon.org}

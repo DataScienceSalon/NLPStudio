@@ -220,24 +220,10 @@ CorpusStudio <- R6::R6Class(
       invisible(self)
     },
 
-    getSplits = function(set = NULL) {
-
-      if (is.null(set)) {
-        return(private$..splits$getSplits())
-      } else if (grepl("^tr", set, ignore.case = TRUE)) {
-        return(private$..splits$getTrainingSet())
-      } else if (grepl("^v", set, ignore.case = TRUE)) {
-        return(private$..splits$getValidationSet())
-      } else if (grepl("^t", set, ignore.case = TRUE)) {
-        return(private$..splits$getTestSet())
-      } else {
-        event <- paste0("Set parameter value, ", set, " is invalid. ",
-                        "Valid values include c('training', validation', 'test'). ",
-                        "See ?", class(self)[1], " for further assistance. ")
-        private$logR$log(method = 'split', event = event, level = "Error")
-        stop()
-      }
-    },
+    getSplits = function() { private$..splits$getSplits() },
+    getTrainingSet = function() { private$..splits$getTrainingSet() },
+    getValidationSet = function() { private$..splits$getValidationSet() },
+    getTestSet = function() { private$..splits$getTestSet() },
 
     #-------------------------------------------------------------------------#
     #                   Corpus kFold Split Method                             #
@@ -303,7 +289,7 @@ CorpusStudio <- R6::R6Class(
       invisible(self)
     },
 
-    getClean = function() private$..clean
+    getClean = function() private$..clean,
 
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #

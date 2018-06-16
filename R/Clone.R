@@ -167,7 +167,7 @@ Clone <- R6::R6Class(
       classname <- class(x)[1]
       out <- switch(classname,
                     Corpus = private$cloneCorpus(x, reference, content),
-                    Document = private$cloneDocument(x),
+                    Document = private$cloneDocument(x, content),
                     FileSet = private$cloneFileSet(x, reference, path),
                     File = private$cloneFile(x, path))
       return(out)
