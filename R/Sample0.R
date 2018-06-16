@@ -29,7 +29,7 @@ Sample0 <- R6::R6Class(
   private = list(
 
     ..corpus = character(),
-    ..splits = data.frame(),
+    ..indices = data.frame(),
 
     segment = function(n, stratify, seed) {
 

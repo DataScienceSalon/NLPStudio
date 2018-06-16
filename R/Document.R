@@ -178,24 +178,24 @@ Document <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Core Methods                                  #
     #-------------------------------------------------------------------------#
-    initialize = function(x, name = NULL) {
+    initialize = function(x = NULL, name = NULL) {
 
-      private$loadServices()
-      private$meta <- Meta$new(x = self, name = name)
+      private$loadServices(name)
 
       # Validate text
-      private$..params <- list()
-      private$..params$classes$name <- list('x')
-      private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list(c('character', 'list', 'File'))
-      v <- private$validator$validate(self)
-      if (v$code == FALSE) {
-        private$logR$log(method = 'initialize',
-                         event = v$msg, level = "Error")
-        stop()
+      if (!is.null(x)) {
+        private$..params <- list()
+        private$..params$classes$name <- list('x')
+        private$..params$classes$objects <- list(x)
+        private$..params$classes$valid <- list(c('character', 'list', 'File'))
+        v <- private$validator$validate(self)
+        if (v$code == FALSE) {
+          private$logR$log(method = 'initialize',
+                           event = v$msg, level = "Error")
+          stop()
+        }
+        private$processContent(x)
       }
-
-      private$processContent(x)
 
       private$logR$log(method = 'initialize',
                        event = "Initialization complete.")

@@ -9,50 +9,29 @@
 SplitKFold
 }
 \arguments{
-\item{corpus}{Corpus object.}
+\item{x}{Corpus object.}
 
-\item{k}{Numeric indicating the number of folds.}
+\item{k}{Numeric of folds}
 
-\item{name}{Character string indicating the name for the cross-validation set.}
-
-\item{train}{Numeric indicating the proportion of the Corpus to allocate
-to the training set. Acceptable values are between 0 and 1. The total of the
-values for the train, validation and test parameters must equal 1.}
-
-\item{validation}{Numeric indicating the proportion of the Corpus to allocate
-to the validation set. Acceptable values are between 0 and 1. The total of the
-values for the train, validation and test parameters must equal 1.}
-
-\item{test}{Numeric indicating the proportion of the Corpus to allocate
-to the test set. Acceptable values are between 0 and 1. The total of the
-values for the train, validation and test parameters must equal 1.}
-
-\item{stratify}{Logical. If TRUE (default), splits and sampling will
-be stratefied.}
+\item{stratify}{Logical. If TRUE (default), SplitKFolds will be taken from
+each document in accordance with the proportions or counts indicated
+in the 'n' parameter.}
 
 \item{seed}{Numeric used to initialize a pseudorandom number generator.}
 }
-\value{
-CVKFold object
-}
 \description{
-\code{SplitKFold} Splits a Corpus object into a k fold cross-validation sets.
-}
-\details{
-Splits a Corpus object into k fold cross-validation sets, each containing
-a training, test and an optional validation set.
+\code{SplitKFold} Creates a K-Fold cross-validation set.
 }
 \section{Methods}{
 
  \itemize{
-  \item{\code{new()}}{Initializes an object of the SplitKFold class.}
-  \item{\code{execute(x, train = 0.75, validation = 0, test = 0.25,
-  stratify = TRUE, seed = NULL)}}{Executes the corpus splits.}
+  \item{\code{new()}}{Not implemented.}
  }
 }
 
 \seealso{
-Other Corpus Split Family of Classes: \code{\link{Split}}
+Other Corpus Sample Family of Classes: \code{\link{Sample0}},
+  \code{\link{Sample}}, \code{\link{Segment}}
 
 Other CorpusStudio Family of Classes: \code{\link{CorpusStudio}},
   \code{\link{Sample0}}, \code{\link{Sample}},

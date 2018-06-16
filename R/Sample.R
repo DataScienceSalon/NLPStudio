@@ -65,14 +65,15 @@ Sample <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                             Sample Method                              #
+    #                             Sample Method                               #
     #-------------------------------------------------------------------------#
     execute = function(x, n, name = NULL, stratify = TRUE, seed = NULL) {
 
       if (!private$validate(x, n, stratify)) stop()
 
-      private$..sample <- NULL
       private$..corpus <- x
+      private$..sample <- Clone$new()$this(x = private$..corpus)
+      if (!is.null(name)) private$..sample$setName(name)
 
       labels <- c('in', 'out')
       if (any(n <= 1)) {
@@ -87,62 +88,27 @@ Sample <- R6::R6Class(
       invisible(self)
     },
     #-------------------------------------------------------------------------#
-    #                           Get Training Set                              #
+    #                             Get Sample                                  #
     #-------------------------------------------------------------------------#
     getSample = function() {
 
-      if (is.null(private$..sample)) {
-        private$..sample <- Clone$new()$this(x = private$..corpus, reference = FALSE)
-        documents <- private$..corpus$getDocuments()
-        for (i in 1:length(documents)) {
-          id <- documents[[i]]$getId()
-          idx <- private$..indices$n[private$..indices$document == id & private$..indices$label == 'in']
-          content <- documents[[i]]$content[idx]
-          document <- Clone$new()$this(x = documents[[i]])
-          document$content <- content
-          private$..sample$addDocument(document)
-        }
+      inDocs <- private$..corpus$getDocuments()
+      outDocs <- private$..sample$getDocuments()
+
+      for (i in 1:length(inDocs)) {
+        id <- inDocs[[i]]$getId()
+        idx <- private$..indices$n[private$..indices$document == id & private$..indices$label == 'in']
+        outDocs[[i]]$content <- inDocs[[i]]$content[idx]
+        private$..sample$addDocument(outDocs[[i]])
       }
       return(private$..sample)
     },
 
     #-------------------------------------------------------------------------#
-    #                           Get Validation Set                            #
-    #-------------------------------------------------------------------------#
-    getValidationSet = function() {
-      documents <- private$..corpus$getDocuments()
-      validation <- unname(unlist(lapply(documents, function(d) {
-        id <- d$getId()
-        idx <- unlist(private$..indices %>% filter(document == id & label == 'validation') %>%
-                        select(n))
-        d$content[idx]
-      })))
-      if (length(validation) == 0) {
-        event <- "No validation set exists."
-        private$logR$log(method = 'getValidationSet', event = event, level = "Warn")
-      }
-      return(validation)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                             Get Test Set                                #
-    #-------------------------------------------------------------------------#
-    getTestSet = function() {
-      documents <- private$..corpus$getDocuments()
-      test <- unname(unlist(lapply(documents, function(d) {
-        id <- d$getId()
-        idx <- unlist(private$..indices %>% filter(document == id & label == 'test') %>%
-                        select(n))
-        d$content[idx]
-      })))
-
-      return(test)
-    },
-    #-------------------------------------------------------------------------#
     #                           Visitor Method                                #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$split(self)
+      visitor$sample(self)
     }
   )
 )

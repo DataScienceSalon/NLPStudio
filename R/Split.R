@@ -45,6 +45,32 @@ Split <- R6::R6Class(
     ..validation = character(),
     ..test = character(),
 
+    #-------------------------------------------------------------------------#
+    #                       initCrossValidatinSets                            #
+    #-------------------------------------------------------------------------#
+    initCrossValidationSets = function(validation) {
+
+      private$..training <- Clone$new()$this(x = private$..corpus)
+      private$..training$setName(paste(private$..corpus$getName(),
+                                       'Training Set'))
+
+      if (validation == 0) {
+        private$..validation <- NULL
+      } else {
+        private$..validation <- Clone$new()$this(x = private$..corpus)
+        private$..validation$setName(paste(private$..corpus$getName(),
+                                           'Validation Set'))
+      }
+
+      private$..test <- Clone$new()$this(x = private$..corpus)
+      private$..test$setName(paste(private$..corpus$getName(),
+                                   'Test Set'))
+      return(TRUE)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                              Validate                                   #
+    #-------------------------------------------------------------------------#
     validate = function(corpus, train, validation, test, stratify) {
       private$..params <- list()
       private$..params$classes$name <- list('corpus','train', 'validation',
@@ -90,14 +116,11 @@ Split <- R6::R6Class(
     execute = function(x, name = NULL, train = 0.75, validation = 0,
                           test = 0.25,  stratify = TRUE, seed = NULL) {
 
-      private$..training <- NULL
-      private$..validation <- NULL
-      private$..test <- NULL
-      private$..validationSet <- ifelse(validation == 0, FALSE, TRUE)
-
       if (!private$validate(x, train, validation, test, stratify)) stop()
+
       private$..corpus <- x
-      private$..name <- name
+      private$initCrossValidationSets(validation)
+
       private$sampleP(labels = c('training', 'validation', 'test'), seed,
                       stratify, weights = list(c(train, validation, test)))
 
@@ -108,31 +131,18 @@ Split <- R6::R6Class(
     #-------------------------------------------------------------------------#
     getTrainingSet = function() {
 
-      if (is.null(private$..training)) {
+      inDocs <- private$..corpus$getDocuments()
+      outDocs <- private$..training$getDocuments()
 
-        private$..training <- Clone$new()$this(x = private$..corpus, reference = FALSE)
+      for (i in 1:length(inDocs)) {
 
-        # Set Name
-        if (is.null(private$..name)) {
-          name <- paste(private$..corpus$getName(), "Training Set")
-        } else {
-          name <- private$..name
-        }
-        private$..training$setName(name)
-
-        documents <- private$..corpus$getDocuments()
-
-        for (i in 1:length(documents)) {
-
-          document <- Clone$new()$this(x = documents[[i]])
-          id <- documents[[i]]$getId()
-          idx <- unlist(private$..indices %>%
-                          filter(document == id & label == 'training') %>%
-                          select(n))
-          document$content <- documents[[i]]$content[idx]
-          document$setMeta(key = 'cv', value = 'training', type = 'f')
-          private$..training$addDocument(document)
-        }
+        id <- inDocs[[i]]$getId()
+        idx <- unlist(private$..indices %>%
+                        filter(document == id & label == 'training') %>%
+                        select(n))
+        outDocs[[i]]$content <- inDocs[[i]]$content[idx]
+        outDocs[[i]]$setMeta(key = 'cv', value = 'training', type = 'f')
+        private$..training$addDocument(outDocs[[i]])
       }
       return(private$..training)
     },
@@ -142,71 +152,45 @@ Split <- R6::R6Class(
     #-------------------------------------------------------------------------#
     getValidationSet = function() {
 
-      if (is.null(private$..validation)) {
+      if (!is.null(private$..validation)) {
 
-        if (private$..validationSet) {
+        inDocs <- private$..corpus$getDocuments()
+        outDocs <- private$..validation$getDocuments()
 
-          private$..validation <- Clone$new()$this(x = private$..corpus, reference = FALSE)
+        for (i in 1:length(inDocs)) {
 
-          # Set Name
-          if (is.null(private$..name)) {
-            name <- paste(private$..corpus$getName(), "Validation Set")
-          } else {
-            name <- private$..name
-          }
-          private$..validation$setName(name)
-
-          documents <- private$..corpus$getDocuments()
-
-          for (i in 1:length(documents)) {
-
-            document <- Clone$new()$this(x = documents[[i]])
-            id <- documents[[i]]$getId()
-            idx <- unlist(private$..indices %>%
-                            filter(document == id & label == 'validation') %>%
-                            select(n))
-            document$content <- documents[[i]]$content[idx]
-            document$setMeta(key = 'cv', value = 'validation', type = 'f')
-            private$..validation$addDocument(document)
-          }
-
-        } else {
-          event <- "No validation set exists."
-          private$logR$log(method = 'getValidationSet', event = event, level = "Warn")
+          id <- inDocs[[i]]$getId()
+          idx <- unlist(private$..indices %>%
+                          filter(document == id & label == 'validation') %>%
+                          select(n))
+          outDocs[[i]]$content <- inDocs[[i]]$content[idx]
+          outDocs[[i]]$setMeta(key = 'cv', value = 'validation', type = 'f')
+          private$..validation$addDocument(outDocs[[i]])
         }
+      } else {
+        event <- paste("No validation set exists.")
+        private$logR$log(method = 'getValidationSet', event = event, level = "Warn")
       }
       return(private$..validation)
     },
+
     #-------------------------------------------------------------------------#
-    #                             Get Test Set                                #
+    #                           Get Test Set                                  #
     #-------------------------------------------------------------------------#
     getTestSet = function() {
 
-      if (is.null(private$..test)) {
+      inDocs <- private$..corpus$getDocuments()
+      outDocs <- private$..test$getDocuments()
 
-        private$..test <- Clone$new()$this(x = private$..corpus, reference = FALSE)
+      for (i in 1:length(inDocs)) {
 
-        # Set Name
-        if (is.null(private$..name)) {
-          name <- paste(private$..corpus$getName(), "Test Set")
-        } else {
-          name <- private$..name
-        }
-        private$..test$setName(name)
-
-        documents <- private$..corpus$getDocuments()
-
-        for (i in 1:length(documents)) {
-
-          document <- Clone$new()$this(x = documents[[i]])
-          id <- documents[[i]]$getId()
-          idx <- unlist(private$..indices %>%
-                          filter(document == id & label == 'test') %>%
-                          select(n))
-          document$content <- documents[[i]]$content[idx]
-          document$setMeta(key = 'cv', value = 'test', type = 'f')
-          private$..test$addDocument(document)
-        }
+        id <- inDocs[[i]]$getId()
+        idx <- unlist(private$..indices %>%
+                        filter(document == id & label == 'test') %>%
+                        select(n))
+        outDocs[[i]]$content <- inDocs[[i]]$content[idx]
+        outDocs[[i]]$setMeta(key = 'cv', value = 'test', type = 'f')
+        private$..test$addDocument(outDocs[[i]])
       }
       return(private$..test)
     },

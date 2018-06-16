@@ -54,37 +54,42 @@ Clone <- R6::R6Class(
       return(out)
     },
 
-    cloneCVSet = function(x, reference) {
-      out <- CVSet$new()
-      out <- private$cloneMeta(x, out)
-      corpora <- x$getCorpus()
-      for (i in 1:length(corpora)) {
-        corpus <- private$cloneCorpus(corpora[[i]], reference)
-        out$addCorpus(corpora[[i]])
-      }
-      event <- paste0("CVSet, ", x$getName(), ", cloned.")
-      out$message(event = event)
-      return(out)
-    },
+    cloneCorpus = function(x, reference, content) {
 
-    cloneCorpus = function(x, reference) {
-      out <- Corpus$new()
+      id <- x$getId()
+      name <- x$getName()
+      out <- Corpus$new(name = name)
       out <- private$cloneMeta(x, out)
+
       if (reference) {
         docs <- x$getDocuments()
         for (i in 1:length(docs)) {
-          doc <- private$cloneDocument(docs[[i]])
+          doc <- private$cloneDocument(docs[[i]], content)
           out$addDocument(doc)
         }
       }
+
+      out$setMeta(key = 'source',
+                  value = paste0('Cloned from ', name, " (", id, ")"),
+                  type = 'f')
       event <- paste0("Corpus, ", x$getName(), ", cloned.")
       out$message(event = event)
       return(out)
     },
 
-    cloneDocument = function(x) {
-      out <- Document$new(x$content)
+    cloneDocument = function(x, content) {
+      id <- x$getId()
+      name <- x$getName()
+      if (content) {
+        out <- Document$new(x = x$content, name = name)
+      } else {
+        out <- Document$new(name = name)
+      }
+
       out <- private$cloneMeta(x, out)
+      out$setMeta(key = 'source',
+                  value = paste0('Cloned from ', name, " (", id, ")"),
+                  type = 'f')
       event <- paste0("Document, ", x$getName(), ", cloned.")
       x$message(event = event)
       return(out)
@@ -134,7 +139,7 @@ Clone <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                            Factory Method                               #
     #-------------------------------------------------------------------------#
-    this = function(x, reference = TRUE, path = NULL) {
+    this = function(x, reference = TRUE, content = FALSE, path = NULL) {
 
       # Validate class of object.
       private$..params <- list()
@@ -161,8 +166,7 @@ Clone <- R6::R6Class(
 
       classname <- class(x)[1]
       out <- switch(classname,
-                    CVSet = private$cloneCVSet(x, reference),
-                    Corpus = private$cloneCorpus(x, reference),
+                    Corpus = private$cloneCorpus(x, reference, content),
                     Document = private$cloneDocument(x),
                     FileSet = private$cloneFileSet(x, reference, path),
                     File = private$cloneFile(x, path))

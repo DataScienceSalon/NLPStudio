@@ -1,95 +1,83 @@
 #' SplitKFold
 #'
-#' \code{SplitKFold} Splits a Corpus object into a k fold cross-validation sets.
-#'
-#' Splits a Corpus object into k fold cross-validation sets, each containing
-#' a training, test and an optional validation set.
+#' \code{SplitKFold} Creates a K-Fold cross-validation set.
 #'
 #' @section Methods:
 #'  \itemize{
-#'   \item{\code{new()}}{Initializes an object of the SplitKFold class.}
-#'   \item{\code{execute(x, train = 0.75, validation = 0, test = 0.25,
-#'   stratify = TRUE, seed = NULL)}}{Executes the corpus splits.}
+#'   \item{\code{new()}}{Not implemented.}
 #'  }
 #'
-#' @param corpus Corpus object.
-#' @param k Numeric indicating the number of folds.
-#' @param name Character string indicating the name for the cross-validation set.
-#' @param train Numeric indicating the proportion of the Corpus to allocate
-#' to the training set. Acceptable values are between 0 and 1. The total of the
-#' values for the train, validation and test parameters must equal 1.
-#' @param validation Numeric indicating the proportion of the Corpus to allocate
-#' to the validation set. Acceptable values are between 0 and 1. The total of the
-#' values for the train, validation and test parameters must equal 1.
-#' @param test Numeric indicating the proportion of the Corpus to allocate
-#' to the test set. Acceptable values are between 0 and 1. The total of the
-#' values for the train, validation and test parameters must equal 1.
-#' @param stratify Logical. If TRUE (default), splits and sampling will
-#' be stratefied.
+#' @param x Corpus object.
+#' @param k Numeric of folds
+#' @param stratify Logical. If TRUE (default), SplitKFolds will be taken from
+#' each document in accordance with the proportions or counts indicated
+#' in the 'n' parameter.
 #' @param seed Numeric used to initialize a pseudorandom number generator.
-#'
-#' @return CVKFold object
 #'
 #' @docType class
 #' @author John James, \email{jjames@@datasciencesalon.org}
-#' @family Corpus Split Family of Classes
+#' @family Corpus Sample Family of Classes
 #' @family CorpusStudio Family of Classes
 #' @export
 SplitKFold <- R6::R6Class(
   classname = "SplitKFold",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = Split,
+  inherit = Sample0,
 
   private = list(
+    ..folds = list(),
 
-    ..folds = character(),
-    #-------------------------------------------------------------------------#
-    #                             Constructor                                 #
-    #-------------------------------------------------------------------------#
-    splitFolds = function(name, train, validation, test, stratify, seed) {
+    initKFolds = function() {
 
-      # Create CVKFold Object
-      if (is.null(name))  name <- paste(private$..folds[[1]]$getName(),
-                                        "K Fold Cross-Validation Set")
-      cvKFold <- CVKFold$new(name)
+      name <- private$..corpus$getName()
 
-      # Process Folds
-      for (i in 1:length(private$..folds)) {
-        private$..corpus <- private$..folds[[i]]
-        cvSet <- private$splitCorpus(name, train, validation, test,  stratify, seed)
-        cvKFold$addCVSet(cvSet)
+      for (i in 1:private$..k) {
+        private$..folds[[i]] <- list()
+        private$..folds[[i]]$training <- Clone$new()$this(x = private$..corpus)
+        private$..folds[[i]]$training$setName(paste0(name, " Fold ", i, " Training Set"))
+        private$..folds[[i]]$test <- Clone$new()$this(x = private$..corpus)
+        private$..folds[[i]]$test$setName(paste0(name, " Fold ", i, " Test Set"))
       }
-      private$..corpus <- NULL
-      private$..folds <- NULL
-      return(cvKFold)
+      return(TRUE)
     },
 
-    validate = function(corpus, k, train, validation, test, stratify, seed) {
+    processFold = function(k, inDocs) {
+
+      trainDocs <- private$..folds[[k]]$training$getDocuments()
+      testDocs <- private$..folds[[k]]$test$getDocuments()
+
+      for (j in 1:length(inDocs)) {
+        id <- inDocs[[j]]$getId()
+        trainIdx <- private$..indices$n[private$..indices$document == id & private$..indices$label != k]
+        testIdx <- private$..indices$n[private$..indices$document == id & private$..indices$label == k]
+
+        trainDocs[[j]]$content <- inDocs[[j]]$content[trainIdx]
+        testDocs[[j]]$content <- inDocs[[j]]$content[testIdx]
+
+        private$..folds[[k]]$training$addDocument(trainDocs[[j]])
+        private$..folds[[k]]$test$addDocument(testDocs[[j]])
+      }
+      return(TRUE)
+    },
+
+    validate = function(x, k, stratify) {
       private$..params <- list()
-      private$..params$classes$name <- list('corpus','k', 'train', 'validation',
-                                            'test', 'stratify')
-      private$..params$classes$objects <- list(corpus, k, train, validation,
-                                               test, stratify)
-      private$..params$classes$valid <- list(c('Corpus'),
-                                             c('integer', 'numeric'),
-                                             c('integer', 'numeric'),
-                                             c('integer', 'numeric'),
-                                             c('integer', 'numeric'),
-                                             c("logical"))
+      private$..params$classes$name <- list('x','k', 'stratify')
+      private$..params$classes$objects <- list(x, k, stratify)
+      private$..params$classes$valid <- list('Corpus', 'numeric', 'logical')
       private$..params$logicals$variables <- c('stratify')
       private$..params$logicals$values <- c(stratify)
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'execute', event = v$msg, level = "Error")
-        stop()
+        return(FALSE)
       }
 
-      if (sum(train, test, validation) != 1) {
-        event <- paste0("Proportions for training, validation and test sets ",
-                        "must equal one. ")
+      if (length(k) > 1) {
+        event <- paste0("Invalid parameter 'k'. Parameter must be of length one.")
         private$logR$log(method = 'execute', event = event, level = "Error")
-        stop()
+        return(FALSE)
       }
       return(TRUE)
     }
@@ -101,27 +89,54 @@ SplitKFold <- R6::R6Class(
     #                             Constructor                                 #
     #-------------------------------------------------------------------------#
     initialize = function() {
-      private$loadServices()
+      private$loadServices("SplitKFold")
       invisible(self)
     },
 
     #-------------------------------------------------------------------------#
-    #                             SplitKFold Method                                #
+    #                             SplitKFold Method                               #
     #-------------------------------------------------------------------------#
-    execute = function(corpus, k, name = NULL, train = 0.75, validation = 0,
-                       test = 0.25,  stratify = TRUE, seed = NULL) {
+    execute = function(x, k, name = NULL, stratify = TRUE, seed = NULL) {
 
-      private$validate(corpus, k, train, validation, test, stratify, seed)
-      private$..folds <- NLPStudio::segment(corpus, n = k)
-      cvKFold <- private$splitFolds(name, train, validation, test, stratify, seed)
+      if (!private$validate(x, k, stratify)) stop()
 
-      return(cvKFold)
+      private$..corpus <- x
+      private$..k <- k
+
+      private$initKFolds()
+      private$segment(k, stratify, seed)
+
+      invisible(self)
+    },
+    #-------------------------------------------------------------------------#
+    #                           Get Training Set                              #
+    #-------------------------------------------------------------------------#
+    getKFolds = function(k = NULL, set = NULL) {
+
+      inDocs <- private$..corpus$getDocuments()
+
+      if (is.null(k)) {
+        for (i in 1:private$..k) {
+          private$processFold(k = i, inDocs = inDocs)
+        }
+        return(private$..folds)
+      } else {
+        private$processFold(k = k, inDocs = inDocs)
+
+        if (is.null(set)) {
+          return(private$..folds[[k]])
+        } else if (grepl("^tr", tolower(set), ignore.case = TRUE)) {
+          return(private$..folds[[k]]$training)
+        } else {
+          return(private$..folds[[k]]$test)
+        }
+      }
     },
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$splitKFold(self)
+      visitor$segment(self)
     }
   )
 )

@@ -33,7 +33,7 @@ Base class that defines the methods common to the Split and Sample Classes.
 
 \seealso{
 Other Corpus Sample Family of Classes: \code{\link{Sample}},
-  \code{\link{Segment}}
+  \code{\link{Segment}}, \code{\link{SplitKFold}}
 
 Other CorpusStudio Family of Classes: \code{\link{CorpusStudio}},
   \code{\link{Sample}}, \code{\link{Segment}},

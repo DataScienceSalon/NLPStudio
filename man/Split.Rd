@@ -50,8 +50,6 @@ are combined into a single cross-validation set or CVSet object.
 }
 
 \seealso{
-Other Corpus Split Family of Classes: \code{\link{SplitKFold}}
-
 Other CorpusStudio Family of Classes: \code{\link{CorpusStudio}},
   \code{\link{Sample0}}, \code{\link{Sample}},
   \code{\link{Segment}}, \code{\link{SplitKFold}},

@@ -27,8 +27,21 @@ Segment <- R6::R6Class(
   inherit = Sample0,
 
   private = list(
-    ..splits = character(),
+
     ..segments = list(),
+
+    processSegment = function(s, inDocs) {
+
+      outDocs <- private$..segments[[s]]$getDocuments()
+
+      for (j in 1:length(inDocs)) {
+        id <- inDocs[[j]]$getId()
+        idx <- private$..indices$n[private$..indices$document == id & private$..indices$label == s]
+        outDocs[[j]]$content <- inDocs[[j]]$content[idx]
+        private$..segments[[s]]$addDocument(outDocs[[j]])
+      }
+      return(TRUE)
+    },
 
     validate = function(x, n, stratify) {
       private$..params <- list()
@@ -63,16 +76,21 @@ Segment <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                             Segment Method                               #
+    #                             Segment Method                              #
     #-------------------------------------------------------------------------#
     execute = function(x, n, name = NULL, stratify = TRUE, seed = NULL) {
 
       if (!private$validate(x, n, stratify)) stop()
 
-      private$..segments <- NULL
       private$..corpus <- x
       private$..n <- n
 
+      # Build Segment Corpora sans content. Content will be added in getSegments
+      for (i in 1:n) {
+        private$..segments[[i]] <- Clone$new()$this(x = private$..corpus)
+        private$..segments[[i]]$setName(paste0(private$..segments[[i]]$getName(),
+                                               " Segment ", i))
+      }
       private$segment(n, stratify, seed)
 
       invisible(self)
@@ -80,24 +98,19 @@ Segment <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Get Training Set                              #
     #-------------------------------------------------------------------------#
-    getSegments = function() {
+    getSegments = function(n = NULL) {
 
-      if (is.null(private$..segments)) {
+      inDocs <- private$..corpus$getDocuments()
+
+      if (is.null(n)) {
         for (i in 1:private$..n) {
-          private$..segments[[i]] <- Clone$new()$this(x = private$..corpus, reference = FALSE)
-          private$..segments[[i]]$setName(paste0(private$..segments[[i]]$getName(), " Segment ", i))
-          documents <- private$..corpus$getDocuments()
-          for (j in 1:length(documents)) {
-            id <- documents[[j]]$getId()
-            idx <- private$..indices$n[private$..indices$document == id & private$..indices$label == i]
-            content <- documents[[j]]$content[idx]
-            document <- Clone$new()$this(x = documents[[j]])
-            document$content <- content
-            private$..segments[[i]]$addDocument(document)
-          }
+          private$processSegment(s = i, inDocs = inDocs)
         }
+        return(private$..segments)
+      } else {
+        private$processSegment(s = n, inDocs = inDocs)
+        return(private$..segments[[n]])
       }
-      return(private$..segments)
     },
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #

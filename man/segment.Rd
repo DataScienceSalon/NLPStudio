@@ -33,7 +33,7 @@ in the 'n' parameter.}
 
 \seealso{
 Other Corpus Sample Family of Classes: \code{\link{Sample0}},
-  \code{\link{Sample}}
+  \code{\link{Sample}}, \code{\link{SplitKFold}}
 
 Other CorpusStudio Family of Classes: \code{\link{CorpusStudio}},
   \code{\link{Sample0}}, \code{\link{Sample}},
