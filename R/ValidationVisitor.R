@@ -64,6 +64,14 @@ ValidationVisitor <- R6::R6Class(
           return(status)
         }
       }
+
+      # Validate path
+      if (!is.null(p$file)) {
+        status <- validatePath(object)
+        if (status$code == FALSE) {
+          return(status)
+        }
+      }
       return(status)
     }
   ),

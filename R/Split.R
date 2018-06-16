@@ -126,6 +126,19 @@ Split <- R6::R6Class(
 
       invisible(self)
     },
+
+    #-------------------------------------------------------------------------#
+    #                              Get All Sets                               #
+    #-------------------------------------------------------------------------#
+    getSplits = function() {
+      splits <- list()
+      splits$training <- self$getTrainingSet()
+      splits$test <- self$getTestSet()
+      if (!is.null(private$..validation)) {
+        splits$validation <- self$getValidationSet()
+      }
+      return(splits)
+    },
     #-------------------------------------------------------------------------#
     #                           Get Training Set                              #
     #-------------------------------------------------------------------------#

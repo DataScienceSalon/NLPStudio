@@ -50,6 +50,11 @@ CorpusStudio <- R6::R6Class(
 
   private = list(
     ..corpus = character(),
+    ..clean  = character(),
+    ..tokens = character(),
+    ..sample = character(),
+    ..splits = character(),
+    ..kFolds = character(),
 
     validate = function(corpus, methodName) {
 
@@ -97,32 +102,29 @@ CorpusStudio <- R6::R6Class(
         }
       }
 
-      corpus <- switch(sourceType,
-                       FileSet = CSourceFileSet$new()$source(x, name),
-                       corpus = CSourceQuanteda$new()$source(x, name),
-                       VCorpus = CSourceTM$new()$source(x, name),
-                       SimpleCorpus = CSourceTM$new()$source(x, name),
-                       character = CSourceVector$new()$source(x, name),
-                       directory = CSourceDir$new()$source(x, name))
+      private$..corpus <- switch(sourceType,
+                                 FileSet = CSourceFileSet$new()$source(x, name),
+                                 corpus = CSourceQuanteda$new()$source(x, name),
+                                 VCorpus = CSourceTM$new()$source(x, name),
+                                 SimpleCorpus = CSourceTM$new()$source(x, name),
+                                 character = CSourceVector$new()$source(x, name),
+                                 directory = CSourceDir$new()$source(x, name))
 
       event <- paste0("Constructed Corpus from ", sourceType, ".")
-      corpus$message(event)
+      private$..corpus$message(event)
       private$logR$log(method = 'build', event = event, level = "Info")
       invisible(self)
     },
 
-    #-------------------------------------------------------------------------#
-    #                      Corpus Tokenize Method                             #
-    #-------------------------------------------------------------------------#
-    addDocuments = function()
+    getCorpus = function() private$..corpus,
 
     #-------------------------------------------------------------------------#
     #                      Corpus Tokenize Method                             #
     #-------------------------------------------------------------------------#
-    tokenize = function(corpus, name = NULL, tokenUnit = 'sentence') {
+    tokenize = function(tokenUnit = 'sentence') {
 
       # Validation
-      private$validate(corpus, methodName = 'tokenize')
+      private$validate(private$..corpus, methodName = 'tokenize')
 
       private$..params <- list()
       private$..params$discrete$variables = list('tokenUnit')
@@ -135,22 +137,25 @@ CorpusStudio <- R6::R6Class(
         stop()
       }
 
-      # Obtain documents and tokenize
-      token <- Tokenizer$new()$execute(corpus, name, tokenUnit)
+      # Obtain documents and tokenizes
+      private$..tokens <- Tokenizer$new()$execute(private$..corpus, tokenUnit)
 
       event <- paste0("Created ", tokenUnit, " object from Corpus.")
-      corpus$message(event)
+      private$..tokens$message(event)
+      private$..corpus$message(event)
       private$logR$log(method = 'tokenize', event = event, level = "Info")
-      return(token)
+      invisible(self)
     },
+
+    getTokens = function() private$..tokens,
 
     #-------------------------------------------------------------------------#
     #                        Corpus Sample Method                             #
     #-------------------------------------------------------------------------#
-    sample = function(corpus, n, name = NULL, stratify = TRUE, replace = FALSE,
+    sample = function(n, name = NULL, stratify = TRUE, replace = FALSE,
                       seed = NULL) {
       # Validation
-      private$validate(corpus, methodName = 'sample')
+      private$validate(private$..corpus, methodName = 'sample')
 
       private$..params <- list()
       private$..params$logicals$variables <- c('stratify', 'replace')
@@ -163,25 +168,28 @@ CorpusStudio <- R6::R6Class(
 
       # Obtain samples
       sampler <- Sample$new()
-      corpus <- sampler$execute(x = corpus, n, name, stratify,
-                             replace, seed)
+      private$..sample <- sampler$execute(x = private$..corpus, n, name, stratify,
+                                          replace, seed)
 
       type <- ifelse(stratify == TRUE, 'stratified', 'non-stratified')
       event <- paste0("Created ", type, " sample from Corpus.")
-      corpus$message(event)
+      private$..corpus$message(event)
+      private$..sample$message(event)
       private$logR$log(method = 'sample', event = event, level = "Info")
 
-      return(corpus)
+      invisible(self)
     },
+
+    getSample = function() private$..sample,
 
     #-------------------------------------------------------------------------#
     #                         Corpus Split Method                             #
     #-------------------------------------------------------------------------#
-    split = function(corpus, name = NULL, train = 0.75, validation = 0,
+    split = function(name = NULL, train = 0.75, validation = 0,
                      test = 0.25,  stratify = TRUE, seed = NULL) {
 
       # Validate
-      private$validate(corpus, methodName = 'split')
+      private$validate(private$..corpus, methodName = 'split')
 
       private$..params <- list()
       private$..params$classes$name <- list('train', 'validation',
@@ -202,24 +210,43 @@ CorpusStudio <- R6::R6Class(
 
       # Render splits
       splitter <- Split$new()
-      cvSet <- splitter$execute(corpus, name, train, validation, test,
+      private$..splits <- splitter$execute(private$..corpus, name, train, validation, test,
                                 stratify, seed)
 
       event <- paste0("Created cross-validation set from Corpus.")
-      cvSet$message(event)
+      private$..splits$message(event)
       private$logR$log(method = 'split', event = event, level = "Info")
 
-      return(cvSet)
+      invisible(self)
+    },
+
+    getSplits = function(set = NULL) {
+
+      if (is.null(set)) {
+        return(private$..splits$getSplits())
+      } else if (grepl("^tr", set, ignore.case = TRUE)) {
+        return(private$..splits$getTrainingSet())
+      } else if (grepl("^v", set, ignore.case = TRUE)) {
+        return(private$..splits$getValidationSet())
+      } else if (grepl("^t", set, ignore.case = TRUE)) {
+        return(private$..splits$getTestSet())
+      } else {
+        event <- paste0("Set parameter value, ", set, " is invalid. ",
+                        "Valid values include c('training', validation', 'test'). ",
+                        "See ?", class(self)[1], " for further assistance. ")
+        private$logR$log(method = 'split', event = event, level = "Error")
+        stop()
+      }
     },
 
     #-------------------------------------------------------------------------#
     #                   Corpus kFold Split Method                             #
     #-------------------------------------------------------------------------#
-    kFold = function(corpus, k = 10, name = NULL, train = 0.75, validation = 0,
+    kFold = function(k = 10, name = NULL, train = 0.75, validation = 0,
                      test = 0.25,  stratify = TRUE, seed = NULL)  {
 
       # Validate
-      private$validate(corpus, methodName = 'kFold')
+      private$validate(private$..corpus, methodName = 'kFold')
 
       private$..params <- list()
       private$..params$classes$name <- list('k', 'train', 'validation',
@@ -239,22 +266,27 @@ CorpusStudio <- R6::R6Class(
         stop()
       }
       splitter <- SplitKFold$new()
-      cvKFold <- splitter$execute(corpus, k, name, train, validation,
+      private$..kFolds <- splitter$execute(private$..corpus, k, name, train, validation,
                                   test,  stratify, seed)
 
       event <- paste0("Created k-fold cross-validation set from Corpus.")
-      cvKFold$message(event)
+      private$..kFolds$message(event)
       private$logR$log(method = 'kFold', event = event, level = "Info")
 
       return(cvKFold)
     },
+
+    getKFolds = function(k = NULL, set = NULL) {
+      return(private$..kFolds$getKFolds(k, set))
+    },
+
     #-------------------------------------------------------------------------#
     #                        Corpus Clean Method                              #
     #-------------------------------------------------------------------------#
-    clean = function(corpus, config, name = NULL) {
+    clean = function(config, name = NULL) {
 
       # Validation
-      private$validate(corpus, methodName = 'clean')
+      private$validate(private$..corpus, methodName = 'clean')
       private$..params <- list()
       private$..params$classes$name <- list('config')
       private$..params$classes$objects <- list(config)
@@ -266,120 +298,12 @@ CorpusStudio <- R6::R6Class(
       }
 
       ts <- TextStudio$new()
-      corpus <- ts$loadConfig(config)$execute(corpus, name)
+      private$..clean <- ts$loadConfig(config)$execute(private$..corpus, name)
 
-      return(corpus)
+      invisible(self)
     },
 
-    #-------------------------------------------------------------------------#
-    #                        Read Documents Method                            #
-    #-------------------------------------------------------------------------#
-    read = function(corpus, path, overwrite = FALSE) {
-
-      private$validate(corpus, methodName = 'read')
-
-      filePaths <- NLPStudio:::listFiles(path)
-      if (length(filePaths > 0)) {
-        for (i in 1:length(filePaths)) {
-          if (overwrite) {
-            idx <- private$search(key = 'source', value = filePaths[[i]])
-            doc <- private$..children[[idx]]
-            corpus$removeDocument(doc)
-          }
-          name <- tools::file_path_sans_ext(basename(filePaths[i]))
-          io <- IOFactory$new()$strategy(filePaths[i])
-          content <- io$read(filePaths[i])
-          document <- Document$new(x = content, name = name)
-          document$setMeta(key = 'source', value = filePaths[i], type = 'f')
-          corpus$addDocument(document)
-        }
-        quant <- corpus$getDocMeta(type = 'q')[[1]]
-        if (nrow(quant) > 0) {
-          keys <- c(names(quant), 'documents')
-          values <- c(colSums(quant), nrow(quant))
-          corpus$setMeta(key = keys, value = values, type = 'q')
-        }
-      } else {
-        event <- paste0("No files found at path or glob")
-        private$logR$log(method = 'read', event = event, level = "Warn")
-      }
-
-      event <- paste0("Read and added documents to Corpus.")
-      corpus$message(event)
-      private$logR$log(method = 'read', event = event, level = "Info")
-
-      return(corpus)
-    },
-
-
-    #-------------------------------------------------------------------------#
-    #                        Corpus Write Method                              #
-    #-------------------------------------------------------------------------#
-    write = function(corpus, path, format = "txt", overwrite = FALSE) {
-
-      # Validate
-      private$validate(corpus, methodName = 'write')
-
-      private$..params <- list()
-      private$..params$discrete$variables = list('format')
-      private$..params$discrete$values = list(tolower(format))
-      private$..params$discrete$valid = list(c('txt', 'csv', 'rdata',
-                                               'rds', 'bin'))
-      v <- private$validator$validate(self)
-      if (v$code == FALSE) {
-        private$logR$log(method = 'write', event = v$msg, level = "Error")
-        stop()
-      }
-
-      # Validate that path is a directory
-      if (tools::file_ext(path) != "") {
-        event <- paste0("Invalid path parameter. Path must be a directory. ",
-                        "See ?", class(self)[1], " for further assistance.")
-        private$logR$log(method = 'write', event = event, level = "Error")
-        stop()
-      }
-
-      io <- switch(format,
-                   txt = IOText$new(),
-                   csv = IOCSV$new(),
-                   rdata = IORdata$new(),
-                   rds = IORds$new(),
-                   bin = IOBin$new())
-
-      ext <- switch(format,
-                    txt = '.txt',
-                    csv = '.csv',
-                    rdata = '.RData',
-                    rds = '.Rds',
-                    bin = '.bin')
-
-      docs <- corpus$getDocuments()
-      lapply(docs, function(d) {
-        filePath <- d$getMeta(key = 'path')
-        if (length(filePath) == 0) {
-          filePath <- file.path(path, paste0(d$getName(), ext))
-        } else {
-          filePath <- file.path(path, paste0(basename(filePath), ext))
-        }
-        if (overwrite == FALSE) {
-          if (file.exists(filePath)) {
-            event <- paste0("File ", filePath, " already exists. Change the ",
-                            "path or set the 'overwrite' variable to TRUE ",
-                            "to overwrite the file.")
-            private$logR$log(method = 'write', event = event, level = "Error")
-            stop()
-          } else {
-            io$write(content = d$content, path = filePath)
-          }
-        }
-      })
-
-      event <- paste0("Wrote Corpus documents to ", path, ".")
-      corpus$message(event)
-      private$logR$log(method = 'write', event, level = "Info")
-
-      return(corpus)
-    },
+    getClean = function() private$..clean
 
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #

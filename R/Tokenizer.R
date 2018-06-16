@@ -64,7 +64,7 @@ Tokenizer <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                             Tokenizer Method                            #
     #-------------------------------------------------------------------------#
-    execute = function(corpus, name = NULL, tokenUnit = 'sentence') {
+    execute = function(corpus, tokenUnit = 'sentence') {
 
       private$validate(corpus, tokenUnit)
       if (grepl("^c", tokenUnit, ignore.case = TRUE)) tokenUnit <- 'Character'
@@ -72,9 +72,9 @@ Tokenizer <- R6::R6Class(
       if (grepl("^s", tokenUnit, ignore.case = TRUE)) tokenUnit <- 'Sentence'
       if (grepl("^p", tokenUnit, ignore.case = TRUE)) tokenUnit <- 'Paragraph'
 
-      token <- Corpus$new()
-      token <- Copy$new()$this(x = corpus, to = token)
+      token <- Clone$new()$execute(x = corpus)
       token$setMeta(key = 'tokenUnit', value = tokenUnit, type = 'f')
+      token$setName(paste0(token$getName(), " Tokens"))
 
       documents <- corpus$getDocuments()
       for (i in 1:length(documents)) {

@@ -127,15 +127,46 @@ Corpus <- R6::R6Class(
       private$..params <- list()
       private$..params$classes$name <- list('x')
       private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list(c('Document', 'Tokens'))
+      private$..params$classes$valid <- list(c('Document', 'character'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'addDocument',
                          event = v$msg, level = "Error")
         stop()
       }
-      private$attach(x)
+
+      if (class(x)[1] != 'Document' & !file.exists(x)) {
+        event <- paste0("File path, ", x, ", does not exist.")
+        private$logR$log(method = 'addDocument', event = event, level = "Error")
+        stop()
+      }
+
+
+      # If Document add directly to Corpus otherwise add Documents from path.
+      if (class(x)[1] == 'Document') {
+        private$attach(x)
+        event <- paste0("Added ", x$getName(), " to Corpus.")
+      } else {
+
+        paths <- NLPStudio:::listFiles(x)
+        lapply(paths, function(p) {
+
+          io <- IOFactory$new()$strategy(p)
+          content <- io$read(p)
+
+          # Instantiate Document objects
+          name <- tools::file_path_sans_ext(basename(p))
+          doc <- Document$new(x = content, name = name)
+          doc$setMeta(key = 'source', value = p, type = 'f')
+
+          # Add content and File to Corpus
+          private$attach(doc)
+        })
+        event <- paste0("Added ", length(paths), " documents to Corpus.")
+      }
       private$sumQuant()
+
+      private$logR$log(method = 'addDocument', event = event, level = "Error")
 
       invisible(self)
 

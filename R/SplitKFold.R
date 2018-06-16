@@ -109,7 +109,7 @@ SplitKFold <- R6::R6Class(
       invisible(self)
     },
     #-------------------------------------------------------------------------#
-    #                           Get Training Set                              #
+    #                                Get KFolds                               #
     #-------------------------------------------------------------------------#
     getKFolds = function(k = NULL, set = NULL) {
 

@@ -254,3 +254,44 @@ validateRange <- function(object) {
     }
   return(status)
 }
+
+#------------------------------------------------------------------------------#
+#                              Validate Path                                   #
+#------------------------------------------------------------------------------#
+#' validatePath
+#'
+#' \code{validatePath} Validates the existence or non-existence of a path.
+#'
+#' Class returns an error if the existence of a path is not expected.
+#'
+#' @usage validateRange(object)
+#'
+#' @param object The object to be validated
+#'
+#' @author John James, \email{jjames@@DataScienceSalon.org}
+#' @family Validation Functions
+#' @export
+validatePath <- function(object) {
+
+  status <- list()
+  status$code <- TRUE
+  status$msg <- NULL
+
+  params <- object$getParams()
+
+  if (length(params$file$path) > 0) {
+    for (i in 1:length(params$file$path)) {
+      if (file.exists(params$file$path[i]) != params$file$expect[i]) {
+        status[['code']] <- FALSE
+        if (file.exists(params$file$path[i])) {
+          status[['msg']] <- paste0("File path ", params$file$path[i], " already exists.")
+        } else {
+          status[['msg']] <- paste0("File path ", params$file$path[i], " does not exist.")
+        }
+        return(status)
+      }
+    }
+  }
+  return(status)
+}
+
