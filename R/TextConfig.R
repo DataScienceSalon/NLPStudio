@@ -15,7 +15,9 @@ TextConfig <- R6::R6Class(
   inherit = Super,
 
   private = list(
+    ..lowercase = FALSE,
     ..remove = list(
+      stopwords = FALSE,
       punct = FALSE,
       numbers = FALSE,
       symbols  = FALSE,
@@ -46,7 +48,8 @@ TextConfig <- R6::R6Class(
     ..abbreviations = character(),
     ..slang = character(),
     ..contractions = character(),
-    ..profanity = character()
+    ..profanity = character(),
+    ..stopwords = character()
   ),
 
 
@@ -61,8 +64,128 @@ TextConfig <- R6::R6Class(
 
     getConfig = function() private,
     #-------------------------------------------------------------------------#
+    #                     Load Reference Data: Abbreviations                  #
+    #-------------------------------------------------------------------------#
+    loadAbbreviations = function(x) {
+
+      messageUser = function() {
+        event <- paste0("TextConfig expects the abbreviations object to be ",
+                        "a two-column data-frame with the abbreviation in ",
+                        "the first column and the expanded form in the second. ",
+                        "See ?", class(self)[1], " for further information.")
+        private$logR$log(method = 'loadAbbreviations', event = event,
+                         level = "Error")
+        stop()
+      }
+
+      if (!class(x)[1] %in% c('data.frame', 'data.table')) messageUser()
+      if (ncol(x) != 2) messageUser()
+      private$..abbreviations <- x
+      invisible(self)
+    },
+    getAbbreviations = function() private$..abbreviations,
+    #-------------------------------------------------------------------------#
+    #                     Load Reference Data: Slang                          #
+    #-------------------------------------------------------------------------#
+    loadSlang = function(x) {
+
+      messageUser = function() {
+        event <- paste0("TextConfig expects the slang object to be ",
+                        "a two-column data-frame with the slang in ",
+                        "the first column and the standard form in the second. ",
+                        "See ?", class(self)[1], " for further information.")
+        private$logR$log(method = 'loadSlang', event = event,
+                         level = "Error")
+        stop()
+      }
+
+      if (!class(x)[1] %in% c('data.frame', 'data.table')) messageUser()
+      if (ncol(x) != 2) messageUser()
+      private$..slang <- x
+      invisible(self)
+    },
+    getSlang = function() private$..slang,
+    #-------------------------------------------------------------------------#
+    #                     Load Reference Data: Contractions                   #
+    #-------------------------------------------------------------------------#
+    loadContractions = function(x) {
+
+      messageUser = function() {
+        event <- paste0("TextConfig expects the contractions object to be ",
+                        "a two-column data-frame with the contractions in ",
+                        "the first column and the expanded form in the second. ",
+                        "See ?", class(self)[1], " for further information.")
+        private$logR$log(method = 'loadContractions', event = event,
+                         level = "Error")
+        stop()
+      }
+
+      if (!class(x)[1] %in% c('data.frame', 'data.table')) messageUser()
+      if (ncol(x) != 2) messageUser()
+      private$..contractions <- x
+      invisible(self)
+    },
+    getContractions = function() private$..contractions,
+    #-------------------------------------------------------------------------#
+    #                     Load Reference Data: Profanity                      #
+    #-------------------------------------------------------------------------#
+    loadProfanity = function(x) {
+
+      private$..params <- list()
+      private$..params$classes$name <- list('x')
+      private$..params$classes$objects <- list(x)
+      private$..params$classes$valid <- list(c('character', 'list', 'data.frame'))
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = 'loadProfanity', event = v$msg, level = "Error")
+        stop()
+      }
+      private$..profanity <- x
+      invisible(self)
+    },
+    getProfanity = function() private$..profanity,
+
+    #-------------------------------------------------------------------------#
+    #                     Load Reference Data: Stopwords                      #
+    #-------------------------------------------------------------------------#
+    loadStopwords = function(x) {
+
+      private$..params <- list()
+      private$..params$classes$name <- list('x')
+      private$..params$classes$objects <- list(x)
+      private$..params$classes$valid <- list(c('character', 'list', 'data.frame'))
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = 'loadStopwords', event = v$msg, level = "Error")
+        stop()
+      }
+      private$..stopwords <- x
+      invisible(self)
+    },
+    getStopwords = function() private$..stopwords,
+    #-------------------------------------------------------------------------#
     #                       Configuration Methods                             #
     #-------------------------------------------------------------------------#
+    lowercase = function() {
+      private$..lowercase <- TRUE
+      invisible(self)
+    },
+
+    keepCase = function() {
+      private$..lowercase <- FALSE
+      invisible(self)
+    },
+
+    removeStopwords = function() {
+      private$..remove$stopwords <- TRUE
+      invisible(self)
+    },
+
+    keepStopwords = function() {
+      private$..remove$stopwords <- FALSE
+      invisible(self)
+    },
+
     removePunct = function() {
       private$..remove$punct <- TRUE
       invisible(self)
@@ -289,6 +412,7 @@ TextConfig <- R6::R6Class(
     },
 
     selectAll = function() {
+      private$..lowercase <- TRUE
       for (i in 1:length(private$..remove)) { private$..remove[[i]] <- TRUE }
       for (i in 1:length(private$..replace)) { private$..replace[[i]] <- TRUE }
       for (i in 1:length(private$..add)) { private$..add[[i]] <- TRUE }
@@ -306,6 +430,7 @@ TextConfig <- R6::R6Class(
     },
 
     resetAll = function() {
+      private$..lowercase <- FALSE
       for (i in 1:length(private$..remove)) { private$..remove[[i]] <- FALSE }
       for (i in 1:length(private$..replace)) { private$..replace[[i]] <- FALSE }
       for (i in 1:length(private$..add)) { private$..add[[i]] <- FALSE }

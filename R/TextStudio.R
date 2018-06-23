@@ -23,11 +23,12 @@ TextStudio <- R6::R6Class(
       hyphen = '[-]',
       apostrophe = '[\']',
       numbers = "(?<![a-zA-Z])(\\d+)(?![a-zA-Z])",
-      symbols  = "[[:punct:]]",
+      symbols  = "(?![.?!'-])[[:punct:]]",
       twitter = '\\B[@#]\\w*[a-zA-Z]+\\w*',
       url = "(?:(?:https?:\\/\\/)|(?:www\\.))[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,4}\\b(?:[-a-zA-Z0-9@:%_\\+.~#?&/=]*)",
       email = "[a-zA-Z0-9\\-_~]+(\\.[a-zA-Z0-9\\-_~]+)*@[a-zA-Z0-9\\-_~]+(\\.[a-zA-Z0-9\\-_~]+)*\\.[a-zA-Z]{2,}",
       strayApostrophe = "\\s*'\\B|\\B'\\s*",
+      strayHyphen = "\\s*-\\B|\\B-\\s*",
       singles = '\\b[b-hj-z]{1}\\b',
       backTick = list(
         pattern = "\\`",
@@ -41,7 +42,6 @@ TextStudio <- R6::R6Class(
 
     processDocument = function(document) {
       content <- document$content
-      print(paste("initial length", length(content)))
 
       regex <- c()
       if (private$..config$..remove$punct)
@@ -60,7 +60,9 @@ TextStudio <- R6::R6Class(
       content <- gsub(paste(regex, collapse = '|'), "", content, perl = TRUE, ignore.case = TRUE)
       regex <- NULL
 
-      print(paste("initial regex", length(content)))
+      if (private$..config$..lowercase) {
+        content <- tolower(content)
+      }
 
       # Remove sentences/vectors with profanity
       if (private$..config$..remove$profanity) {
@@ -73,24 +75,35 @@ TextStudio <- R6::R6Class(
         content <- content[!grepl(pattern, content, perl = TRUE)]
       }
 
-      print(paste("post profanity", length(content)))
+      # Process Stopwords
+      if (private$..config$..remove$stopwords) {
+        if (length(private$..config$..stopwords) == 0) {
+          stopwords <- NLPLists::stopwords
+        } else {
+          stopwords <- private$..config$..stopwords
+        }
+        pattern <- paste0("\\b",unlist(stopwords),"\\b")
+        replacement <- ""
+        content <- stringi::stri_replace_all_regex(content,
+                                                   replacement = replacement,
+                                                   pattern = pattern, mode = all,
+                                                   vectorize_all = FALSE)
+      }
 
       # Process Abbreviations
       if (private$..config$..replace$abbreviations) {
         if (length(private$..config$..abbreviations) == 0) {
-          content <- qdap::replace_abbreviation(text.var = content,
-                                                ignore.case = TRUE)
+          abbreviations <- NLPLists::internetAbbreviations
         } else {
-          pattern <- "\\b"%s+%unlist(private$..config$..abbreviations[,1])%s+%"\\b"
-          replacement <- unlist(private$..config$..abbreviations[,2])
-          content <- stringi::stri_replace_all_regex(content,
-                                                     replacement = replacement,
-                                                     pattern = pattern, mode = all,
-                                                     vectorize_all = FALSE)
+          abbreviations <- private$..config$..abbreviations
         }
+        pattern <- paste0("\\b",unlist(abbreviations[,1]),"\\b")
+        replacement <- unlist(abbreviations[,2])
+        content <- stringi::stri_replace_all_regex(content,
+                                                   replacement = replacement,
+                                                   pattern = pattern, mode = all,
+                                                   vectorize_all = FALSE)
       }
-
-      print(paste("post abbreviations", length(content)))
 
       # Process Hyphens
       if (private$..config$..replace$hyphen) {
@@ -98,7 +111,6 @@ TextStudio <- R6::R6Class(
                         content,  perl = TRUE)
       }
 
-      print(paste("post hyphens", length(content)))
       # Process Internet Slang
       if (private$..config$..replace$slang) {
         if (length(private$..config$slang) == 0) {
@@ -106,14 +118,13 @@ TextStudio <- R6::R6Class(
         } else {
           slang <- private$..config$slang
         }
-        pattern <- "\\b"%s+%unlist(slang[,1])%s+%"\\b"
+        pattern <- paste0("\\b",unlist(slang[,1]),"\\b")
         replacement <- unlist(slang[,2])
         content <- stringi::stri_replace_all_regex(content,
                                                    replacement = replacement,
                                                    pattern = pattern, mode = all,
                                                    vectorize_all = FALSE)
       }
-      print(paste("post slang", length(content)))
 
       # Process Backtick
       if (private$..config$..replace$backtick) {
@@ -123,8 +134,6 @@ TextStudio <- R6::R6Class(
                         content, perl = TRUE, ignore.case = TRUE)
       }
 
-      print(paste("post backtick", length(content)))
-
       # Process Contractions
       if (private$..config$..replace$contractions) {
         if (length(private$..config$..contractions) == 0) {
@@ -132,7 +141,7 @@ TextStudio <- R6::R6Class(
         } else {
           contractions <- private$..config$..contractions
         }
-        pattern <- "\\b"%s+%unlist(contractions[,1])%s+%"\\b"
+        pattern <- paste0("\\b",unlist(contractions[,1]),"\\b")
         replacement <- unlist(contractions[,2])
         content <- stringi::stri_replace_all_regex(content,
                                                    replacement = replacement,
@@ -140,64 +149,45 @@ TextStudio <- R6::R6Class(
                                                    vectorize_all = FALSE)
       }
 
-      print(paste("post contractions", length(content)))
-
       # Process CurlyQuotes
       if (private$..config$..replace$curlyQuotes) {
         content <- textclean::replace_curly_quote(x = content)
       }
-
-      print(paste("post curlyquotes", length(content)))
-      print(head(content))
 
       # Process Emoji
       if (private$..config$..replace$emoji) {
         content <- textclean::replace_emoji(x = content)
       }
 
-      print(paste("post emoji", length(content)))
-
       # Process Emoticon
       if (private$..config$..replace$emoticon) {
         content <- textclean::replace_emoticon(x = content)
       }
-
-      print(paste("post emoticon", length(content)))
 
       # Process Kern
       if (private$..config$..replace$kern) {
         content <- textclean::replace_kern(x = content)
       }
 
-      print(paste("post kern", length(content)))
-
       # Process Numbers
       if (private$..config$..replace$numbers) {
         content <- textclean::replace_number(x = content)
       }
-
-      print(paste("post numbers", length(content)))
 
       # Process Ordinal
       if (private$..config$..replace$ordinal) {
         content <- textclean::replace_ordinal(x = content)
       }
 
-      print(paste("post ordinal", length(content)))
-
       # Process Symbol
       if (private$..config$..replace$symbols) {
         content <- textclean::replace_symbol(x = content)
       }
 
-      print(paste("post symbol", length(content)))
-
       # Process Word Elongation
       if (private$..config$..replace$wordElongation) {
         content <- textclean::replace_word_elongation(x = content)
       }
-
-      print(paste("post elongation", length(content)))
 
       # Process Comma Space
       if (private$..config$..add$commaSpace) {
@@ -207,10 +197,11 @@ TextStudio <- R6::R6Class(
                         content, perl = TRUE, ignore.case = TRUE)
       }
 
-      print(paste("post comma space", length(content)))
+      # Clean remove singletons, stray hyphens and apostrophes, and extra whitespace.
+      regex <- c(private$..regex$strayApostrophe, private$..regex$singles,
+                 private$..regex$strayHyphen)
+      content <- gsub(paste(regex, collapse = '|'), "", content, perl = TRUE, ignore.case = TRUE)
       content <- textclean::replace_white(x = content)
-
-      print(paste("post whitespace", length(content)))
 
       document$content <- content
       return(document)

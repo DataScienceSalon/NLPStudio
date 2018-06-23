@@ -38,7 +38,7 @@ Imports:
     tm,
     tokenizers,
     tools,
-    stringr,
+    stringi,
     NLPLists
 Remotes: github::DataScienceSalon/NLPLists
 RoxygenNote: 6.0.1
