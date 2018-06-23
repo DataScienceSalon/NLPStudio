@@ -72,7 +72,7 @@ Tokenizer <- R6::R6Class(
       if (grepl("^s", tokenUnit, ignore.case = TRUE)) tokenUnit <- 'Sentence'
       if (grepl("^p", tokenUnit, ignore.case = TRUE)) tokenUnit <- 'Paragraph'
 
-      token <- Clone$new()$execute(x = corpus)
+      token <- Clone$new()$this(x = corpus, reference = TRUE, content = TRUE)
       token$setMeta(key = 'tokenUnit', value = tokenUnit, type = 'f')
       token$setName(paste0(token$getName(), " Tokens"))
 

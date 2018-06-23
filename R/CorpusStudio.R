@@ -50,11 +50,25 @@ CorpusStudio <- R6::R6Class(
 
   private = list(
     ..corpus = character(),
-    ..clean  = character(),
     ..tokens = character(),
     ..sample = character(),
-    ..splits = character(),
+    ..clean  = character(),
+    ..training = character(),
+    ..validation = character(),
+    ..test = character(),
     ..kFolds = character(),
+
+    getTarget = function() {
+
+      if (length(private$..clean) > 0) {
+        corpus <- private$..clean
+      } else if (length(private$..tokens) > 0) {
+        corpus <- private$..tokens
+      } else {
+        corpus <- private$..corpus
+      }
+      return(corpus)
+    },
 
     validate = function(corpus, methodName) {
 
@@ -121,11 +135,9 @@ CorpusStudio <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                      Corpus Tokenize Method                             #
     #-------------------------------------------------------------------------#
-    tokenize = function(tokenUnit = 'sentence') {
+    tokenize = function(tokenUnit = 'sentence', corpus = NULL) {
 
       # Validation
-      private$validate(private$..corpus, methodName = 'tokenize')
-
       private$..params <- list()
       private$..params$discrete$variables = list('tokenUnit')
       private$..params$discrete$values = list(tokenUnit)
@@ -137,8 +149,10 @@ CorpusStudio <- R6::R6Class(
         stop()
       }
 
+      if (length(corpus) == 0) corpus <- private$getTarget()
+
       # Obtain documents and tokenizes
-      private$..tokens <- Tokenizer$new()$execute(private$..corpus, tokenUnit)
+      private$..tokens <- Tokenizer$new()$execute(corpus, tokenUnit)
 
       event <- paste0("Created ", tokenUnit, " object from Corpus.")
       private$..tokens$message(event)
@@ -152,13 +166,11 @@ CorpusStudio <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                        Corpus Sample Method                             #
     #-------------------------------------------------------------------------#
-    sample = function(n, name = NULL, stratify = TRUE, replace = FALSE,
-                      seed = NULL) {
+    sample = function(n, corpus = NULL,  name = NULL, stratify = TRUE,
+                      replace = FALSE, seed = NULL) {
       # Validation
-      private$validate(private$..corpus, methodName = 'sample')
-
       private$..params <- list()
-      private$..params$logicals$variables <- c('stratify', 'replace')
+      private$..params$logicals$variables <- c( 'stratify', 'replace')
       private$..params$logicals$values <- c(stratify, replace)
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
@@ -166,13 +178,17 @@ CorpusStudio <- R6::R6Class(
         stop()
       }
 
+      # Get target corpus for splitting
+      if (length(corpus) == 0)  corpus <- private$getTarget()
+
       # Obtain samples
       sampler <- Sample$new()
-      private$..sample <- sampler$execute(x = private$..corpus, n, name, stratify,
-                                          replace, seed)
+      private$..sample <- sampler$execute(x = corpus, n = n, name = name,
+                                          stratify = stratify, replace = replace,
+                                          seed = seed)$getSample()
 
       type <- ifelse(stratify == TRUE, 'stratified', 'non-stratified')
-      event <- paste0("Created ", type, " sample from Corpus.")
+      event <- paste0("Created ", type, " Corpus sample.")
       private$..corpus$message(event)
       private$..sample$message(event)
       private$logR$log(method = 'sample', event = event, level = "Info")
@@ -185,12 +201,11 @@ CorpusStudio <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                         Corpus Split Method                             #
     #-------------------------------------------------------------------------#
-    split = function(name = NULL, train = 0.75, validation = 0,
-                     test = 0.25,  stratify = TRUE, seed = NULL) {
+    split = function(train = 0.75, validation = 0,  test = 0.25,
+                     corpus = NULL, name = NULL, stratify = TRUE,
+                     seed = NULL) {
 
       # Validate
-      private$validate(private$..corpus, methodName = 'split')
-
       private$..params <- list()
       private$..params$classes$name <- list('train', 'validation',
                                             'test', 'stratify')
@@ -208,41 +223,44 @@ CorpusStudio <- R6::R6Class(
         stop()
       }
 
+      # Get target corpus for splitting
+      if (length(corpus) == 0)  {
+        if (length(private$..sample) > 0) {
+          corpus <- private$..sample
+        } else {
+        corpus <- private$getTarget()
+        }
+      }
+
       # Render splits
-      splitter <- Split$new()
-      private$..splits <- splitter$execute(private$..corpus, name, train, validation, test,
+      splits <- Split$new()$execute(corpus, name, train, validation, test,
                                 stratify, seed)
+      private$..train <- splits$getTrainingSet()
+      private$..validation <- splits$getValidationSet()
+      private$..test <- splits$getTestSet()
 
       event <- paste0("Created cross-validation set from Corpus.")
-      private$..splits$message(event)
       private$logR$log(method = 'split', event = event, level = "Info")
 
       invisible(self)
     },
 
-    getSplits = function() { private$..splits$getSplits() },
-    getTrainingSet = function() { private$..splits$getTrainingSet() },
-    getValidationSet = function() { private$..splits$getValidationSet() },
-    getTestSet = function() { private$..splits$getTestSet() },
+    getTrainingSet = function() { private$..train },
+    getValidationSet = function() { private$..validation },
+    getTestSet = function() { private$..test },
 
     #-------------------------------------------------------------------------#
     #                   Corpus kFold Split Method                             #
     #-------------------------------------------------------------------------#
-    kFold = function(k = 10, name = NULL, train = 0.75, validation = 0,
-                     test = 0.25,  stratify = TRUE, seed = NULL)  {
+    kFold = function(k = 10, corpus = NULL, name = NULL,stratify = TRUE, seed = NULL)  {
 
       # Validate
       private$validate(private$..corpus, methodName = 'kFold')
 
       private$..params <- list()
-      private$..params$classes$name <- list('k', 'train', 'validation',
-                                            'test', 'stratify')
-      private$..params$classes$objects <- list(k, train, validation,
-                                               test, stratify)
+      private$..params$classes$name <- list('k','stratify')
+      private$..params$classes$objects <- list(k, stratify)
       private$..params$classes$valid <- list(c('integer', 'numeric'),
-                                             c('integer', 'numeric'),
-                                             c('integer', 'numeric'),
-                                             c('integer', 'numeric'),
                                              c("logical"))
       private$..params$logicals$variables <- c('stratify')
       private$..params$logicals$values <- c(stratify)
@@ -251,28 +269,32 @@ CorpusStudio <- R6::R6Class(
         private$logR$log(method = 'kFold', event = v$msg, level = "Error")
         stop()
       }
-      splitter <- SplitKFold$new()
-      private$..kFolds <- splitter$execute(private$..corpus, k, name, train, validation,
-                                  test,  stratify, seed)
+
+      # Get target corpus for splitting
+      if (length(corpus) == 0)  corpus <- private$getTarget()
+
+      private$..kFolds <- SplitKFold$new()$execute(corpus, k, name,
+                                                   stratify, seed)
 
       event <- paste0("Created k-fold cross-validation set from Corpus.")
-      private$..kFolds$message(event)
       private$logR$log(method = 'kFold', event = event, level = "Info")
 
-      return(cvKFold)
+      invisible(self)
     },
 
-    getKFolds = function(k = NULL, set = NULL) {
-      return(private$..kFolds$getKFolds(k, set))
+    getFolds = function(k = NULL) {
+      if (!is.null(k)) {
+        return(private$..kFolds$getFolds[[k]])
+      } else {
+        return(private$..kFolds$getFolds())
+      }
     },
 
     #-------------------------------------------------------------------------#
     #                        Corpus Clean Method                              #
     #-------------------------------------------------------------------------#
-    clean = function(config, name = NULL) {
+    clean = function(config, corpus = NULL, name = NULL) {
 
-      # Validation
-      private$validate(private$..corpus, methodName = 'clean')
       private$..params <- list()
       private$..params$classes$name <- list('config')
       private$..params$classes$objects <- list(config)
@@ -283,8 +305,17 @@ CorpusStudio <- R6::R6Class(
         stop()
       }
 
+      # Get target corpus
+      if (length(corpus) == 0) {
+        if (length(private$..training) > 0) {
+          corpus <- private$..training
+        } else {
+          corpus <- private$getTarget()
+        }
+      }
+
       ts <- TextStudio$new()
-      private$..clean <- ts$loadConfig(config)$execute(private$..corpus, name)
+      private$..clean <- ts$loadConfig(config)$execute(corpus, name)$getCorpus()
 
       invisible(self)
     },

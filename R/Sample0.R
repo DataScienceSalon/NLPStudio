@@ -62,7 +62,7 @@ Sample0 <- R6::R6Class(
 
     },
 
-    sampleN = function(n, seed, stratify) {
+    sampleN = function(n, seed, stratify, replace) {
 
       documents <- private$..corpus$getDocuments()
 
@@ -77,7 +77,7 @@ Sample0 <- R6::R6Class(
           split <- list()
           split$document <- rep(documents[[d]]$getId(), length(documents[[d]]$content))
           split$n <- seq(1:length(documents[[d]]$content))
-          idx <- sample.int(n = length(documents[[d]]$content), size = n[[d]], replace = FALSE)
+          idx <- sample.int(n = length(documents[[d]]$content), size = n[[d]], replace = replace)
           split$label[split$n %in% idx] <- 'in'
           split$label[!split$n %in% idx] <- 'out'
           split
@@ -90,7 +90,7 @@ Sample0 <- R6::R6Class(
           split$label <- rep('out', length(d$content))
           split
         }))
-        idx <- sample.int(n = nrow(private$..indices), size = n, replace = FALSE)
+        idx <- sample.int(n = nrow(private$..indices), size = n, replace = replace)
         private$..indices$label[idx] <- 'in'
       }
       if (length(seed) > 0)  set.seed(unseed)
@@ -114,7 +114,7 @@ Sample0 <- R6::R6Class(
           split$document <- rep(documents[[d]]$getId(), length(documents[[d]]$content))
           split$n <- seq(1:length(documents[[d]]$content))
           split$label <- sample(labels, size = length(documents[[d]]$content), replace = TRUE,
-                                  prob = weights)
+                                  prob = weights[[1]])
           split
         }))
       } else {
@@ -125,7 +125,7 @@ Sample0 <- R6::R6Class(
           split
         }))
         private$..indices$label <- sample(labels, size = nrow(private$..indices), replace = TRUE,
-                                         prob = weights)
+                                         prob = weights[[1]])
       }
 
       if (length(seed) > 0)  set.seed(unseed)

@@ -46,7 +46,7 @@ SplitKFold <- R6::R6Class(
       train$setMeta(key = 'cv', value = 'training', type = 'f')
       test$setMeta(key = 'cv', value = 'test', type = 'f')
 
-      # Create and add training and test documents and add to Corpora objects
+      # Create and add training and test Documents to Corpora object
       for (i in 1:length(corpusDocs)) {
         id <- corpusDocs[[i]]$getId()
         trainIdx <- private$..indices$n[private$..indices$document == id & private$..indices$label != k]

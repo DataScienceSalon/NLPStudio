@@ -67,7 +67,7 @@ Sample <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                             Sample Method                               #
     #-------------------------------------------------------------------------#
-    execute = function(x, n, name = NULL, stratify = TRUE, seed = NULL) {
+    execute = function(x, n, name = NULL, stratify = TRUE, replace = NULL, seed = NULL) {
 
       if (!private$validate(x, n, stratify)) stop()
 
@@ -83,7 +83,7 @@ Sample <- R6::R6Class(
         }
         private$sampleP(labels, seed, stratify, weights)
       } else {
-        private$sampleN(n, seed, stratify)
+        private$sampleN(n, seed, stratify, replace)
       }
       invisible(self)
     },

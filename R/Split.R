@@ -140,7 +140,7 @@ Split <- R6::R6Class(
       labels <- c('training', 'validation', 'test')
       labels <- labels[weights > 0]
       weights <- weights[weights > 0]
-      private$sampleP(labels = labels, seed, stratify, weights = weights)
+      private$sampleP(labels = labels, seed, stratify, weights = list(weights))
 
       # Build and attach CV Set objects from the corpus Document objects.
       corpusDocs <- private$..corpus$getDocuments()
