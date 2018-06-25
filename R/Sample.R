@@ -31,6 +31,40 @@ Sample <- R6::R6Class(
   private = list(
     ..sample = character(),
 
+    indexSamples = function(n, stratify, replace, seed) {
+
+      labels <- c('in', 'out')
+      if (any(n <= 1)) {
+        weights <- list()
+        for (i in 1:length(n)) {
+          weights[[i]] <- c(n[i], 1- n[i])
+        }
+        private$sampleP(labels, seed, stratify, weights)
+      } else {
+        private$sampleN(n, seed, stratify, replace)
+      }
+      return(TRUE)
+    },
+
+    createSample = function(n, name, stratify, seed) {
+
+      # Create sample Corpus object from clone of original Corpus object.
+      private$..sample <- Clone$new()$this(x = private$..corpus, reference = FALSE)
+      if (!is.null(name)) private$..sample$setName(name)
+
+      # Obtain samples by document
+      documents <- private$..corpus$getDocuments()
+
+      for (i in 1:length(documents)) {
+        id <- documents[[i]]$getId()
+        idx <- private$..indices$n[private$..indices$document == id & private$..indices$label == 'in']
+        document <- Clone$new()$this(x = documents[[i]], content = FALSE)
+        document$content <- documents[[i]]$content[idx]
+        private$..sample$addDocument(document)
+      }
+      return(TRUE)
+    },
+
     validate = function(x, n, stratify) {
       private$..params <- list()
       private$..params$classes$name <- list('x','n', 'stratify')
@@ -72,37 +106,17 @@ Sample <- R6::R6Class(
       if (!private$validate(x, n, stratify)) stop()
 
       private$..corpus <- x
-      private$..sample <- Clone$new()$this(x = private$..corpus)
-      if (!is.null(name)) private$..sample$setName(name)
 
-      labels <- c('in', 'out')
-      if (any(n <= 1)) {
-        weights <- list()
-        for (i in 1:length(n)) {
-          weights[[i]] <- c(n[i], 1- n[i])
-        }
-        private$sampleP(labels, seed, stratify, weights)
-      } else {
-        private$sampleN(n, seed, stratify, replace)
-      }
+      # Create table of indices representing the samples taken from the Corpus.
+      private$indexSamples(n, stratify, replace, seed)
+      private$createSample(n, name, stratify, seed)
+
       invisible(self)
     },
     #-------------------------------------------------------------------------#
     #                             Get Sample                                  #
     #-------------------------------------------------------------------------#
-    getSample = function() {
-
-      inDocs <- private$..corpus$getDocuments()
-      outDocs <- private$..sample$getDocuments()
-
-      for (i in 1:length(inDocs)) {
-        id <- inDocs[[i]]$getId()
-        idx <- private$..indices$n[private$..indices$document == id & private$..indices$label == 'in']
-        outDocs[[i]]$content <- inDocs[[i]]$content[idx]
-        private$..sample$addDocument(outDocs[[i]])
-      }
-      return(private$..sample)
-    },
+    getSample = function()  return(private$..sample),
 
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #

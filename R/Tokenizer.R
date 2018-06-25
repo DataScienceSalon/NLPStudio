@@ -72,17 +72,16 @@ Tokenizer <- R6::R6Class(
       if (grepl("^s", tokenUnit, ignore.case = TRUE)) tokenUnit <- 'Sentence'
       if (grepl("^p", tokenUnit, ignore.case = TRUE)) tokenUnit <- 'Paragraph'
 
-      token <- Clone$new()$this(x = corpus, reference = TRUE, content = TRUE)
+      token <- Clone$new()$this(x = corpus, reference = FALSE)
       token$setMeta(key = 'tokenUnit', value = tokenUnit, type = 'f')
       token$setName(paste0(token$getName(), " Tokens"))
 
       documents <- corpus$getDocuments()
       for (i in 1:length(documents)) {
-        name <- documents[[i]]$getName()
-        tokens <- unlist(NLPStudio::tokenize(documents[[i]]$content,
+        document <- Clone$new()$this(x = documents[[i]], content = FALSE)
+        document$content <- unlist(NLPStudio::tokenize(documents[[i]]$content,
                                              tokenUnit = tokenUnit))
-        document <- Document$new(x = tokens,
-                                 name = paste0(name, "( ", tokenUnit, " Tokenizers )"))
+        document$setName(paste0(documents[[i]]$getName(), " (", tokenUnit, " Tokens)"))
         document$setMeta(key = 'tokenUnit', value = tokenUnit, type = 'f')
         token$addDocument(document)
       }

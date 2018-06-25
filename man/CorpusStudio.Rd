@@ -38,8 +38,9 @@ be stratefied.}
 \item{replace}{Logical. If TRUE, sampling is conducted with replacement. The
 default is FALSE.}
 
-\item{overWrite}{Logical, Used in the read method. If TRUE, any text or binary
-files read will overwrite existing versions of the same document source.}
+\item{what}{Character string which indicates the target Corpus object for a
+method. Options are c('raw', 'tokenized', 'sample', 'train',
+'validation', 'test'). The default value is method specific.}
 
 \item{train}{Numeric indicating the proportion of the Corpus to allocate
 to the training set. Acceptable values are between 0 and 1. The total of the

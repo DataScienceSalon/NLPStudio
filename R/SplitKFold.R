@@ -8,7 +8,7 @@
 #'  }
 #'
 #' @param x Corpus object.
-#' @param k Numeric of folds
+#' @param k Numeric of cvSets
 #' @param stratify Logical. If TRUE (default), SplitKFolds will be taken from
 #' each document in accordance with the proportions or counts indicated
 #' in the 'n' parameter.
@@ -27,26 +27,27 @@ SplitKFold <- R6::R6Class(
 
   private = list(
 
-    processFold = function(k, corpusDocs, name) {
+    processFold = function(k, name) {
 
-      # Instantiate Fold and Training and Test Corpus objects
-      fold <- Fold$new(name)
-      fold <- Copy$new()$this(x = private$..corpus, to = fold)
+      # Instantiate cvSet
+      cvSet <- CVSet$new(name)
+      cvSet <- Copy$new()$this(x = private$..corpus, to = cvSet)
       train <- Clone$new()$this(x = private$..corpus, reference = FALSE)
       test <- Clone$new()$this(x = private$..corpus, reference = FALSE)
 
       # Set names
-      if (is.null(name))  name <- private$..corpus$getName()
-      fold$setName(paste0(name, " Fold #", k))
+      if (is.null(name)) name <- private$..corpus$getName()
+      cvSet$setName(paste0(name, " Fold #", k))
       train$setName(paste0(name, " Fold #", k, " Training Set"))
       test$setName(paste0(name, " Fold #", k, " Test Set"))
 
       # Set cross-validation type
-      fold$setMeta(key = 'cv', value = paste0("Fold #", k), type = 'f')
+      cvSet$setMeta(key = 'cv', value = paste0("Fold #", k), type = 'f')
       train$setMeta(key = 'cv', value = 'training', type = 'f')
       test$setMeta(key = 'cv', value = 'test', type = 'f')
 
       # Create and add training and test Documents to Corpora object
+      corpusDocs <- private$..corpus$getDocuments()
       for (i in 1:length(corpusDocs)) {
         id <- corpusDocs[[i]]$getId()
         trainIdx <- private$..indices$n[private$..indices$document == id & private$..indices$label != k]
@@ -68,16 +69,30 @@ SplitKFold <- R6::R6Class(
         test$addDocument(testDoc)
       }
 
-      fold$addSet(train)
-      fold$addSet(test)
+      cvSet$addCorpus(train)
+      cvSet$addCorpus(test)
 
-      private$attach(fold)
+      private$..cvSetKFold$addCVSet(cvSet)
 
       event <- paste0("Fold #", k, " created.")
-      fold$message(event)
+      cvSet$message(event)
       private$logR$log(method = 'processFold', event = event, level = "Info")
 
       return(TRUE)
+    },
+
+    buildFolds = function(k, name) {
+
+      cvSetName <- name
+      if (is.null(cvSetName)) cvSetName <- paste0(private$..corpus$getName(),
+                                             " KFold CV Set")
+
+      private$..cvSetKFold <- CVSetKFold$new(name = cvSetName)
+
+      for (i in 1:k) {
+        private$processFold(k = i, name = name)
+      }
+
     },
 
     validate = function(x, k, stratify) {
@@ -120,31 +135,22 @@ SplitKFold <- R6::R6Class(
       if (!private$validate(x, k, stratify)) stop()
 
       private$..corpus <- x
-      private$..k <- k
 
       private$segment(k, stratify, seed)
-      corpusDocs <- private$..corpus$getDocuments()
-      for (i in 1:private$..k) { private$processFold(k = i, corpusDocs = corpusDocs,
-                                                     name = name) }
+      private$buildFolds(k, name)
 
       invisible(self)
     },
     #-------------------------------------------------------------------------#
     #                                Get KFolds                               #
     #-------------------------------------------------------------------------#
-    getFolds = function(k = NULL) {
+    getFolds = function() private$..cvSetKFold,
 
-      if (is.null(k)) {
-        return(private$..children)
-      } else {
-        return(private$..children[[k]])
-      }
-    },
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$segment(self)
+      visitor$splitKFold(self)
     }
   )
 )

@@ -43,17 +43,22 @@ Split <- R6::R6Class(
   private = list(
 
     #-------------------------------------------------------------------------#
-    #                       initCrossValidatinSets                            #
+    #                                Build CV Set                             #
     #-------------------------------------------------------------------------#
-    buildCVSets = function(corpusDocs, labels) {
+    buildCVSet = function(corpusDocs, labels, name) {
+
+      private$..cvSet <- CVSet$new()
+
+      if (is.null(name)) name <- paste0(private$..corpus$getName(), " CVSet")
+      private$..cvSet$setName(name)
 
       for (i in 1:length(labels)) {
 
         # Create the Training, Validation or Test Set Object
-        cvSet <-  Clone$new()$this(x = private$..corpus, reference = FALSE)
-        cvSet$setName(paste(private$..corpus$getName(),
+        corpus <-  Clone$new()$this(x = private$..corpus, reference = FALSE)
+        corpus$setName(paste(private$..corpus$getName(),
                                    NLPStudio:::proper(paste(labels[i], "set"))))
-        cvSet$setMeta(key = 'cv', value = labels[i], type = 'f')
+        corpus$setMeta(key = 'cv', value = labels[i], type = 'f')
 
         # Create and add Document objects to the Set
         for (j in 1:length(corpusDocs)) {
@@ -65,18 +70,19 @@ Split <- R6::R6Class(
                           select(n))
 
           # Create the sample Document object with indexed content from the corpus
-          cvDoc <- Clone$new()$this(x = corpusDocs[[j]], content = FALSE)
-          cvDoc$content <- corpusDocs[[j]]$content[idx]
-          cvDoc$setName(paste(corpusDocs[[j]]$getName(),
+          document <- Clone$new()$this(x = corpusDocs[[j]], content = FALSE)
+          document$content <- corpusDocs[[j]]$content[idx]
+          document$setName(paste(corpusDocs[[j]]$getName(),
                                NLPStudio:::proper(paste(labels[i], "set"))))
-          cvDoc$setMeta(key = 'cv', value = labels[i], type = 'f')
+          document$setMeta(key = 'cv', value = labels[i], type = 'f')
 
           # Add Document object to cvSet object
-          cvSet$addDocument(cvDoc)
+          corpus$addDocument(document)
         }
 
-        # Attach cvSet
-        private$attach(cvSet)
+        # Attach to CVSet
+        private$..cvSet <- private$..cvSet$addCorpus(corpus)
+
       }
       private$..corpus <- NULL
       return(TRUE)
@@ -133,48 +139,25 @@ Split <- R6::R6Class(
       if (!private$validate(x, train, validation, test, stratify)) stop()
 
       private$..corpus <- x
-      if (!is.null(name)) self$setName(name)
 
-      # Format weights and labels,then create of indices of elements to split
+      # Format weights and labels and index the data as train, validation, or test.
       weights <- c(train, validation, test)
       labels <- c('training', 'validation', 'test')
       labels <- labels[weights > 0]
       weights <- weights[weights > 0]
       private$sampleP(labels = labels, seed, stratify, weights = list(weights))
 
-      # Build and attach CV Set objects from the corpus Document objects.
+      # Build the corpora and add to a CVSet
       corpusDocs <- private$..corpus$getDocuments()
-      private$buildCVSets(corpusDocs, labels)
+      private$buildCVSet(corpusDocs, labels, name)
 
       invisible(self)
     },
 
     #-------------------------------------------------------------------------#
-    #                       Get Cross-Validation Sets                         #
+    #                       Get Cross-Validation Set                          #
     #-------------------------------------------------------------------------#
-    getSplits = function() { private$..children },
-
-    getTrainingSet = function() {
-      train <- private$..children[private$search(key = 'cv', value = 'training')]
-      return(train[[1]])
-    },
-
-    getValidationSet = function() {
-      key <- private$search(key = 'cv', value = 'validation')
-      if (sum(key) == 0){
-        event <- "There is no validation set for the Corpus."
-        private$logR$log(method = 'execute', event = event, level = "Warn")
-        return(FALSE)
-      } else {
-        validation <- private$..children[key]
-        return(validation[[1]])
-      }
-    },
-
-    getTestSet = function() {
-      test <- private$..children[private$search(key = 'cv', value = 'test')]
-      return(test[[1]])
-    },
+    getCVSet = function() { private$..cvSet },
 
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #

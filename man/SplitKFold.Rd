@@ -11,7 +11,7 @@ SplitKFold
 \arguments{
 \item{x}{Corpus object.}
 
-\item{k}{Numeric of folds}
+\item{k}{Numeric of cvSets}
 
 \item{stratify}{Logical. If TRUE (default), SplitKFolds will be taken from
 each document in accordance with the proportions or counts indicated
