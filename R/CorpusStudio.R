@@ -134,7 +134,7 @@ CorpusStudio <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                        Corpus Sample Method                             #
     #-------------------------------------------------------------------------#
-    sample = function() {
+    sampleCorpus = function() {
 
       if (private$..settings$tokenize) {
         corpus <- private$..tokens
@@ -164,16 +164,23 @@ CorpusStudio <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                        Corpus Clean Method                              #
     #-------------------------------------------------------------------------#
-    clean = function() {
+    cleanCorpus = function() {
 
       if (private$..settings$sample) {
         corpus <- private$..sample
-      } else {
+        event <- paste0("Cleaned corpus sample object")
+      } else if (private$..settings$tokenize) {
         corpus <- private$..tokens
+        event <- paste0("Cleaned tokenized Corpus object")
+      } else {
+        corpus <- private$..corpus
+        event <- paste0("Cleaned corpus object")
       }
 
       ts <- TextStudio$new()$loadConfig(private$..settings$textConfig)
       private$..clean <- ts$execute(corpus, private$..settings$name)$getCorpus()
+
+      private$logR$log(method = 'cleanCorpus', event = event, level = "Info")
 
       invisible(self)
     },
@@ -211,7 +218,7 @@ CorpusStudio <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                   Corpus kFold Split Method                             #
     #-------------------------------------------------------------------------#
-    kFold = function(k = 10, what = 'raw', name = NULL,stratify = TRUE, seed = NULL)  {
+    kFold = function()  {
 
       if (private$..settings$clean) {
         corpus <- private$..clean
@@ -232,6 +239,284 @@ CorpusStudio <- R6::R6Class(
       private$logR$log(method = 'kFold', event = event, level = "Info")
 
       return(TRUE)
+    },
+  ),
+
+  active = list(
+    #-------------------------------------------------------------------------#
+    #                          Settings Manager                               #
+    #-------------------------------------------------------------------------#
+    name = function(x) {
+      if (missing(x)) {
+        return(private$..settings$name)
+      } else {
+        private$..settings$name <- x
+        invisible(self)
+      }
+    },
+
+    tokenize = function(x) {
+      if (missing(x)) {
+        return(private$..settings$tokenize)
+      } else {
+        private$..params <- list()
+        private$..params$logicals$variables <- c( 'x')
+        private$..params$logicals$values <- c(x)
+        v <- private$validator$validate(self)
+        if (v$code == FALSE) {
+          private$logR$log(method = 'tokenize', event = v$msg, level = "Error")
+          stop()
+        }
+        private$..settings$tokenize <- x
+        invisible(self)
+      }
+    },
+
+    tokenUnits = function(x) {
+      if (missing(x)) {
+        return(private$..settings$tokenUnits)
+      } else {
+        private$..params <- list()
+        private$..params$discrete$variables = list('x')
+        private$..params$discrete$values = list(x)
+        private$..params$discrete$valid = list(c('word', 'sentence', 'paragraph',
+                                                 'w', 's', 'p'))
+        v <- private$validator$validate(self)
+        if (v$code == FALSE) {
+          private$logR$log(method = 'tokenUnits', event = v$msg, level = "Error")
+          stop()
+        }
+        private$..settings$tokenUnits <- x
+        invisible(self)
+      }
+    },
+
+    clean = function(x) {
+      if (missing(x)) {
+        return(private$..settings$clean)
+      } else {
+        private$..params <- list()
+        private$..params$logicals$variables <- c('x')
+        private$..params$logicals$values <- c(x)
+        v <- private$validator$validate(self)
+        if (v$code == FALSE) {
+          private$logR$log(method = 'clean', event = v$msg, level = "Error")
+          stop()
+        }
+        private$..settings$clean <- x
+        invisible(self)
+      }
+    },
+
+    textConfig = function(x) {
+      if (missing(x)) {
+        return(private$..settings$textConfig)
+      } else {
+        private$..params <- list()
+        private$..params$classes$name <- list('x')
+        private$..params$classes$objects <- list(x)
+        private$..params$classes$valid = list(c('TextConfig'))
+        v <- private$validator$validate(self)
+        if (v$code == FALSE) {
+          private$logR$log(method = 'textConfig', event = v$msg, level = "Error")
+          stop()
+        }
+        private$..settings$textConfig <- x
+        invisible(self)
+      }
+    },
+
+    sample = function(x) {
+      if (missing(x)) {
+        return(private$..settings$sample)
+      } else {
+        private$..params <- list()
+        private$..params$logicals$variables <- c('x')
+        private$..params$logicals$values <- c(x)
+        v <- private$validator$validate(self)
+        if (v$code == FALSE) {
+          private$logR$log(method = 'sample', event = v$msg, level = "Error")
+          stop()
+        }
+        private$..settings$sample <- x
+        invisible(self)
+      }
+    },
+
+    stratify = function(x) {
+      if (missing(x)) {
+        return(private$..settings$stratify)
+      } else {
+        private$..params <- list()
+        private$..params$logicals$variables <- c('x')
+        private$..params$logicals$values <- c(x)
+        v <- private$validator$validate(self)
+        if (v$code == FALSE) {
+          private$logR$log(method = 'stratify', event = v$msg, level = "Error")
+          stop()
+        }
+        private$..settings$stratify <- x
+        invisible(self)
+      }
+    },
+
+    sampleSize = function(x) {
+      if (missing(x)) {
+        return(private$..settings$sampleSize)
+      } else {
+        private$..params <- list()
+        private$..params$classes$name <- list('x')
+        private$..params$classes$objects <- list(x)
+        private$..params$classes$valid = list(c('numeric', 'integer'))
+        v <- private$validator$validate(self)
+        if (v$code == FALSE) {
+          private$logR$log(method = 'sampleSize', event = v$msg, level = "Error")
+          stop()
+        }
+        private$..settings$sampleSize <- x
+        invisible(self)
+      }
+    },
+
+    replace = function(x) {
+      if (missing(x)) {
+        return(private$..settings$replace)
+      } else {
+        private$..params <- list()
+        private$..params$logicals$variables <- c('x')
+        private$..params$logicals$values <- c(x)
+        v <- private$validator$validate(self)
+        if (v$code == FALSE) {
+          private$logR$log(method = 'replace', event = v$msg, level = "Error")
+          stop()
+        }
+        private$..settings$replace <- x
+        invisible(self)
+      }
+    },
+
+    cv = function(x) {
+      if (missing(x)) {
+        return(private$..settings$cv)
+      } else {
+        private$..params <- list()
+        private$..params$discrete$variables = list('x')
+        private$..params$discrete$values = list(x)
+        private$..params$discrete$valid = list(c('standard', 'kFold'))
+        v <- private$validator$validate(self)
+        if (v$code == FALSE) {
+          private$logR$log(method = 'cv', event = v$msg, level = "Error")
+          stop()
+        }
+        private$..settings$cv <- x
+        invisible(self)
+      }
+    },
+
+    train = function(x) {
+      if (missing(x)) {
+        return(private$..settings$train)
+      } else {
+        private$..params <- list()
+        private$..params$classes$name <- list('x')
+        private$..params$classes$objects <- list(x)
+        private$..params$classes$valid = list(c('numeric', 'integer'))
+        private$..params$range$variable <- c('x')
+        private$..params$range$value <- c(x)
+        private$..params$range$low <- 0
+        private$..params$range$high <- 1
+        v <- private$validator$validate(self)
+        if (v$code == FALSE) {
+          private$logR$log(method = 'train', event = v$msg, level = "Error")
+          stop()
+        }
+        private$..settings$train <- x
+        invisible(self)
+      }
+    },
+
+    validation = function(x) {
+      if (missing(x)) {
+        return(private$..settings$validation)
+      } else {
+        private$..params <- list()
+        private$..params$classes$name <- list('x')
+        private$..params$classes$objects <- list(x)
+        private$..params$classes$valid = list(c('numeric', 'integer'))
+        private$..params$range$variable <- c('x')
+        private$..params$range$value <- c(x)
+        private$..params$range$low <- 0
+        private$..params$range$high <- 1
+        v <- private$validator$validate(self)
+        if (v$code == FALSE) {
+          private$logR$log(method = 'validation', event = v$msg, level = "Error")
+          stop()
+        }
+        private$..settings$validation <- x
+        invisible(self)
+      }
+    },
+
+    test = function(x) {
+      if (missing(x)) {
+        return(private$..settings$test)
+      } else {
+        private$..params <- list()
+        private$..params$classes$name <- list('x')
+        private$..params$classes$objects <- list(x)
+        private$..params$classes$valid = list(c('numeric', 'integer'))
+        private$..params$range$variable <- c('x')
+        private$..params$range$value <- c(x)
+        private$..params$range$low <- 0
+        private$..params$range$high <- 1
+        v <- private$validator$validate(self)
+        if (v$code == FALSE) {
+          private$logR$log(method = 'test', event = v$msg, level = "Error")
+          stop()
+        }
+        private$..settings$test <- x
+        invisible(self)
+      }
+    },
+
+    k = function(x) {
+      if (missing(x)) {
+        return(private$..settings$k)
+      } else {
+        private$..params <- list()
+        private$..params$classes$name <- list('x')
+        private$..params$classes$objects <- list(x)
+        private$..params$classes$valid = list(c('numeric', 'integer'))
+        private$..params$range$variable <- c('x')
+        private$..params$range$value <- c(x)
+        private$..params$range$low <- 2
+        private$..params$range$high <- 10
+        v <- private$validator$validate(self)
+        if (v$code == FALSE) {
+          private$logR$log(method = 'k', event = v$msg, level = "Error")
+          stop()
+        }
+        private$..settings$k <- x
+        invisible(self)
+      }
+    },
+
+    seed = function(x) {
+      if (missing(x)) {
+        return(private$..settings$seed)
+      } else {
+        private$..params <- list()
+        private$..params$classes$name <- list('x')
+        private$..params$classes$objects <- list(x)
+        private$..params$classes$valid = list(c('numeric', 'integer'))
+        v <- private$validator$validate(self)
+        if (v$code == FALSE) {
+          private$logR$log(method = 'seed', event = v$msg, level = "Error")
+          stop()
+        }
+        private$..settings$seed <- x
+        invisible(self)
+      }
     }
   ),
 
@@ -249,14 +534,15 @@ CorpusStudio <- R6::R6Class(
       private$loadServices(name = 'CorpusStudio')
 
       private$..params <- list()
-      private$..params$classes$name <- list('x', 'sampleSize')
-      private$..params$classes$objects <- list(x, sampleSize)
+      private$..params$classes$name <- list('x', 'textConfig', 'sampleSize')
+      private$..params$classes$objects <- list(x, textConfig, sampleSize)
       private$..params$classes$valid = list(c('character', 'FileSet', 'corpus',
                                               'VCorpus', 'SimpleCorpus'),
+                                            c('TextConfig'),
                                             c('numeric'))
       private$..params$discrete$variables = list('tokenUnits', 'cv')
       private$..params$discrete$values = list(tokenUnits, cv)
-      private$..params$classes$valid = list(c('word', 'sentence', 'paragraph',
+      private$..params$discrete$valid = list(c('word', 'sentence', 'paragraph',
                                               'w', 's', 'p'),
                                              c('standard', 'kFold'))
       private$..params$logicals$variables <- c( 'tokenize', 'clean', 'sample',
@@ -294,23 +580,16 @@ CorpusStudio <- R6::R6Class(
       invisible(self)
     },
 
-
+    #-------------------------------------------------------------------------#
+    #                           Object Accessors                              #
+    #-------------------------------------------------------------------------#
     getCorpus = function() private$..corpus,
     getTokens = function() private$..tokens,
     getSample = function() private$..sample,
     getClean = function() private$..clean,
+    getCVSet = function() private$..cvSet,
+    getKFolds = function() private$..kFolds,
 
-
-
-
-
-    getFolds = function(k = NULL) {
-      if (!is.null(k)) {
-        return(private$..kFolds$getFolds[[k]])
-      } else {
-        return(private$..kFolds$getFolds())
-      }
-    },
 
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #
