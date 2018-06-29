@@ -5,44 +5,33 @@
 #'
 #' \code{KNStudio} Builds Kneser Ney language model object.
 #'
-#' @param x Corpus object upon which the model will be trained.
-#' @param modelSize Numeric indicating the model size in terms of nGrams. Defaults to trigram model.
-#' @param open Logical indicating whether the vocabulary is open
-#' or closed. Open indicates that it is possible to encounter out of vocabulary
-#' words in the test set. If TRUE, OOV processing will be performed on
-#' the training set. Default is TRUE.
-#' @param name Character string containing the name of the KN Model object.
+#' @param config SLMConfig object containing the model parameters
+#' @param corpora SLMCorpora object containing the test set.
 #'
 #' @docType class
 #' @author John James, \email{jjames@@dataScienceSalon.org}
-#' @family Language Model Classes
+#' @family Statistical Language Model Classes
 #' @family Kneser Ney Model Classes
 #' @export
 KNStudio <- R6::R6Class(
   classname = "KNStudio",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = LMStudio0,
+  inherit = SLMStudio0,
 
   public = list(
     #-------------------------------------------------------------------------#
     #                               Constructor                               #
     #-------------------------------------------------------------------------#
-    initialize = function(x, modelSize = 3, open = TRUE, name = NULL)  {
+    initialize = function(config, corpora)  {
 
       private$loadServices()
 
       # Validation
       private$..params <- list()
-      private$..params$classes$name <- list('x')
-      private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list('CVSet')
-      private$..params$range$variable <- c('modelSize')
-      private$..params$range$value <- c(modelSize)
-      private$..params$range$low <- 1
-      private$..params$range$high <- 5
-      private$..params$logicals$variables <- c('open')
-      private$..params$logicals$values <- c(open)
+      private$..params$classes$name <- list('config', 'corpora')
+      private$..params$classes$objects <- list(config, corpora)
+      private$..params$classes$valid <- list('SLMConfig', 'SLMCorpora')
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'build',
@@ -51,41 +40,25 @@ KNStudio <- R6::R6Class(
       }
 
       # Create Language Model Object
-      private$..model <- KN$new(x = x, modelSize = modelSize,
-                                open = open , name = name)
+      private$..config <- config
+      private$..corpora <- corpora
+
       invisible(self)
     },
 
-    #-------------------------------------------------------------------------#
-    #                             Features Method                             #
-    #-------------------------------------------------------------------------#
-    getFeatures = function() {
-
-    },
 
     #-------------------------------------------------------------------------#
     #                             Build Method                                #
     #-------------------------------------------------------------------------#
-    build = function(corpora, modelSize = 3, open = TRUE, name = NULL) {
+    build = function() {
 
-      private$..model <- KNBuild$new(private$..model)$build()$getModel()
+      private$..model <- KNBuild$new(private$..config,
+                                     private$..corpora)$build()$getModel()
+      private$..model <- KNEstimate$new(private$..config,
+                                        private$..model)$estimate()$getModel()
 
       invisible(self)
     },
-    #-------------------------------------------------------------------------#
-    #                           Estimate Method                               #
-    #-------------------------------------------------------------------------#
-    estimate = function() {
-      private$..model <- KNEstimate$new(private$..model)$estimate()$getModel()
-    },
-
-    #-------------------------------------------------------------------------#
-    #                         Evaluation Method                               #
-    #-------------------------------------------------------------------------#
-    evaluate = function() {
-      private$..model <- KNEvaluate$new(private$..model)$evaluate()$getModel()
-    },
-
     #-------------------------------------------------------------------------#
     #                          Get Model Method                               #
     #-------------------------------------------------------------------------#
@@ -97,6 +70,5 @@ KNStudio <- R6::R6Class(
     accept = function(visitor)  {
       visitor$knStudio(self)
     }
-
   )
 )

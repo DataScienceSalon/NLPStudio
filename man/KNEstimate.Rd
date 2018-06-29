@@ -21,9 +21,8 @@ Computes Modified Kneser Ney estimates for all nGrams in the Model
 Other KNStudio Classes: \code{\link{KNBuild}},
   \code{\link{KNEvaluate}}
 
-Other LMStudio Classes: \code{\link{KNBuild}},
-  \code{\link{KNEvaluate}}, \code{\link{LMCorpora}},
-  \code{\link{LMStudio0}}
+Other SLMStudio Classes: \code{\link{KNBuild}},
+  \code{\link{KNEvaluate}}, \code{\link{SLMCorpora}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

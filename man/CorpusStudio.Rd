@@ -11,36 +11,31 @@ CorpusStudio
 \arguments{
 \item{x}{a series of character vectors, each containing the text for a single
 document, a FileSet object containing .txt files, a character string
-containing the directory containing .txt files, a quanteda corpus object, or
-a tm VCorpus, or tm SimpleCorpus object.}
+containing the directory holding .txt files, a quanteda corpus object, or
+a tm VCorpus, or tm SimpleCorpus object.#'}
 
-\item{corpus}{Corpus object}
+\item{name}{Character string containing the name to assign to the final
+CVSet or CVSetKFold object.}
 
-\item{name}{Character string containing the name to assign to the Corpus
-object.}
+\item{cv}{The type of cross-validation product to deliver. Valid values
+are c('standard', 'kFold'). The default is standard and one letter
+abbreviations are acceptable.}
 
-\item{path}{Character string containing a relative path to a directory
-containing text files or a relative file path for a Corpus object. This
-parameter is used in the load and save methods.}
-
-\item{mode}{Character string indicating the mode for writing a Corpus object.
-Valid values are c("text", "binary", "object"). Abbreviations are permitted.}
-
-\item{k}{Numeric used by the kFold method. Indicates number of folds in
-which to split the Corpus object.}
+\item{textConfig}{a TextConfig object which encapsulates the text
+cleaning configuration.}
 
 \item{n}{Numeric parameter used by the sample method. It contains the number
-of samples to obtain or the proportion of the Corpus to sample.}
+of samples to obtain from the Corpus or the proportion of the Corpus to sample
+prior to splitting into cross-validation set(s).}
+
+\item{k}{Numeric. If 'cv' is 'kFold', this number indicates the number
+of folds to produce.}
 
 \item{stratify}{Logical. If TRUE (default), splits and sampling will
 be stratefied.}
 
 \item{replace}{Logical. If TRUE, sampling is conducted with replacement. The
 default is FALSE.}
-
-\item{what}{Character string which indicates the target Corpus object for a
-method. Options are c('raw', 'tokenized', 'sample', 'train',
-'validation', 'test'). The default value is method specific.}
 
 \item{train}{Numeric indicating the proportion of the Corpus to allocate
 to the training set. Acceptable values are between 0 and 1. The total of the
@@ -57,7 +52,24 @@ values for the train, validation and test parameters must equal 1.}
 \item{seed}{Numeric used to initialize a pseudorandom number generator.}
 }
 \description{
-\code{CorpusStudio}  Class responsible for building and manipulating Corpus objects.
+\code{CorpusStudio}  Creates a Corpus object then prepares it for cross-validation downstream.
+}
+\details{
+Class responsible for creating, cleaning, sampling, splitting and
+constructing the cross-validation object that will be used by downstream
+modeling classes. This is performed in five states.
+
+The first stage builds the corpus object from one of several sources:
+a directory source, a FileSet object, a TM Corpus object, or a
+quanteda corpus object. The second stage is optional and reshapes the
+Corpus object into word, sentence or paragraph units. The third stage,
+the Sampling Stage takes a stratified or non-stratfified sampling
+from the Corpus object. The forth stage, the cross-validation stage,
+produces one of two cross-validation objects: a CVSet object, which
+is comprised of a training, test and optional validation set, or
+a CVSetKFold object which contains k-folds, each comprised of a
+training and test set. The cross-validation product is the final product
+and forms the data basis for the modeling phase.
 }
 \seealso{
 Other CorpusStudio Family of Classes: \code{\link{Sample0}},

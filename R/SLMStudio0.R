@@ -1,27 +1,27 @@
 #==============================================================================#
-#                               LMStudio0                                      #
+#                               SLMStudio0                                      #
 #==============================================================================#
-#' LMStudio0
+#' SLMStudio0
 #'
-#' \code{LMStudio0} Abstract class for the language model family of classes.
+#' \code{SLMStudio0} Abstract class for the Statistical Language Model Studio (SLMStudio) family of classes.
 #'
-#' This abstract class defines a common interface and methods of the LMStudio
-#' family of classes.
-#'
-#' @param x Language model object
+#' This abstract class defines common members for the SLMStudio family of classes.
 #'
 #' @docType class
 #' @author John James, \email{jjames@@dataScienceSalon.org}
-#' @family LMStudio Classes
+#' @family Language Model Classes
+#' @family Statistical Language Model Studio Classes
 #' @export
-LMStudio0 <- R6::R6Class(
-  classname = "LMStudio0",
+SLMStudio0 <- R6::R6Class(
+  classname = "SLMStudio0",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = Super,
+  inherit = SLM0,
 
   private = list(
-    ..model = character(),
+    ..config = character(),
+    ..corpora = character(),
+    ..model = list(),
     ..regex = list(
       prefix = list(
         bigrams   = "^((\\S+\\s+){0}\\S+).*$",
@@ -40,6 +40,8 @@ LMStudio0 <- R6::R6Class(
 
   public = list(
     initialize = function(x) { stop("Not implemented for this abstract/interface class.") },
-    build = function() { stop("Not implemented for this abstract/interface class.") }
+    getConfig = function() private$..config,
+    getCorpora = function() private$..corpora,
+    getModel = function() private$..model
   )
 )

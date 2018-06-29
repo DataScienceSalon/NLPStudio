@@ -9,25 +9,16 @@
 KNStudio
 }
 \arguments{
-\item{x}{Corpus object upon which the model will be trained.}
+\item{config}{SLMConfig object containing the model parameters}
 
-\item{modelSize}{Numeric indicating the model size in terms of nGrams. Defaults to trigram model.}
-
-\item{open}{Logical indicating whether the vocabulary is open
-or closed. Open indicates that it is possible to encounter out of vocabulary
-words in the test set. If TRUE, OOV processing will be performed on
-the training set. Default is TRUE.}
-
-\item{name}{Character string containing the name of the KN Model object.}
+\item{corpora}{SLMCorpora object containing the test set.}
 }
 \description{
 \code{KNStudio} Builds Kneser Ney language model object.
 }
 \seealso{
-Other Language Model Classes: \code{\link{KNStudio0}},
-  \code{\link{KN}}
-
-Other Kneser Ney Model Classes: \code{\link{KNStudio0}}
+Other Statistical Language Model Classes: \code{\link{SLM0}},
+  \code{\link{SLM}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

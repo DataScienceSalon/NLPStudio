@@ -13,7 +13,7 @@
 #' @docType class
 #' @author John James, \email{jjames@@dataScienceSalon.org}
 #' @family KNStudio Classes
-#' @family LMStudio Classes
+#' @family SLMStudio Classes
 #' @export
 KNBuild <- R6::R6Class(
   classname = "KNBuild",
@@ -22,28 +22,31 @@ KNBuild <- R6::R6Class(
   inherit = KNStudio0,
 
   private = list(
-    ..modelSize = numeric(),
-    ..modelTypes = character(),
-    ..nGrams = list(),
-    ..totals = data.table(),
-    ..discounts = data.table(),
+    ..model = list(
+      nGrams = list(),
+      totals = data.table(),
+      discounts = data.table()
+    ),
 
     discounts = function() {
-      private$..discounts <- private$..totals$n1 /
-        (private$..totals$n1 + 2 * private$..totals$n2)
+      private$..model$discounts <- private$..model$totals$n1 /
+        (private$..model$totals$n1 + 2 * private$..model$totals$n2)
       return(TRUE)
     },
 
     totals = function() {
 
-      for (i in 1:private$..modelSize) {
+      modelSize <- private$..config$getModelSize()
+      modelTypes <- private$..config$getModelTypes()
+
+      for (i in 1:modelSize) {
 
         # Summarize counts and store in summary table
-        nGram <- private$..modelTypes[i]
-        n <- nrow(private$..nGrams[[i]])
+        nGram <- .modelTypes[i]
+        n <- nrow(private$..model$nGrams[[i]])
 
         # Obtain frequency spectrum
-        spectrum <- as.data.frame(table(private$..nGrams[[i]]$cNGram), stringsAsFactors = FALSE)
+        spectrum <- as.data.frame(table(private$..model$nGrams[[i]]$cNGram), stringsAsFactors = FALSE)
         names(spectrum) <- c('cNGram', 'freq')
         spectrum$cNGram <- as.numeric(spectrum$cNGram)
         for (j in 1:2) {
@@ -55,7 +58,7 @@ KNBuild <- R6::R6Class(
         dt_i <- data.table(nGram = nGram, n = n,
                            n1 = spectrum$freq[1],
                            n2 = spectrum$freq[2])
-        private$..totals <- rbind(private$..totals, dt_i)
+        private$..model$totals <- rbind(private$..model$totals, dt_i)
       }
       return(TRUE)
     },
@@ -63,7 +66,7 @@ KNBuild <- R6::R6Class(
 
     prefix = function(n) {
       # Compute the number of times a prefix occurs in the corpus
-      private$..nGrams[[n]][, ":=" (cPre = sum(cNGram)), by = prefix]
+      private$..model$nGrams[[n]][, ":=" (cPre = sum(cNGram)), by = prefix]
     },
 
 
@@ -73,10 +76,10 @@ KNBuild <- R6::R6Class(
       # an nGram prefix.  This computed for all levels except
       # the unigram level, which does not have a prefix.
       N1pPre_ <-
-        private$..nGrams[[n]][,.(N1pPre_ = .N), by = .(prefix)]
+        private$..model$nGrams[[n]][,.(N1pPre_ = .N), by = .(prefix)]
 
-      private$..nGrams[[n]] <-
-        merge(private$..nGrams[[n]], N1pPre_, by = 'prefix',
+      private$..model$nGrams[[n]] <-
+        merge(private$..model$nGrams[[n]], N1pPre_, by = 'prefix',
               all.x = TRUE)
     },
 
@@ -85,25 +88,27 @@ KNBuild <- R6::R6Class(
       # precede an nGram.  This is compute for all levels except
       # the highest.
 
-      if (n < private$..modelSize) {
+      modelSize <- private$..config$getModelSize()
+
+      if (n < modelSize) {
 
         # Compute the continuation count for the nGram
-        higher <- private$..nGrams[[n+1]][,.(suffix)]
+        higher <- private$..model$nGrams[[n+1]][,.(suffix)]
         higher <- higher[,.(cKN_nGram = .N), by = .(suffix)]
         higher$cMKN_nGram <- as.numeric(higher$cKN_nGram)
-        setkey(private$..nGrams[[n]], nGram)
+        setkey(private$..model$nGrams[[n]], nGram)
         setkey(higher, suffix)
-        private$..nGrams[[n]] <-
-          merge(private$..nGrams[[n]], higher, by.x = 'nGram',
+        private$..model$nGrams[[n]] <-
+          merge(private$..model$nGrams[[n]], higher, by.x = 'nGram',
                 by.y = 'suffix', all.x = TRUE)
 
         # Handle special case where nGram is sequence of BOS tags
         # The continuation count is the number of occurences
         # of BOS tag.
-        private$..nGrams[[n]][like(nGram, "BOS"), cKN_nGram := as.numeric(cNGram)]
+        private$..model$nGrams[[n]][like(nGram, "BOS"), cKN_nGram := as.numeric(cNGram)]
 
       } else {
-        private$..nGrams[[n]]$cKN_nGram <- private$..nGrams[[n]]$cNGram
+        private$..model$nGrams[[n]]$cKN_nGram <- private$..model$nGrams[[n]]$cNGram
       }
 
 
@@ -112,17 +117,19 @@ KNBuild <- R6::R6Class(
 
     counts = function() {
 
-      for (n in 1:private$..modelSize) {
+      modelSize <- private$..config$getModelSize()
+
+      for (n in 1:modelSize) {
 
         private$ckn(n)
         if (n > 1) {
           private$hist(n)
         }
-        if (n == private$..modelSize) private$prefix(n)
+        if (n == modelSize) private$prefix(n)
 
-        for (i in seq_along(private$..nGrams[[n]])) {
-          set(private$..nGrams[[n]],
-              i=which(is.na(private$..nGrams[[n]][[i]])), j=i, value=0)
+        for (i in seq_along(private$..model$nGrams[[n]])) {
+          set(private$..model$nGrams[[n]],
+              i=which(is.na(private$..model$nGrams[[n]][[i]])), j=i, value=0)
         }
       }
       private$totals()
@@ -143,16 +150,20 @@ KNBuild <- R6::R6Class(
 
     buildTables = function() {
 
-      train <- private$..model$getTrain()
+      # Obtain model parameters and training Corpus object.
+      modelSize <- private$..config$getModelSize()
+      modelTypes <- private$..config$getModelTypes()
+      train <- private$..corpora$getTrain()
+
       document <- train$getDocuments()[[1]]
 
-      private$..nGrams <- lapply(seq(1:private$..modelSize), function(n) {
+      private$..model$nGrams <- lapply(seq(1:modelSize), function(n) {
         nGrams <- unlist(NLPStudio::tokenize(document$content, tokenUnit = 'word',
                                              nGrams = n, lowercase = FALSE))
         private$createTable(nGrams, n)
       })
 
-      names(private$..nGrams) <- private$..modelTypes[1:private$..modelSize]
+      names(private$..model$nGrams) <- modelTypes[1:modelSize]
 
       return(TRUE)
     }
@@ -163,23 +174,22 @@ KNBuild <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                              Constructor                                #
     #-------------------------------------------------------------------------#
-    initialize = function(x) {
+    initialize = function(config, corpora) {
 
       private$loadServices()
 
       private$..params <- list()
-      private$..params$classes$name <- list('x')
-      private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list(c('KN'))
+      private$..params$classes$name <- list('config', 'corpora')
+      private$..params$classes$objects <- list(config, corpora)
+      private$..params$classes$valid <- list(c('SLMConfig', 'SLMCorpora'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize', event = v$msg, level = "Error")
         stop()
       }
 
-      private$..model <- x
-      private$..modelSize <- x$getModelSize()
-      private$..modelTypes <- x$getModelTypes()
+      private$..config <- config
+      private$..corpora <- corpora
 
       event <-  paste0("Instantiated KNBuild ")
       private$logR$log(method = 'initialize', event = event)
@@ -187,7 +197,6 @@ KNBuild <- R6::R6Class(
     },
 
     build = function() {
-
 
       # Build ngram tables with raw frequency counts
       private$buildTables()
@@ -198,26 +207,19 @@ KNBuild <- R6::R6Class(
       # Compute discounts
       private$discounts()
 
-      # Update language model
-      private$..model$setNGrams(private$..nGrams)
-      private$..model$setDiscounts(private$..discounts)
-      private$..model$setTotals(private$..totals)
+      invisible(self)
+    },
 
-      # Remove temporary members
-      private$....modelSize <- NULL
-      private$....modelTypes <- NULL
-      private$....nGrams <- NULL
-      private$....totals <- NULL
-      private$....discounts <- NULL
-
-      return(private$..model)
+    getModel = function() {
+      model <- KN$new(config = private$..config, model = private$..model)
+      return(model)
     },
 
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$knCounts(self)
+      visitor$knBuild(self)
     }
   )
 )

@@ -17,12 +17,10 @@ Source
 \code{Source} Encapsulates the command to source a FileSet object.
 }
 \seealso{
-Other FileStudio Command Classes: \code{\link{BuildCorpus}},
-  \code{\link{CleanCorpus}}, \code{\link{CopyFileSet}},
+Other FileStudio Command Classes: \code{\link{CopyFileSet}},
   \code{\link{MoveFileSet}}, \code{\link{ReadCorpus}},
   \code{\link{RepairFileSet}}, \code{\link{SampleCorpus}},
-  \code{\link{SplitCorpus}}, \code{\link{TokenizeCorpus}},
-  \code{\link{WriteCorpus}}
+  \code{\link{TokenizeCorpus}}, \code{\link{WriteCorpus}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

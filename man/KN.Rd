@@ -24,8 +24,8 @@ the training set. Default is TRUE.}
 \code{KN} Class containing the Kneser Ney Language Model object.
 }
 \seealso{
-Other Language Model Classes: \code{\link{KNStudio0}},
-  \code{\link{KNStudio}}
+Other Language Model Classes: \code{\link{SLM0}},
+  \code{\link{SLMConfig}}, \code{\link{SLMStudio0}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

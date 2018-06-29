@@ -120,11 +120,11 @@ CorpusStudio <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                      Corpus Tokenize Method                             #
     #-------------------------------------------------------------------------#
-    tokenize = function() {
+    tokenizeCorpus = function() {
       private$..tokens <- Tokenizer$new()$execute(private$..corpus,
                                                   private$..settings$tokenUnit)
 
-      event <- paste0("Created ", tokenUnit, " object from Corpus.")
+      event <- paste0("Created ", private$..settings$tokenUnit, " object from Corpus.")
       private$..tokens$message(event)
       private$..corpus$message(event)
       private$logR$log(method = 'tokenize', event = event, level = "Info")
@@ -188,7 +188,7 @@ CorpusStudio <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                         Corpus Split Method                             #
     #-------------------------------------------------------------------------#
-    split = function() {
+    splitCorpus = function() {
 
       if (private$..settings$clean) {
         corpus <- private$..clean
@@ -218,7 +218,7 @@ CorpusStudio <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                   Corpus kFold Split Method                             #
     #-------------------------------------------------------------------------#
-    kFold = function()  {
+    kFoldCorpus = function()  {
 
       if (private$..settings$clean) {
         corpus <- private$..clean
@@ -234,12 +234,12 @@ CorpusStudio <- R6::R6Class(
                                                    k = private$..settings$k,
                                                    name = private$..settings$name,
                                                    stratify = private$..settings$stratify,
-                                                   seed = private$..settings$seed)
+                                                   seed = private$..settings$seed)$getKFolds()
       event <- paste0("Created k-fold cross-validation set from Corpus.")
       private$logR$log(method = 'kFold', event = event, level = "Info")
 
       return(TRUE)
-    },
+    }
   ),
 
   active = list(
@@ -260,14 +260,14 @@ CorpusStudio <- R6::R6Class(
         return(private$..settings$tokenize)
       } else {
         private$..params <- list()
-        private$..params$logicals$variables <- c( 'x')
+        private$..params$logicals$variables <- c('tokenize')
         private$..params$logicals$values <- c(x)
         v <- private$validator$validate(self)
         if (v$code == FALSE) {
           private$logR$log(method = 'tokenize', event = v$msg, level = "Error")
-          stop()
+        } else {
+          private$..settings$tokenize <- x
         }
-        private$..settings$tokenize <- x
         invisible(self)
       }
     },
@@ -277,16 +277,16 @@ CorpusStudio <- R6::R6Class(
         return(private$..settings$tokenUnits)
       } else {
         private$..params <- list()
-        private$..params$discrete$variables = list('x')
+        private$..params$discrete$variables = list('tokenUnits')
         private$..params$discrete$values = list(x)
         private$..params$discrete$valid = list(c('word', 'sentence', 'paragraph',
                                                  'w', 's', 'p'))
         v <- private$validator$validate(self)
         if (v$code == FALSE) {
           private$logR$log(method = 'tokenUnits', event = v$msg, level = "Error")
-          stop()
+        } else {
+          private$..settings$tokenUnits <- x
         }
-        private$..settings$tokenUnits <- x
         invisible(self)
       }
     },
@@ -296,14 +296,14 @@ CorpusStudio <- R6::R6Class(
         return(private$..settings$clean)
       } else {
         private$..params <- list()
-        private$..params$logicals$variables <- c('x')
+        private$..params$logicals$variables <- c('clean')
         private$..params$logicals$values <- c(x)
         v <- private$validator$validate(self)
         if (v$code == FALSE) {
           private$logR$log(method = 'clean', event = v$msg, level = "Error")
-          stop()
+        } else {
+          private$..settings$clean <- x
         }
-        private$..settings$clean <- x
         invisible(self)
       }
     },
@@ -313,15 +313,15 @@ CorpusStudio <- R6::R6Class(
         return(private$..settings$textConfig)
       } else {
         private$..params <- list()
-        private$..params$classes$name <- list('x')
+        private$..params$classes$name <- list('textConfig')
         private$..params$classes$objects <- list(x)
         private$..params$classes$valid = list(c('TextConfig'))
         v <- private$validator$validate(self)
         if (v$code == FALSE) {
           private$logR$log(method = 'textConfig', event = v$msg, level = "Error")
-          stop()
+        } else {
+          private$..settings$textConfig <- x
         }
-        private$..settings$textConfig <- x
         invisible(self)
       }
     },
@@ -331,14 +331,14 @@ CorpusStudio <- R6::R6Class(
         return(private$..settings$sample)
       } else {
         private$..params <- list()
-        private$..params$logicals$variables <- c('x')
+        private$..params$logicals$variables <- c('sample')
         private$..params$logicals$values <- c(x)
         v <- private$validator$validate(self)
         if (v$code == FALSE) {
           private$logR$log(method = 'sample', event = v$msg, level = "Error")
-          stop()
+        } else {
+          private$..settings$sample <- x
         }
-        private$..settings$sample <- x
         invisible(self)
       }
     },
@@ -348,14 +348,14 @@ CorpusStudio <- R6::R6Class(
         return(private$..settings$stratify)
       } else {
         private$..params <- list()
-        private$..params$logicals$variables <- c('x')
+        private$..params$logicals$variables <- c('stratify')
         private$..params$logicals$values <- c(x)
         v <- private$validator$validate(self)
         if (v$code == FALSE) {
           private$logR$log(method = 'stratify', event = v$msg, level = "Error")
-          stop()
+        } else {
+          private$..settings$stratify <- x
         }
-        private$..settings$stratify <- x
         invisible(self)
       }
     },
@@ -365,15 +365,15 @@ CorpusStudio <- R6::R6Class(
         return(private$..settings$sampleSize)
       } else {
         private$..params <- list()
-        private$..params$classes$name <- list('x')
+        private$..params$classes$name <- list('sampleSize')
         private$..params$classes$objects <- list(x)
         private$..params$classes$valid = list(c('numeric', 'integer'))
         v <- private$validator$validate(self)
         if (v$code == FALSE) {
           private$logR$log(method = 'sampleSize', event = v$msg, level = "Error")
-          stop()
+        } else {
+          private$..settings$sampleSize <- x
         }
-        private$..settings$sampleSize <- x
         invisible(self)
       }
     },
@@ -383,14 +383,14 @@ CorpusStudio <- R6::R6Class(
         return(private$..settings$replace)
       } else {
         private$..params <- list()
-        private$..params$logicals$variables <- c('x')
+        private$..params$logicals$variables <- c('replace')
         private$..params$logicals$values <- c(x)
         v <- private$validator$validate(self)
         if (v$code == FALSE) {
           private$logR$log(method = 'replace', event = v$msg, level = "Error")
-          stop()
+        } else {
+          private$..settings$replace <- x
         }
-        private$..settings$replace <- x
         invisible(self)
       }
     },
@@ -400,15 +400,15 @@ CorpusStudio <- R6::R6Class(
         return(private$..settings$cv)
       } else {
         private$..params <- list()
-        private$..params$discrete$variables = list('x')
+        private$..params$discrete$variables = list('cv')
         private$..params$discrete$values = list(x)
         private$..params$discrete$valid = list(c('standard', 'kFold'))
         v <- private$validator$validate(self)
         if (v$code == FALSE) {
           private$logR$log(method = 'cv', event = v$msg, level = "Error")
-          stop()
+        } else {
+          private$..settings$cv <- x
         }
-        private$..settings$cv <- x
         invisible(self)
       }
     },
@@ -418,7 +418,7 @@ CorpusStudio <- R6::R6Class(
         return(private$..settings$train)
       } else {
         private$..params <- list()
-        private$..params$classes$name <- list('x')
+        private$..params$classes$name <- list('train')
         private$..params$classes$objects <- list(x)
         private$..params$classes$valid = list(c('numeric', 'integer'))
         private$..params$range$variable <- c('x')
@@ -428,9 +428,9 @@ CorpusStudio <- R6::R6Class(
         v <- private$validator$validate(self)
         if (v$code == FALSE) {
           private$logR$log(method = 'train', event = v$msg, level = "Error")
-          stop()
+        } else {
+          private$..settings$train <- x
         }
-        private$..settings$train <- x
         invisible(self)
       }
     },
@@ -440,7 +440,7 @@ CorpusStudio <- R6::R6Class(
         return(private$..settings$validation)
       } else {
         private$..params <- list()
-        private$..params$classes$name <- list('x')
+        private$..params$classes$name <- list('validation')
         private$..params$classes$objects <- list(x)
         private$..params$classes$valid = list(c('numeric', 'integer'))
         private$..params$range$variable <- c('x')
@@ -450,9 +450,9 @@ CorpusStudio <- R6::R6Class(
         v <- private$validator$validate(self)
         if (v$code == FALSE) {
           private$logR$log(method = 'validation', event = v$msg, level = "Error")
-          stop()
+        } else {
+          private$..settings$validation <- x
         }
-        private$..settings$validation <- x
         invisible(self)
       }
     },
@@ -462,7 +462,7 @@ CorpusStudio <- R6::R6Class(
         return(private$..settings$test)
       } else {
         private$..params <- list()
-        private$..params$classes$name <- list('x')
+        private$..params$classes$name <- list('test')
         private$..params$classes$objects <- list(x)
         private$..params$classes$valid = list(c('numeric', 'integer'))
         private$..params$range$variable <- c('x')
@@ -472,9 +472,9 @@ CorpusStudio <- R6::R6Class(
         v <- private$validator$validate(self)
         if (v$code == FALSE) {
           private$logR$log(method = 'test', event = v$msg, level = "Error")
-          stop()
+        } else {
+          private$..settings$test <- x
         }
-        private$..settings$test <- x
         invisible(self)
       }
     },
@@ -484,19 +484,19 @@ CorpusStudio <- R6::R6Class(
         return(private$..settings$k)
       } else {
         private$..params <- list()
-        private$..params$classes$name <- list('x')
+        private$..params$classes$name <- list('k')
         private$..params$classes$objects <- list(x)
         private$..params$classes$valid = list(c('numeric', 'integer'))
-        private$..params$range$variable <- c('x')
+        private$..params$range$variable <- c('k')
         private$..params$range$value <- c(x)
         private$..params$range$low <- 2
         private$..params$range$high <- 10
         v <- private$validator$validate(self)
         if (v$code == FALSE) {
           private$logR$log(method = 'k', event = v$msg, level = "Error")
-          stop()
+        } else {
+          private$..settings$k <- x
         }
-        private$..settings$k <- x
         invisible(self)
       }
     },
@@ -506,15 +506,15 @@ CorpusStudio <- R6::R6Class(
         return(private$..settings$seed)
       } else {
         private$..params <- list()
-        private$..params$classes$name <- list('x')
+        private$..params$classes$name <- list('seed')
         private$..params$classes$objects <- list(x)
         private$..params$classes$valid = list(c('numeric', 'integer'))
         v <- private$validator$validate(self)
         if (v$code == FALSE) {
           private$logR$log(method = 'seed', event = v$msg, level = "Error")
-          stop()
+        } else {
+          private$..settings$seed <- x
         }
-        private$..settings$seed <- x
         invisible(self)
       }
     }
@@ -534,11 +534,10 @@ CorpusStudio <- R6::R6Class(
       private$loadServices(name = 'CorpusStudio')
 
       private$..params <- list()
-      private$..params$classes$name <- list('x', 'textConfig', 'sampleSize')
-      private$..params$classes$objects <- list(x, textConfig, sampleSize)
+      private$..params$classes$name <- list('x', 'sampleSize')
+      private$..params$classes$objects <- list(x, sampleSize)
       private$..params$classes$valid = list(c('character', 'FileSet', 'corpus',
                                               'VCorpus', 'SimpleCorpus'),
-                                            c('TextConfig'),
                                             c('numeric'))
       private$..params$discrete$variables = list('tokenUnits', 'cv')
       private$..params$discrete$values = list(tokenUnits, cv)
@@ -549,15 +548,28 @@ CorpusStudio <- R6::R6Class(
                                                 'stratify', 'replace')
       private$..params$logicals$values <- c(tokenize, clean, sample, stratify,
                                             replace)
-      private$..params$range$variable <- c('train', 'validation', 'test')
-      private$..params$range$value <- c(train, validation, test)
-      private$..params$range$low <- 0
-      private$..params$range$high <- 1
 
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize', event = v$msg, level = "Error")
         stop()
+      }
+
+      if (clean & class(textConfig)[1] != "TextConfig") {
+        event <- paste0("TextConfig object is missing or invalid. If 'clean' is ",
+                        "TRUE, a TextConfig object must be provided. See ?",
+                        class(self)[1], " for further assistance.")
+        private$logR$log(method = 'initialize', event = event, level = "Error")
+        stop()
+      }
+
+      if (cv == 'standard') {
+        if (sum(train, validation, test) != 1) {
+          event <- paste0("The proportions for training, validation, and test sets ",
+          "must sum to one.")
+          private$logR$log(method = 'initialize', event = event, level = "Error")
+          stop()
+        }
       }
 
       private$..settings$x = x
@@ -567,7 +579,7 @@ CorpusStudio <- R6::R6Class(
       private$..settings$clean = clean
       private$..settings$textConfig = textConfig
       private$..settings$sample = sample
-      private$..settings$sample = stratify
+      private$..settings$stratify = stratify
       private$..settings$sampleSize = sampleSize
       private$..settings$replace = replace
       private$..settings$cv = cv
@@ -581,6 +593,19 @@ CorpusStudio <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
+    #                             Execute Method                              #
+    #-------------------------------------------------------------------------#
+    execute = function() {
+      private$build()
+      if (private$..settings$tokenize) private$tokenizeCorpus()
+      if (private$..settings$sample) private$sampleCorpus()
+      if (private$..settings$clean) private$cleanCorpus()
+      if (private$..settings$cv == 'standard') private$splitCorpus()
+      if (private$..settings$cv == 'kFold') private$kFoldCorpus()
+      invisible(self)
+    },
+
+    #-------------------------------------------------------------------------#
     #                           Object Accessors                              #
     #-------------------------------------------------------------------------#
     getCorpus = function() private$..corpus,
@@ -589,7 +614,6 @@ CorpusStudio <- R6::R6Class(
     getClean = function() private$..clean,
     getCVSet = function() private$..cvSet,
     getKFolds = function() private$..kFolds,
-
 
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #

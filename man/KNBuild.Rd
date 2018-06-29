@@ -22,9 +22,8 @@ probabilities.
 Other KNStudio Classes: \code{\link{KNEstimate}},
   \code{\link{KNEvaluate}}
 
-Other LMStudio Classes: \code{\link{KNEstimate}},
-  \code{\link{KNEvaluate}}, \code{\link{LMCorpora}},
-  \code{\link{LMStudio0}}
+Other SLMStudio Classes: \code{\link{KNEstimate}},
+  \code{\link{KNEvaluate}}, \code{\link{SLMCorpora}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

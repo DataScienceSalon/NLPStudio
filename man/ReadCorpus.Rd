@@ -23,12 +23,10 @@ Token object
 \code{ReadCorpus} Encapsulates the command to read a Corpus or its texts.
 }
 \seealso{
-Other FileStudio Command Classes: \code{\link{BuildCorpus}},
-  \code{\link{CleanCorpus}}, \code{\link{CopyFileSet}},
+Other FileStudio Command Classes: \code{\link{CopyFileSet}},
   \code{\link{MoveFileSet}}, \code{\link{RepairFileSet}},
   \code{\link{SampleCorpus}}, \code{\link{Source}},
-  \code{\link{SplitCorpus}}, \code{\link{TokenizeCorpus}},
-  \code{\link{WriteCorpus}}
+  \code{\link{TokenizeCorpus}}, \code{\link{WriteCorpus}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

@@ -12,7 +12,7 @@
 #' @docType class
 #' @author John James, \email{jjames@@dataScienceSalon.org}
 #' @family KNStudio Classes
-#' @family LMStudio Classes
+#' @family SLMStudio Classes
 #' @export
 KNEstimate <- R6::R6Class(
   classname = "KNEstimate",
@@ -97,15 +97,15 @@ KNEstimate <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                              Constructor                                #
     #-------------------------------------------------------------------------#
-    initialize = function(x) {
+    initialize = function(config, model) {
 
       private$loadServices()
 
       # Validation
       private$..params <- list()
-      private$..params$classes$name <- list('x')
-      private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list(c('KN'))
+      private$..params$classes$name <- list('config', 'model')
+      private$..params$classes$objects <- list(config, model)
+      private$..params$classes$valid <- list(c('SLMConfig','KN'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize', event = v$msg, level = "Error")
@@ -113,11 +113,12 @@ KNEstimate <- R6::R6Class(
       }
 
       # Dock current lm (extract members read/updated within class)
-      private$..model <- x
-      private$..nGrams <- x$getNGrams()
-      private$..discounts <- x$getDiscounts()
-      private$..totals <- x$getTotals()
-      private$..modelSize <- x$getModelSize()
+      private$..config <- config
+      private$..model <- model
+      private$..nGrams <- model$getNGrams()
+      private$..discounts <- model$getDiscounts()
+      private$..totals <- model$getTotals()
+      private$..modelSize <- config$getModelSize()
 
       event <-  paste0("Instantiated KNEstimate ")
       private$logR$log(method = 'initialize', event = event)
@@ -141,6 +142,8 @@ KNEstimate <- R6::R6Class(
 
       return(private$..model)
     },
+
+    getModel = function() private$..model,
 
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #

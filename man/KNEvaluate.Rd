@@ -22,9 +22,8 @@ test set perplexity
 Other KNStudio Classes: \code{\link{KNBuild}},
   \code{\link{KNEstimate}}
 
-Other LMStudio Classes: \code{\link{KNBuild}},
-  \code{\link{KNEstimate}}, \code{\link{LMCorpora}},
-  \code{\link{LMStudio0}}
+Other SLMStudio Classes: \code{\link{KNBuild}},
+  \code{\link{KNEstimate}}, \code{\link{SLMCorpora}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

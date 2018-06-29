@@ -23,12 +23,10 @@ Token object
 \code{WriteCorpus} Encapsulates the command to write a Corpus or CVSet to file.
 }
 \seealso{
-Other FileStudio Command Classes: \code{\link{BuildCorpus}},
-  \code{\link{CleanCorpus}}, \code{\link{CopyFileSet}},
+Other FileStudio Command Classes: \code{\link{CopyFileSet}},
   \code{\link{MoveFileSet}}, \code{\link{ReadCorpus}},
   \code{\link{RepairFileSet}}, \code{\link{SampleCorpus}},
-  \code{\link{Source}}, \code{\link{SplitCorpus}},
-  \code{\link{TokenizeCorpus}}
+  \code{\link{Source}}, \code{\link{TokenizeCorpus}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

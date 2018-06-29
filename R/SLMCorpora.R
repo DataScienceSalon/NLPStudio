@@ -1,33 +1,34 @@
 #==============================================================================#
-#                                LMCorpora                                     #
+#                                SLMCorpora                                    #
 #==============================================================================#
-#' LMCorpora
+#' SLMCorpora
 #'
-#' \code{LMCorpora} Class responsible for preparing training Corpus objects for language modeling.
+#' \code{SLMCorpora} Class responsible for preparing training and test Corpora  objects for language modeling.
 #'
 #' Class responsible for preparing training Corpus objects for language modeling.
 #'
-#' @param x Language model object
+#' @param config SLMConfig object containing the model parameters and the
+#' training and test Corpus objects.
 #'
 #' @docType class
 #' @author John James, \email{jjames@@dataScienceSalon.org}
-#' @family LMStudio Classes
+#' @family SLMStudio Classes
 #' @export
-LMCorpora <- R6::R6Class(
-  classname = "LMCorpora",
+SLMCorpora <- R6::R6Class(
+  classname = "SLMCorpora",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = Super,
+  inherit = SLMStudio0,
 
   private = list(
-    ..train = character(),
-    ..test = character(),
-    ..modelSize = numeric(),
-    ..openVocabulary = logical(),
 
     combine = function(corpus) {
-      # combines a corpus with multiple documents into a corpus with a
-      # single document.
+
+      # Creates a new Corpus object that will contain a single combined
+      # Document object.
+
+      # Create Clone Corpus
+      modelCorpus <- Clone$new()$this(x = corpus, reference = FALSE)
 
       # Combine and extract corpus text
       documents <- corpus$getDocuments()
@@ -42,10 +43,9 @@ LMCorpora <- R6::R6Class(
       name <- paste0(name, " Document")
       document$setName(name)
 
-      # Purge existing Document objects and add combined Document
-      corpus$purgeDocuments()
-      corpus$addDocument(document)
-      return(corpus)
+      # Add document to modelCorpus object
+      modelCorpus$addDocument(document)
+      return(modelCorpus)
     },
 
     countWords = function(tokens) {
@@ -121,42 +121,6 @@ LMCorpora <- R6::R6Class(
       corpus$purgeDocuments()
       corpus$addDocument(document)
       return(corpus)
-    }
-  ),
-
-
-  public = list(
-    #-------------------------------------------------------------------------#
-    #                              Constructor                                #
-    #-------------------------------------------------------------------------#
-    initialize = function(train, test, modelSize = 3, openVocabulary = TRUE) {
-
-      private$loadServices()
-
-      # Validation
-      private$..params <- list()
-      private$..params$classes$name <- list('train', 'test')
-      private$..params$classes$objects <- list(train, test)
-      private$..params$classes$valid <- list('Corpus','Corpus')
-      private$..params$logicals$variables <- c('openVocabulary')
-      private$..params$logicals$values <- c(openVocabulary)
-      private$..params$range$variable <- c('modelSize')
-      private$..params$range$value <- c(modelSize)
-      private$..params$range$low <- 1
-      private$..params$range$high <- 5
-      v <- private$validator$validate(self)
-      if (v$code == FALSE) {
-        private$logR$log(method = 'initialize', event = v$msg, level = "Error")
-        stop()
-      }
-
-      # Dock language model (extract members read/modified in class)
-      private$..train <- Clone$new()$this(x = train)
-      private$..test <- Clone$new()$this(x = test)
-      private$..modelSize <- modelSize
-      private$..openVocabulary <- openVocabulary
-
-      invisible(self)
     },
 
     prepTrain = function() {
@@ -165,7 +129,7 @@ LMCorpora <- R6::R6Class(
 
       private$..train <- private$annotate(private$..train)
 
-      if (private$..openVocabulary) private$processTrain()
+      if (private$..config$isOpen()) private$processTrain()
 
       invisible(self)
     },
@@ -176,8 +140,43 @@ LMCorpora <- R6::R6Class(
 
       private$..test <- private$annotate(private$..test)
 
-      if (private$..openVocabulary) private$processTest()
+      if (private$..config$isOpen()) private$processTest()
 
+      invisible(self)
+    }
+  ),
+
+
+  public = list(
+    #-------------------------------------------------------------------------#
+    #                              Constructor                                #
+    #-------------------------------------------------------------------------#
+    initialize = function(train, test, config) {
+
+      private$loadServices()
+
+      # Validation
+      private$..params <- list()
+      private$..params$classes$name <- list('config')
+      private$..params$classes$objects <- list(config)
+      private$..params$classes$valid <- list('SLMConfig')
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = 'initialize', event = v$msg, level = "Error")
+        stop()
+      }
+
+      # Dock statistical language model configuration and Corpus objects.
+      private$..config <- config
+      private$..train <- train
+      private$..test <- test
+
+      invisible(self)
+    },
+
+    build = function() {
+      private$prepTrain()
+      private$prepTest()
       invisible(self)
     },
 
@@ -188,7 +187,7 @@ LMCorpora <- R6::R6Class(
     #                           Visitor Method                                #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$lmCorpora(self)
+      visitor$slmCorpora(self)
     }
   )
 )

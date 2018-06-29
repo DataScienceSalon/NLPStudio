@@ -1,25 +1,24 @@
 #==============================================================================#
-#                               KNEvaluate                                     #
+#                               SLMEvaluate                                    #
 #==============================================================================#
-#' KNEvaluate
+#' SLMEvaluate
 #'
-#' \code{KNEvaluate} Evaluates a Kneser-Ney Language Model on Test Set
+#' \code{SLMEvaluate} Evaluates a designated language model on a test set.
 #'
-#' Evaluates a Kneser-Ney Language Model on Test Set by computing
-#' test set perplexity
-#'
-#' @param x Language model object
+#' @param config SLMConfig object
+#' @param model A Language Model Object
+#' @param test A test Corpus object.
 #'
 #' @docType class
 #' @author John James, \email{jjames@@dataScienceSalon.org}
 #' @family KNStudio Classes
 #' @family SLMStudio Classes
 #' @export
-KNEvaluate <- R6::R6Class(
-  classname = "KNEvaluate",
+SLMEvaluate <- R6::R6Class(
+  classname = "SLMEvaluate",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = KNStudio0,
+  inherit = SLMStudio0,
 
   private = list(
 
@@ -140,35 +139,36 @@ KNEvaluate <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                              Constructor                                #
     #-------------------------------------------------------------------------#
-    initialize = function(x) {
+    initialize = function(config, model, test) {
 
 
       private$loadServices()
 
       private$..params <- list()
-      private$..params$classes$name <- list('x')
-      private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list(c('KN'))
+      private$..params$classes$name <- list('config', 'model', 'test')
+      private$..params$classes$objects <- list(config, model, test)
+      private$..params$classes$valid <- list(c('SLMConfig', 'KN', 'Corpus'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize', event = v$msg, level = "Error")
         stop()
       }
 
-      private$..model <- x
-      private$..test <- x$getTest()
-      private$..nGrams <- x$getNGrams()
-      private$..modelSize <- x$getModelSize()
-      private$..modelTypes <- x$getModelTypes()
+      private$..model <- model
+      private$..config <- config
+      private$..test <- test
+      private$..nGrams <- model$getNGrams()
+      private$..modelSize <- config$getModelSize()
+      private$..modelTypes <- config$getModelTypes()
 
       invisible(self)
 
-      event <-  paste0("Instantiated KNEvaluate ")
+      event <-  paste0("Instantiated SLMEvaluate ")
       private$logR$log(method = 'initialize', event = event)
       invisible(self)
     },
 
-    build = function() {
+    evaluate = function() {
 
       private$buildTestNGrams()
       private$computeProbs()
@@ -184,14 +184,16 @@ KNEvaluate <- R6::R6Class(
       private$..scores <- NULL
       private$..evaluation <- NULL
 
-      return(private$..model)
+      invisible(self)
     },
+
+    getModel = function() private$..model,
 
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$knEvaluate(self)
+      visitor$slmEvaluate(self)
     }
   )
 )

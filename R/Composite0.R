@@ -119,18 +119,18 @@ Composite0 <- R6::R6Class(
                          childMeta[[x]]$tech)
 
         # Combine data into a single data frame
-        childrenummary <- sections[[1]]
+        childSummary <- sections[[1]]
         for (i in 2:length(sections)) {
-         if (nrow(sections[[i]]) > 0)  childrenummary <- cbind(childrenummary, sections[[i]])
+         if (nrow(sections[[i]]) > 0)  childSummary <- cbind(childSummary, sections[[i]])
         }
 
         #Remove non-essential data, replace NAs with spaces and print
-        childrenummary <- childrenummary %>% select(-modified, -modifiedBy, -nModified,
+        childSummary <- childSummary %>% select(-modified, -modifiedBy, -nModified,
                                             -lastState, -hardware, -os,
                                             -release, -version)
-        childrenummary[is.na(childrenummary)] <- " "
+        childSummary[is.na(childSummary)] <- " "
         cat("\n")
-        print(childrenummary, row.names = FALSE)
+        print(childSummary, row.names = FALSE)
       })
 
       return(childMeta)
