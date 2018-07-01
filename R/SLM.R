@@ -31,7 +31,7 @@ SLM <- R6::R6Class(
   classname = "SLM",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = SLM0,
+  inherit = Super,
 
   private = list(
     ..evaluation = character(),
@@ -44,7 +44,7 @@ SLM <- R6::R6Class(
       meta <- private$meta$get()
 
       vocabulary <- 'Closed'
-      if (private$..openVocabulary) vocabulary <- 'Open'
+      if (private$..config$isOpen()) vocabulary <- 'Open'
 
       NLPStudio::printHeading(text = paste0(private$..smoothing, ": ",
                                             private$modelName, " Summary"),
@@ -52,27 +52,80 @@ SLM <- R6::R6Class(
                               newlines = 2)
       cat(paste0("\nId         : ", meta$identity$id))
       cat(paste0("\nName       : ", meta$identity$name))
-      cat(paste0("\nType       : ", private$..settings$modelType))
-      cat(paste0("\nSmoothing  : ", private$..settings$smoothing))
+      cat(paste0("\nType       : ", meta$functional$modelType))
+      cat(paste0("\nSmoothing  : ", meta$functional$algorithm))
       cat(paste0("\nVocabulary : ", vocabulary))
       return(TRUE)
 
-    }
-  ),
+    },
 
-  public = list(
+    nGramSummary = function() {
+
+      name <- self$getName()
+      algorithm <- private$..config$getAlgorithm()
+      modelType <- private$..config$getModelType()
+      heading <- paste(name, algorithm, modelType, "nGram Summary")
+
+      NLPStudio::printHeading(text = heading, symbol = "-", newlines = 2)
+      print(private$..model$totals)
+      return(TRUE)
+
+    },
+
+    discountSummary = function() {
+
+      name <- self$getName()
+      algorithm <- private$..config$getAlgorithm()
+      modelType <- private$..config$getModelType()
+      heading <- paste(name, algorithm, modelType, "Discount Summary")
+
+      NLPStudio::printHeading(text = heading, symbol = "-", newlines = 2)
+      print(private$..model$discounts)
+      return(TRUE)
+
+    },
+
+    nGramDetail = function() {
+
+      name <- self$getName()
+      algorithm <- private$..config$getAlgorithm()
+      modelType <- private$..config$getModelType()
+      heading <- paste(name, algorithm, modelType, "nGram Detail")
+
+
+      if (length(private$..model$nGrams) > 0) {
+
+        for (i in 1:private$meta$get(key = 'modelSize')) {
+          NLPStudio::printHeading(text = heading,
+                                  symbol = "-",
+                                  newlines = 2)
+          setkey(private$..model$nGrams[[i]], nGram)
+          print(private$..model$nGrams[[i]][, tail(.SD, 10), by=nGram])
+        }
+      }
+      return(TRUE)
+    },
 
     #-------------------------------------------------------------------------#
-    #                                Constructor                              #
+    #                           Validation Methods                            #
     #-------------------------------------------------------------------------#
-    initialize = function(x = NULL, train = NULL, test = NULL, name = NULL, smoothing = 'kn',
-                          modelSize = 3, openVocabulary = TRUE) {
+    validateClass = function(x, fieldName, className, methodName) {
 
-      private$loadServices(name)
+      private$..params <- list()
+      private$..params$classes$name <- list(fieldName)
+      private$..params$classes$objects <- list(x)
+      private$..params$classes$valid <- list(className)
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = methodName, event = v$msg, level = "Error")
+        return(FALSE)
+      } else {
+        return(TRUE)
+      }
+    },
 
-      #-----------------------------------------------------------------------#
-      #                               Validation                              #
-      #-----------------------------------------------------------------------#
+    validateParams = function(x, train, test, name, smoothing, modelSize,
+                              openVocabulary) {
       # Validate CVSet and Training/Test Set Parameters
       if (is.null(x) & is.null(train)) {
         event <- paste0("Either the 'x' parameter, a CVSEt object, or the ",
@@ -97,8 +150,15 @@ SLM <- R6::R6Class(
                                   methodName = 'initialize') == FALSE) stop()
       } else {
         if (private$validateClass(x, fieldName = 'x',
-                                 className = 'CVSet',
-                                 methodName = 'initialize') == FALSE) stop()
+                                  className = 'CVSet',
+                                  methodName = 'initialize') == FALSE) stop()
+
+        if (!is.null(train) | !is.null(test)) {
+          event <- paste0("When the 'x' parameter is provided and is a valid ",
+                          "CVSet object, the 'train', and 'test' parameters ",
+                          "are ignored.")
+          private$logR$log(method = 'initialize', event = event, level = "Warn")
+        }
       }
 
       # Validate other parameters
@@ -116,6 +176,23 @@ SLM <- R6::R6Class(
         private$logR$log(method = 'initialize', event = v$msg, level = "Error")
         stop()
       }
+      return(TRUE)
+    }
+  ),
+
+  public = list(
+
+    #-------------------------------------------------------------------------#
+    #                                Constructor                              #
+    #-------------------------------------------------------------------------#
+    initialize = function(x = NULL, train = NULL, test = NULL, name = NULL,
+                          smoothing = 'kn', modelSize = 3,
+                          openVocabulary = TRUE) {
+
+      private$loadServices(name)
+
+      private$validateParams(x, train, test, name, smoothing, modelSize,
+                             openVocabulary)
 
       # Create Configuration Object
       private$..config <- SLMConfig$new(smoothing = smoothing,
@@ -123,7 +200,18 @@ SLM <- R6::R6Class(
                                         name = name,
                                         openVocabulary = openVocabulary)
 
-      # Obtain training and test Corpus objects from x (CVSet) parameter.
+      # Update meta data
+      private$meta$set(key = 'smoothing', value = smoothing, type = 'f')
+      private$meta$set(key = 'algorithm',
+                       value = private$..config$getAlgorithm(), type = 'f')
+      private$meta$set(key = 'openVocabulary', value = openVocabulary, type = 'f')
+      private$meta$set(key = 'modelSize', value = modelSize, type = 'f')
+
+      private$meta$set(key = 'modelType',
+                       value = private$..config$getModelType(), type = 'f')
+
+      # Obtain training and test Corpus objects from x, the CVSEt
+      # parameter if it is not null.
       if (!is.null(x)) {
         train <- x$getTrain()
         test <- x$getTest()
@@ -141,6 +229,7 @@ SLM <- R6::R6Class(
     fit = function() {
 
       smoothing <- private$..config$getSmoothing()
+
       private$..model <- switch(smoothing,
                                 katz = KatzStudio$new(private$..config,
                                                       private$..corpora)$build()$getModel(),
@@ -157,21 +246,38 @@ SLM <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                             Evaluate Model                              #
     #-------------------------------------------------------------------------#
-    evaluateModel = function() {
+    evaluate = function() {
       test <- private$..corpora$getTest()
-      private$..model <- SLMEvaluate$new(private$..config, private$..model,
-                                         test)$evaluate()$getModel()
-      private$..evaluation <- private$..model$getEval()
+      private$..evaluation <- SLMEvaluate$new(private$..config, private$..model,
+                                         test)$evaluate()
       invisible(self)
     },
 
     #-------------------------------------------------------------------------#
-    #                             Accessor Methods                            #
+    #                     Accessor and Setter Methods                         #
     #-------------------------------------------------------------------------#
     getConfig = function() private$..config,
     getCorpora = function() private$..corpora,
     getModel = function() private$..model,
-    getEvaluation = function() private$..evaluation,
+    getNGrams = function() private$..model$nGrams,
+    setNGrams = function(x) private$..model$nGrams <- x,
+    getDiscounts = function() private$..model$discounts,
+    getTotals = function() private$..model$totals,
+    getScores = function() private$..model$scores,
+    setScores = function(x) private$..model$scores <- x,
+    getEval = function() private$..model$evaluation,
+    setEval = function(x) private$..model$evaluation <- x,
+
+    #-------------------------------------------------------------------------#
+    #                             Summary Method                              #
+    #-------------------------------------------------------------------------#
+    summary = function() {
+      private$overview()
+      if (length(private$..corpora) > 0) private$..corpora$summary()
+      if (length(private$..model) > 0) private$..model$summary()
+      if (length(private$..evaluation) > 0) private$..evaluation$summary()
+      invisible(self)
+    },
 
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #

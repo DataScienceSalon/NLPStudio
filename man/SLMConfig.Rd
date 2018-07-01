@@ -12,8 +12,7 @@ SLMConfig
 \code{SLMConfig} Class representing a Statistical Language Model (SLM) configuration.
 }
 \seealso{
-Other Language Model Classes: \code{\link{KN}},
-  \code{\link{SLM0}}, \code{\link{SLMStudio0}}
+Other Language Model Classes: \code{\link{SLMStudio0}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

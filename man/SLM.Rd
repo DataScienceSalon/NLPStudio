@@ -38,7 +38,8 @@ and Stupid-Backoff.
 }
 \seealso{
 Other Statistical Language Model Classes: \code{\link{KNStudio}},
-  \code{\link{SLM0}}
+  \code{\link{KN}}, \code{\link{MKNStudio}},
+  \code{\link{MKN}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

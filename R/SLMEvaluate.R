@@ -29,6 +29,14 @@ SLMEvaluate <- R6::R6Class(
     ..scores = data.table(),
     ..evaluation = data.frame(),
 
+    evalSummary = function() {
+
+      NLPStudio::printHeading(text = 'Evaluation', symbol = "-", newlines = 2)
+      print(private$..evaluation)
+      return(TRUE)
+
+    },
+
     score = function() {
 
       # Obtain training test summary data.
@@ -141,13 +149,12 @@ SLMEvaluate <- R6::R6Class(
     #-------------------------------------------------------------------------#
     initialize = function(config, model, test) {
 
-
       private$loadServices()
 
       private$..params <- list()
       private$..params$classes$name <- list('config', 'model', 'test')
       private$..params$classes$objects <- list(config, model, test)
-      private$..params$classes$valid <- list(c('SLMConfig', 'KN', 'Corpus'))
+      private$..params$classes$valid <- list('SLMConfig', 'KN', 'Corpus')
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize', event = v$msg, level = "Error")
@@ -176,18 +183,13 @@ SLMEvaluate <- R6::R6Class(
       private$..model$setScores(private$..scores)
       private$..model$setEval(private$..evaluation)
 
-      # Remove temporary members
-      private$..test <- NULL
-      private$..nGrams <- NULL
-      private$..modelSize <- NULL
-      private$..modelTypes <- NULL
-      private$..scores <- NULL
-      private$..evaluation <- NULL
-
       invisible(self)
     },
 
-    getModel = function() private$..model,
+    summary = function() {
+      private$evalSummary()
+      invisible(self)
+    },
 
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #

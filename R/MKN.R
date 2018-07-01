@@ -1,9 +1,9 @@
 #==============================================================================#
-#                                    KN                                        #
+#                                    MKN                                       #
 #==============================================================================#
-#' KN
+#' MKN
 #'
-#' \code{KN} Class containing the Kneser Ney Language Model object.
+#' \code{MKN} Class containing the Kneser Ney Language Model object.
 #'
 #' @param x CVSet object containing a training and test set.
 #' @param modelSize Numeric indicating the model size in terms of nGrams. Defaults to trigram model.
@@ -11,15 +11,15 @@
 #' or closed. Open indicates that it is possible to encounter out of vocabulary
 #' words in the test set. If TRUE, OOV processing will be performed on
 #' the training set. Default is TRUE.
-#' @param name Character string. Represents name to be assigned to the KN object.
+#' @param name Character string. Represents name to be assigned to the MKN object.
 #'
 #' @docType class
 #' @author John James, \email{jjames@@dataScienceSalon.org}
 #' @family Statistical Language Model Classes
 #' @family Kneser-Ney Language Model Classes
 #' @export
-KN <- R6::R6Class(
-  classname = "KN",
+MKN <- R6::R6Class(
+  classname = "MKN",
   lock_objects = FALSE,
   lock_class = FALSE,
   inherit = KN0,
@@ -50,13 +50,13 @@ KN <- R6::R6Class(
 
       # Unpack configuration and initialize meta data
       cfg <- config$getConfig()
-      private$meta$set(key = 'smoothing', value = "Kneser-Ney", type = 'f')
+      private$meta$set(key = 'smoothing', value = "Modified Kneser-Ney", type = 'f')
       private$meta$set(key = 'modelSize', value = cfg$modelSize, type = 'f')
       private$meta$set(key = 'modelType', value = cfg$modelTypes[cfg$modelSize], type = 'f')
       private$meta$set(key = 'openVocabulary', value = cfg$openVocabulary, type = 'f')
 
       # Create log entry
-      event <- paste0("KN Language Model Object Instantiated.")
+      event <- paste0("MKN Language Model Object Instantiated.")
       private$logR$log(method = 'initialize', event = event)
 
       invisible(self)
@@ -67,7 +67,7 @@ KN <- R6::R6Class(
     #                           Visitor Method                                #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$kn(self)
+      visitor$mkn(self)
     }
   )
 )

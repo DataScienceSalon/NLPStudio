@@ -69,7 +69,9 @@ CSourceDir <- R6::R6Class(
         # Instantiate Document objects
         name <- tools::file_path_sans_ext(basename(p))
         doc <- Document$new(x = content, name = name)
+        fileName <- basename(p)
         doc$setMeta(key = 'source', value = p, type = 'f')
+        doc$setMeta(key = 'fileName', value = fileName, type = 'f')
 
         # Add content and File to Corpus
         corpus$addDocument(x = doc)

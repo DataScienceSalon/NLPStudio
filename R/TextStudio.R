@@ -19,7 +19,7 @@ TextStudio <- R6::R6Class(
     ..corpus = character(),
     ..config = list(),
     ..regex = list(
-      punct = "(?![-#%$&*+<=>@^_~|/\'])[[:punct:]]",
+      punct = "(?![\'-])[[:punct:]]",
       hyphen = '[-]',
       apostrophe = '[\']',
       numbers = "(?<![a-zA-Z])(\\d+)(?![a-zA-Z])",
@@ -43,22 +43,7 @@ TextStudio <- R6::R6Class(
     processDocument = function(document) {
       content <- document$content
 
-      regex <- c()
-      if (private$..config$..remove$punct)
-        regex <- c(regex, private$..regex$punct)
-      if (private$..config$..remove$numbers)
-        regex <- c(regex, private$..regex$numbers)
-      if (private$..config$..remove$symbols)
-        regex <- c(regex, private$..regex$symbols)
-      if (private$..config$..remove$twitter)
-        regex <- c(regex, private$..regex$twitter)
-      if (private$..config$..remove$url)
-        regex <- c(regex, private$..regex$url)
-      if (private$..config$..remove$email)
-        regex <- c(regex, private$..regex$email)
-
-      content <- gsub(paste(regex, collapse = '|'), "", content, perl = TRUE, ignore.case = TRUE)
-      regex <- NULL
+      content <- iconv(content, "UTF-8", "ASCII", sub = "")
 
       if (private$..config$..lowercase) {
         content <- tolower(content)
@@ -169,11 +154,6 @@ TextStudio <- R6::R6Class(
         content <- textclean::replace_kern(x = content)
       }
 
-      # Process Numbers
-      if (private$..config$..replace$numbers) {
-        content <- textclean::replace_number(x = content)
-      }
-
       # Process Ordinal
       if (private$..config$..replace$ordinal) {
         content <- textclean::replace_ordinal(x = content)
@@ -196,9 +176,27 @@ TextStudio <- R6::R6Class(
         content <- gsub(pattern = pattern, replacement = replacement,
                         content, perl = TRUE, ignore.case = TRUE)
       }
+      # Remove punctuation, numbers, symbols, twitter, url and email
+      regex <- c()
+      if (private$..config$..remove$punct)
+        regex <- c(regex, private$..regex$punct)
+      if (private$..config$..remove$numbers)
+        regex <- c(regex, private$..regex$numbers)
+      if (private$..config$..remove$symbols)
+        regex <- c(regex, private$..regex$symbols)
+      if (private$..config$..remove$twitter)
+        regex <- c(regex, private$..regex$twitter)
+      if (private$..config$..remove$url)
+        regex <- c(regex, private$..regex$url)
+      if (private$..config$..remove$email)
+        regex <- c(regex, private$..regex$email)
 
-      # Clean remove singletons, stray hyphens and apostrophes, and extra whitespace.
-      regex <- c(private$..regex$strayApostrophe, private$..regex$singles,
+      content <- gsub(paste(regex, collapse = '|'), "", content, perl = TRUE, ignore.case = TRUE)
+      regex <- NULL
+
+
+      # Clean remove stray hyphens and apostrophes, and extra whitespace.
+      regex <- c(private$..regex$strayApostrophe,
                  private$..regex$strayHyphen)
       content <- gsub(paste(regex, collapse = '|'), "", content, perl = TRUE, ignore.case = TRUE)
       content <- textclean::replace_white(x = content)

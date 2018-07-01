@@ -266,7 +266,19 @@ ValidationVisitor <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                  Validate Language Model Classes                        #
     #-------------------------------------------------------------------------#
-    lmCorpora = function(object) {
+    slm = function(object) {
+      return(private$validate(object))
+    },
+
+    slmConfig = function(object) {
+      return(private$validate(object))
+    },
+
+    slmCorpora = function(object) {
+      return(private$validate(object))
+    },
+
+    slmEvaluate = function(object) {
       return(private$validate(object))
     },
 
@@ -274,7 +286,7 @@ ValidationVisitor <- R6::R6Class(
       return(private$validate(object))
     },
 
-    knCounts = function(object) {
+    knBuild = function(object) {
       return(private$validate(object))
     },
 

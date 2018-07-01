@@ -18,7 +18,7 @@ KNEstimate <- R6::R6Class(
   classname = "KNEstimate",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = KNStudio0,
+  inherit = SLMStudio0,
 
   private = list(
 
@@ -105,7 +105,7 @@ KNEstimate <- R6::R6Class(
       private$..params <- list()
       private$..params$classes$name <- list('config', 'model')
       private$..params$classes$objects <- list(config, model)
-      private$..params$classes$valid <- list(c('SLMConfig','KN'))
+      private$..params$classes$valid <- list('SLMConfig','KN')
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize', event = v$msg, level = "Error")
@@ -126,7 +126,7 @@ KNEstimate <- R6::R6Class(
       invisible(self)
     },
 
-    build = function() {
+    estimate = function() {
 
       private$alpha()
       private$lambda()
@@ -140,7 +140,7 @@ KNEstimate <- R6::R6Class(
       private$..totals <- NULL
       private$..modelSize <- NULL
 
-      return(private$..model)
+      invisible(self)
     },
 
     getModel = function() private$..model,

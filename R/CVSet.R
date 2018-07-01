@@ -89,23 +89,23 @@ CVSet <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                               Get Methods                               #
     #-------------------------------------------------------------------------#
-    getTrainingSet = function() {
+    getTrain = function() {
       train <- private$..children[private$search(key = 'cv', value = 'training')]
       return(train[[1]])
     },
 
-    getValidationSet = function() {
+    getValidation = function() {
       validation <- private$..children[private$search(key = 'cv', value = 'validation')]
       if (length(validation) == 0) {
         event <- "No validation set exists for the CVSet."
-        private$logR$log(method = 'getValidationSet', event = event, level = "Info")
+        private$logR$log(method = 'getValidation', event = event, level = "Info")
         return(FALSE)
       } else {
         return(validation[[1]])
       }
     },
 
-    getTestSet = function() {
+    getTest = function() {
       test <- private$..children[private$search(key = 'cv', value = 'test')]
       return(test[[1]])
     },

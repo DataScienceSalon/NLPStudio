@@ -20,10 +20,11 @@ probabilities.
 }
 \seealso{
 Other KNStudio Classes: \code{\link{KNEstimate}},
-  \code{\link{KNEvaluate}}
+  \code{\link{MKNBuild}}, \code{\link{SLMEvaluate}}
 
-Other SLMStudio Classes: \code{\link{KNEstimate}},
-  \code{\link{KNEvaluate}}, \code{\link{SLMCorpora}}
+Other SLMStudio Classes: \code{\link{KNBuild0}},
+  \code{\link{KNEstimate}}, \code{\link{MKNBuild}},
+  \code{\link{SLMCorpora}}, \code{\link{SLMEvaluate}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

@@ -15,8 +15,7 @@ SLMStudio0
 This abstract class defines common members for the SLMStudio family of classes.
 }
 \seealso{
-Other Language Model Classes: \code{\link{KN}},
-  \code{\link{SLM0}}, \code{\link{SLMConfig}}
+Other Language Model Classes: \code{\link{SLMConfig}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

@@ -1,5 +1,5 @@
 #==============================================================================#
-#                               SLMStudio0                                      #
+#                               SLMStudio0                                     #
 #==============================================================================#
 #' SLMStudio0
 #'
@@ -16,7 +16,7 @@ SLMStudio0 <- R6::R6Class(
   classname = "SLMStudio0",
   lock_objects = FALSE,
   lock_class = FALSE,
-  inherit = SLM0,
+  inherit = Super,
 
   private = list(
     ..config = character(),
@@ -36,12 +36,5 @@ SLMStudio0 <- R6::R6Class(
         quintgrams = "^.*\\s+((?:\\S+\\s+){3}\\S+)$"
       )
     )
-  ),
-
-  public = list(
-    initialize = function(x) { stop("Not implemented for this abstract/interface class.") },
-    getConfig = function() private$..config,
-    getCorpora = function() private$..corpora,
-    getModel = function() private$..model
   )
 )

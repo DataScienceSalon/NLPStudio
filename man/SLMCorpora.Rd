@@ -19,8 +19,9 @@ training and test Corpus objects.}
 Class responsible for preparing training Corpus objects for language modeling.
 }
 \seealso{
-Other SLMStudio Classes: \code{\link{KNBuild}},
-  \code{\link{KNEstimate}}, \code{\link{KNEvaluate}}
+Other SLMStudio Classes: \code{\link{KNBuild0}},
+  \code{\link{KNBuild}}, \code{\link{KNEstimate}},
+  \code{\link{MKNBuild}}, \code{\link{SLMEvaluate}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

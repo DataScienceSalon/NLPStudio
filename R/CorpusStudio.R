@@ -207,7 +207,7 @@ CorpusStudio <- R6::R6Class(
                                              validation = private$..settings$validation,
                                              test = private$..settings$test,
                                              stratify = private$..settings$stratify,
-                                             seed = private$..settings$seed)
+                                             seed = private$..settings$seed)$getCVSet()
 
       event <- paste0("Created cross-validation set from Corpus.")
       private$logR$log(method = 'split', event = event, level = "Info")

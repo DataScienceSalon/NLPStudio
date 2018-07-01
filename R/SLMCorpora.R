@@ -63,6 +63,8 @@ SLMCorpora <- R6::R6Class(
         pattern <- paste("\\b(?:", paste(wordChunks[[i]], collapse = "|"), ")\\b ?")
         text <- gsub(pattern = pattern, replacement = " UNK ", text, perl = TRUE)
       }
+      # Remove extra white space
+      text <- gsub("\\s+"," ",text)
       return(text)
     },
 
@@ -111,14 +113,15 @@ SLMCorpora <- R6::R6Class(
     },
 
     annotate = function(corpus) {
-      # Assumes a single document Corpus
+      # Annotates text with appropriate start and end of sentence tokens.
+      modelSize <- private$..config$getModelSize()
+
       document <- corpus$getDocuments()[[1]]
       document$content <-
-        paste(paste0(rep("BOS", times = private$..modelSize-1), collapse = " "),
+        paste(paste0(rep("BOS", times = modelSize-1), collapse = " "),
               document$content,
               "EOS", sep = " ")
 
-      corpus$purgeDocuments()
       corpus$addDocument(document)
       return(corpus)
     },
@@ -157,9 +160,9 @@ SLMCorpora <- R6::R6Class(
 
       # Validation
       private$..params <- list()
-      private$..params$classes$name <- list('config')
-      private$..params$classes$objects <- list(config)
-      private$..params$classes$valid <- list('SLMConfig')
+      private$..params$classes$name <- list('train', 'test', 'config')
+      private$..params$classes$objects <- list(train, test, config)
+      private$..params$classes$valid <- list('Corpus', 'Corpus', 'SLMConfig')
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize', event = v$msg, level = "Error")
@@ -182,6 +185,15 @@ SLMCorpora <- R6::R6Class(
 
     getTrain = function() { return(private$..train) },
     getTest = function() { return(private$..test) },
+
+    #-------------------------------------------------------------------------#
+    #                           Summary Method                                #
+    #-------------------------------------------------------------------------#
+    summary = function() {
+      private$..train$summary()
+      private$..test$summary()
+      invisible(self)
+    },
 
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #

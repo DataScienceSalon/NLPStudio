@@ -134,7 +134,7 @@ validateLogical <- function(object) {
 
   if (length(params$logicals$values) > 0) {
     for (i in 1:length(params$logicals$values)) {
-      if (!(params$logicals$values[i] %in% c('TRUE', 'FALSE', 1, 0))) {
+      if (!(params$logicals$values[i] %in% c(TRUE, FALSE, 1, 0))) {
         status[['code']] <- FALSE
         status[['msg']] <- paste0("TRUE/FALSE expected for the '",
                                   params$logicals$variables[i],  "' variable. ",

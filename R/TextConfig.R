@@ -351,16 +351,6 @@ TextConfig <- R6::R6Class(
       invisible(self)
     },
 
-    replaceNumbers = function() {
-      private$..replace$numbers <- TRUE
-      invisible(self)
-    },
-
-    keepNumeric = function() {
-      private$..replace$numbers <- FALSE
-      invisible(self)
-    },
-
     replaceOrdinal = function() {
       private$..replace$ordinal <- TRUE
       invisible(self)

@@ -52,18 +52,28 @@ SLMConfig <- R6::R6Class(
         stop()
       }
 
+      algorithm <- switch(smoothing,
+                          katz = 'Katz',
+                          kn = 'Kneser-Ney',
+                          mkn = 'Modified Kneser-Ney',
+                          sbo = 'Stupid Backoff')
+
       private$..settings$modelName <- name
       private$..settings$smoothing <- smoothing
+      private$..settings$algorithm <- algorithm
       private$..settings$modelSize <- modelSize
       private$..settings$modelType <- private$..settings$modelTypes[modelSize]
+      private$..settings$openVocabulary <- openVocabulary
 
       invisible(self)
     },
 
     getConfig = function() private$..settings,
     getSmoothing = function() private$..settings$smoothing,
+    getAlgorithm = function() private$..settings$algorithm,
     getModelName = function() private$..settings$modelName,
     getModelSize = function() private$..settings$modelSize,
+    getModelType = function() private$..settings$modelType,
     getModelTypes = function() private$..settings$modelTypes,
     isOpen = function() private$..settings$openVocabulary,
 
