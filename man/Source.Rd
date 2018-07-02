@@ -20,7 +20,7 @@ Source
 Other FileStudio Command Classes: \code{\link{CopyFileSet}},
   \code{\link{MoveFileSet}}, \code{\link{ReadCorpus}},
   \code{\link{RepairFileSet}}, \code{\link{SampleCorpus}},
-  \code{\link{TokenizeCorpus}}, \code{\link{WriteCorpus}}
+  \code{\link{WriteCorpus}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

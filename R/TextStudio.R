@@ -22,13 +22,14 @@ TextStudio <- R6::R6Class(
       punct = "(?![\'-])[[:punct:]]",
       hyphen = '[-]',
       apostrophe = '[\']',
-      numbers = "(?<![a-zA-Z])(\\d+)(?![a-zA-Z])",
+      numbers = "\\d+\\S*",
       symbols  = "(?![.?!'-])[[:punct:]]",
       twitter = '\\B[@#]\\w*[a-zA-Z]+\\w*',
       url = "(?:(?:https?:\\/\\/)|(?:www\\.))[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,4}\\b(?:[-a-zA-Z0-9@:%_\\+.~#?&/=]*)",
       email = "[a-zA-Z0-9\\-_~]+(\\.[a-zA-Z0-9\\-_~]+)*@[a-zA-Z0-9\\-_~]+(\\.[a-zA-Z0-9\\-_~]+)*\\.[a-zA-Z]{2,}",
-      strayApostrophe = "\\s*'\\B|\\B'\\s*",
+      strayApostrophe = "\\s'\\B|\\B'\\s*",
       strayHyphen = "\\s*-\\B|\\B-\\s*",
+      strayComma = "\\s,\\B|\\B,\\s*",
       singles = '\\b[b-hj-z]{1}\\b',
       backTick = list(
         pattern = "\\`",
@@ -196,7 +197,7 @@ TextStudio <- R6::R6Class(
 
 
       # Clean remove stray hyphens and apostrophes, and extra whitespace.
-      regex <- c(private$..regex$strayApostrophe,
+      regex <- c(private$..regex$strayApostrophe, regex$strayComma,
                  private$..regex$strayHyphen)
       content <- gsub(paste(regex, collapse = '|'), "", content, perl = TRUE, ignore.case = TRUE)
       content <- textclean::replace_white(x = content)

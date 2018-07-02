@@ -266,63 +266,13 @@ ValidationVisitor <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                  Validate Language Model Classes                        #
     #-------------------------------------------------------------------------#
-    slm = function(object) {
-      return(private$validate(object))
-    },
-
-    slmConfig = function(object) {
-      return(private$validate(object))
-    },
-
-    slmCorpora = function(object) {
-      return(private$validate(object))
-    },
-
-    slmEvaluate = function(object) {
-      return(private$validate(object))
-    },
-
     kn = function(object) {
-      return(private$validate(object))
-    },
-
-    knBuild = function(object) {
-      return(private$validate(object))
-    },
-
-    knEstimate = function(object) {
-      return(private$validate(object))
-    },
-
-    knEvaluate = function(object) {
-      return(private$validate(object))
-    },
-
-
-    knStudio = function(object) {
       return(private$validate(object))
     },
 
     mkn = function(object) {
       return(private$validate(object))
     },
-
-    mknStudio = function(object) {
-      return(private$validate(object))
-    },
-
-    mknCounts = function(object) {
-      return(private$validate(object))
-    },
-
-    mknEstimate = function(object) {
-      return(private$validate(object))
-    },
-
-    mknEvaluate = function(object) {
-      return(private$validate(object))
-    },
-
 
     katz = function(object) {
       return(private$validate(object))

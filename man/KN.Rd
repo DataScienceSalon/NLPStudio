@@ -9,26 +9,29 @@
 KN
 }
 \arguments{
-\item{x}{CVSet object containing a training and test set.}
+\item{x}{a CVSet containing training and test Corpus objects}
 
-\item{modelSize}{Numeric indicating the model size in terms of nGrams. Defaults to trigram model.}
+\item{train}{Train Corpus object. Ignored if x is a CVSet, required otherwise.}
 
-\item{open}{Logical indicating whether the vocabulary is open
-or closed. Open indicates that it is possible to encounter out of vocabulary
-words in the test set. If TRUE, OOV processing will be performed on
-the training set. Default is TRUE.}
+\item{test}{Test Corpus object. Ignored if x is a CVSet, required otherwise.}
 
-\item{name}{Character string. Represents name to be assigned to the KN object.}
+\item{modelSize}{Numeric between 1, for unigram to 5 for quintgram.}
+
+\item{openVocabulary}{Logical. If TRUE, preprocessing will replace all words
+in the test corpus that are not in the training corpus with the pseudo-word
+UNK. If FALSE, all words in test corpus are assumed to be in the training
+corpus. The default is TRUE.}
 }
 \description{
-\code{KN} Class containing the Kneser Ney Language Model object.
+\code{KN} Kneser Ney Statistical Learning Model
+}
+\details{
+Encapsulates a Statistical Language Model implementing the Kneser-Ney
+algorithm.
 }
 \seealso{
-Other Statistical Language Model Classes: \code{\link{KNStudio}},
-  \code{\link{MKNStudio}}, \code{\link{MKN}},
-  \code{\link{SLM}}
-
-Other Kneser-Ney Language Model Classes: \code{\link{MKN}}
+Other Statistical Language Model Classes: \code{\link{MKN}},
+  \code{\link{SLM0}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

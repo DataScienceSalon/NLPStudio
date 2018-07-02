@@ -23,7 +23,7 @@ to which the repaired file will be stored.}
 Other FileStudio Command Classes: \code{\link{CopyFileSet}},
   \code{\link{MoveFileSet}}, \code{\link{ReadCorpus}},
   \code{\link{SampleCorpus}}, \code{\link{Source}},
-  \code{\link{TokenizeCorpus}}, \code{\link{WriteCorpus}}
+  \code{\link{WriteCorpus}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}
