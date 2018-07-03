@@ -238,15 +238,15 @@ MKN <- R6::R6Class(
       }
     },
 
-    pKN = function() {
+    pSmooth = function() {
       for (i in 1:private$..settings$modelSize) {
 
         if (i == 1) {
-          private$..model$nGrams[[i]]$pKN <- private$..model$nGrams[[i]]$alpha
+          private$..model$nGrams[[i]]$pSmooth <- private$..model$nGrams[[i]]$alpha
 
         } else {
-          lower <- private$..model$nGrams[[i-1]][,.(nGram, pKN)]
-          setnames(lower, "pKN", "pKNSuffix")
+          lower <- private$..model$nGrams[[i-1]][,.(nGram, pSmooth)]
+          setnames(lower, "pSmooth", "pSmoothSuffix")
           setkey(lower, nGram)
           setkey(private$..model$nGrams[[i]], suffix)
           private$..model$nGrams[[i]] <-
@@ -256,10 +256,10 @@ MKN <- R6::R6Class(
             set(private$..model$nGrams[[i]],
                 i=which(is.na(private$..model$nGrams[[i]][[j]])), j=j, value=0)
           }
-          private$..model$nGrams[[i]]$pKN <-
+          private$..model$nGrams[[i]]$pSmooth <-
             private$..model$nGrams[[i]]$alpha +
             private$..model$nGrams[[i]]$lambda *
-            private$..model$nGrams[[i]]$pKNSuffix
+            private$..model$nGrams[[i]]$pSmoothSuffix
         }
       }
     }
@@ -323,7 +323,7 @@ MKN <- R6::R6Class(
       private$lambda()
 
       # Compute probabilities
-      private$pKN()
+      private$pSmooth()
 
       invisible(self)
     },

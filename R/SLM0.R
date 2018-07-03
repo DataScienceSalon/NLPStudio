@@ -187,9 +187,9 @@ SLM0 <- R6::R6Class(
       OOV = private$..corpora$test$getMeta(key = 'OOV')
       exact <- nrow(private$..scores[ Match == private$..settings$modelSize])
       exactRate <- exact / nrow(private$..scores)
-      zeroProbs <- nrow(private$..scores[ pKN == 0])
-      scores <- private$..scores[ pKN > 0]
-      scores[, logProb := log2(pKN)]
+      zeroProbs <- nrow(private$..scores[ pSmooth == 0])
+      scores <- private$..scores[ pSmooth > 0]
+      scores[, logProb := log2(pSmooth)]
       H <- -1 * 1/netWords * sum(scores$logProb)
       pp <- 2^H
 
@@ -211,50 +211,50 @@ SLM0 <- R6::R6Class(
       while (i > 0) {
         # Obtain training probabilities
         setkey(private$..model$nGrams[[i]], nGram)
-        probs <- private$..model$nGrams[[i]][,.(nGram, pKN, Match = i)]
+        probs <- private$..model$nGrams[[i]][,.(nGram, pSmooth, Match = i)]
 
         if (i == 1) {
           setkey(private$..scores, Unigram)
           private$..scores <- merge(private$..scores, probs, by.x = 'Unigram',
                                     by.y = 'nGram', all.x = TRUE,
                                     suffixes = c("", ".update"))
-          private$..scores[(!is.na(pKN.update) & (Match == 0)),
-                           c("Match", "pKN") := list(Match.update, pKN.update)]
-          private$..scores[, c('pKN.update', 'Match.update') := NULL]
+          private$..scores[(!is.na(pSmooth.update) & (Match == 0)),
+                           c("Match", "pSmooth") := list(Match.update, pSmooth.update)]
+          private$..scores[, c('pSmooth.update', 'Match.update') := NULL]
         } else if (i == 2) {
           setkey(private$..scores, Bigram)
           private$..scores <- merge(private$..scores, probs, by.x = 'Bigram',
                                     by.y = 'nGram', all.x = TRUE,
                                     suffixes = c("", ".update"))
-          private$..scores[(!is.na(pKN.update) & (Match == 0)),
-                           c("Match", "pKN") := list(Match.update, pKN.update)]
-          private$..scores[, c('pKN.update', 'Match.update') := NULL]
+          private$..scores[(!is.na(pSmooth.update) & (Match == 0)),
+                           c("Match", "pSmooth") := list(Match.update, pSmooth.update)]
+          private$..scores[, c('pSmooth.update', 'Match.update') := NULL]
 
         } else if (i == 3) {
           setkey(private$..scores, Trigram)
           private$..scores <- merge(private$..scores, probs, by.x = 'Trigram',
                                     by.y = 'nGram', all.x = TRUE,
                                     suffixes = c("", ".update"))
-          private$..scores[(!is.na(pKN.update) & (Match == 0)),
-                           c("Match", "pKN") := list(Match.update, pKN.update)]
-          private$..scores[, c('pKN.update', 'Match.update') := NULL]
+          private$..scores[(!is.na(pSmooth.update) & (Match == 0)),
+                           c("Match", "pSmooth") := list(Match.update, pSmooth.update)]
+          private$..scores[, c('pSmooth.update', 'Match.update') := NULL]
 
         } else if (i == 4) {
           setkey(private$..scores, Quadgram)
           private$..scores <- merge(private$..scores, probs, by.x = 'Quadgram',
                                     by.y = 'nGram', all.x = TRUE,
                                     suffixes = c("", ".update"))
-          private$..scores[(!is.na(pKN.update) & (Match == 0)),
-                           c("Match", "pKN") := list(Match.update, pKN.update)]
-          private$..scores[, c('pKN.update', 'Match.update') := NULL]
+          private$..scores[(!is.na(pSmooth.update) & (Match == 0)),
+                           c("Match", "pSmooth") := list(Match.update, pSmooth.update)]
+          private$..scores[, c('pSmooth.update', 'Match.update') := NULL]
         } else if (i == 5) {
           setkey(private$..scores, Quintgram)
           private$..scores <- merge(private$..scores, probs, by.x = 'Quintgram',
                                     by.y = 'nGram', all.x = TRUE,
                                     suffixes = c("", ".update"))
-          private$..scores[(!is.na(pKN.update) & (Match == 0)),
-                           c("Match", "pKN") := list(Match.update, pKN.update)]
-          private$..scores[, c('pKN.update', 'Match.update') := NULL]
+          private$..scores[(!is.na(pSmooth.update) & (Match == 0)),
+                           c("Match", "pSmooth") := list(Match.update, pSmooth.update)]
+          private$..scores[, c('pSmooth.update', 'Match.update') := NULL]
         }
         i <- i - 1
       }
@@ -277,7 +277,7 @@ SLM0 <- R6::R6Class(
       modelTypes <- private$..settings$modelTypes[1:private$..settings$modelSize]
       modelTypes <- rev(modelTypes)
       names(private$..scores) <- modelTypes[seq(1:private$..settings$modelSize)]
-      private$..scores <- cbind(private$..scores, Match = 0, pKN = 0)
+      private$..scores <- cbind(private$..scores, Match = 0, pSmooth = 0)
       return(TRUE)
     },
 
