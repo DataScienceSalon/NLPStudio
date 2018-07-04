@@ -1,13 +1,13 @@
-#' Tokenizer
+#' TokenizerNLP
 #'
-#' \code{Tokenizer} Wrapper class for the tokenizer package.
+#' \code{TokenizerNLP} Wrapper class for the OpenNLP package tokens functions
 #'
 #' Creates character, word, sentence and paragraph tokens and nGrams using the
-#' tokenizer package.
+#' OpenNLP package.
 #'
 #' @section Methods:
 #'  \itemize{
-#'   \item{\code{new()}{Initializes an object of the Tokenizer class.}}
+#'   \item{\code{new()}{Initializes an object of the TokenizerNLP class.}}
 #'   \item{\code{character(x)}}
 #'   \item{\code{word(x)}}
 #'   \item{\code{sentence(x)}}
@@ -17,15 +17,15 @@
 #'
 #' @param x Corpus object
 #' @param n Numeric for the nGram method. Indicates the nGram size.
-#' @return Tokenizer object
+#' @return TokenizerNLP object
 #'
 #' @docType class
 #' @author John James, \email{jjames@@datasciencesalon.org}
-#' @family Corpus Tokenizer Family of Classes
+#' @family Corpus TokenizerNLP Family of Classes
 #' @family CorpusStudio Family of Classes
 #' @export
-Tokenizer <- R6::R6Class(
-  classname = "Tokenizer",
+TokenizerNLP <- R6::R6Class(
+  classname = "TokenizerNLP",
   lock_objects = FALSE,
   lock_class = FALSE,
   inherit = Super,
@@ -53,39 +53,46 @@ Tokenizer <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                           Tokenize Method                               #
+    #                           Tokenize Methods                              #
     #-------------------------------------------------------------------------#
-    tokenize = function(x, n, tokenUnit, stopwords = character(),
-                        paragraphBreak = "\n\n",  nGramDelim = " ") {
+    tokenizeSentences = function(x) {
+      s <- paste(x, collapse = "")
+      s <- NLP::as.String(s)
 
-      if (grepl("^c", tokenUnit, ignore.case = TRUE)) {
-        return(unlist(tokenizers::tokenize_characters(x = x,
-                                               lowercase = FALSE,
-                                               strip_non_alphanum = FALSE,
-                                               simplify = FALSE)))
-      } else if (grepl("^w", tokenUnit, ignore.case = TRUE)) {
-        return(unlist(tokenizers::tokenize_words(x = x,
-                                   lowercase = FALSE,
-                                   strip_punct = FALSE,
-                                   strip_numeric = FALSE,
-                                   simplify = FALSE)))
+      ## Need sentence token annotations.
+      sent_token_annotator <- openNLP::Maxent_Sent_Token_Annotator()
+      a1 <- NLP::annotate(s, sent_token_annotator)
+      return(as.character(s[a1]))
+    },
+
+    tokenizeWords = function(x) {
+
+      s <- paste(x, collapse = "")
+      s <- NLP::as.String(s)
+
+      ## Need sentence token annotations.
+      sent_token_annotator <- openNLP::Maxent_Sent_Token_Annotator()
+      a1 <- NLP::annotate(s, sent_token_annotator)
+      ## Need word token annotations.
+      word_token_annotator <- openNLP::Maxent_Word_Token_Annotator()
+      a2 <- NLP::annotate(s, word_token_annotator, a1)
+      # Extract words
+      a2w <- subset(a2, type == 'word')
+      return(as.character(s[a2w]))
+    },
+
+    tokenize = function(x, tokenUnit) {
+
+
+      if (grepl("^w", tokenUnit, ignore.case = TRUE)) {
+        return(private$tokenizeWords(x = x))
+
       } else if (grepl("^s", tokenUnit, ignore.case = TRUE)) {
-        return(unlist(tokenizers::tokenize_sentences(x = x,
-                                              lowercase = FALSE,
-                                              strip_punct = FALSE,
-                                              simplify = FALSE)))
-      } else if (grepl("^p", tokenUnit, ignore.case = TRUE)) {
-        return(unlist(tokenizers::tokenize_paragraphs(x = x,
-                                              paragraph_break = paragraphBreak,
-                                              simplify = FALSE)))
-      } else if (grepl("^n", tokenUnit, ignore.case = TRUE)) {
-        return(unlist(tokenizers::tokenize_ngrams(x = x, lowercase = FALSE,
-                                           n = n, stopwords = stopwords,
-                                           ngram_delim = nGramDelim,
-                                           simplify = FALSE)))
+        return(private$tokenizeSentences(x = x))
+
       } else {
-        event <- paste0("Invalid token unit. Must be c('character', 'word',",
-                        " 'sentence', 'paragraph'). See ?", class(self)[1],
+        event <- paste0("Invalid token unit. Must be c('word',",
+                        " 'sentence'). See ?", class(self)[1],
                         " for further assistance.")
         private$logR$log(method = 'tokenize', event = event, level = "Error")
         stop()
@@ -95,18 +102,8 @@ Tokenizer <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Execute Method                                #
     #-------------------------------------------------------------------------#
-    execute = function(tokenUnit, n = NULL, paragraphBreak = "\n\n",
-                       stopwords = character(), nGramDelim = " ") {
+    execute = function(tokenUnit) {
 
-      # Format nGram Type
-      tokenType <- tokenUnit
-      if (grepl("^n", tokenUnit, ignore.case = TRUE)) {
-        if (n == 1)  tokenType <- "Unigrams"
-        if (n == 2)  tokenType <- "Bigrams"
-        if (n == 3)  tokenType <- "Trigrams"
-        if (n == 4)  tokenType <- "Quadgrams"
-        if (n == 5)  tokenType <- "Quintgrams"
-      }
       # Create tokens object
       private$..tokens <- Clone$new()$this(private$..x, reference = FALSE,
                                            content = FALSE)
@@ -121,14 +118,10 @@ Tokenizer <- R6::R6Class(
         # Clone document
         document <- Clone$new()$this(documents[[i]],  content = TRUE)
 
-
         # Tokenize
-        document$content <- private$tokenize(document$content,
-                                             n = n,
-                                             paragraphBreak = paragraphBreak,
-                                             tokenUnit = tokenUnit,
-                                             stopwords = stopwords,
-                                             nGramDelim = nGramDelim)
+        document$content <- private$tokenize(paste(document$content,
+                                                   collapse = " "),
+                                             tokenUnit)
 
         # Get Counts
         counts <- length(document$content)
@@ -136,11 +129,11 @@ Tokenizer <- R6::R6Class(
 
         # Update documents metadata
         name <- document$getName()
-        name <- paste0(name, " (", tokenType, " Tokens)")
+        name <- paste0(name, " (", tokenUnit, " Tokens)")
         document$setName(name)
-        document$setMeta(key = 'tokenizer', value = 'Tokenizer package', type = 'f')
-        document$setMeta(key = 'tokenUnit', value = tokenType, type = 'f')
-        document$setMeta(key = paste(tokenType, 'Tokens'), value = counts, type = 'q')
+        document$setMeta(key = 'tokenizer', value = 'openNLP Package', type = 'f')
+        document$setMeta(key = 'tokenUnit', value = tokenUnit, type = 'f')
+        document$setMeta(key = paste(tokenUnit, "Tokens"), value = counts, type = 'q')
 
         private$..tokens$addDocument(document)
 
@@ -148,11 +141,11 @@ Tokenizer <- R6::R6Class(
 
       # Update corpus metadata
       name <- private$..tokens$getName()
-      name <- paste0(name, " (", tokenType," Tokens)")
+      name <- paste0(name, " (", tokenUnit," Tokens)")
       private$..tokens$setName(name)
-      private$..tokens$setMeta(key = 'tokenizer', value = 'Tokenizer package', type = 'f')
-      private$..tokens$setMeta(key = 'tokenUnit', value = tokenType, type = 'f')
-      private$..tokens$setMeta(key = paste(tokenType, 'Tokens'), value = totalCounts, type = 'q')
+      private$..tokens$setMeta(key = 'tokenizer', value = 'openNLP Package', type = 'f')
+      private$..tokens$setMeta(key = 'tokenUnit', value = tokenUnit, type = 'f')
+      private$..tokens$setMeta(key = paste(tokenUnit, "Tokens"), value = totalCounts, type = 'q')
       return(TRUE)
     }
   ),
@@ -174,7 +167,7 @@ Tokenizer <- R6::R6Class(
     #-------------------------------------------------------------------------#
     chars = function() {
 
-      private$execute(tokenUnit = 'Character')
+      stop("This method is not implemented for this class.")
 
       invisible(self)
     },
@@ -202,9 +195,9 @@ Tokenizer <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                       Paragraph Tokens Method                           #
     #-------------------------------------------------------------------------#
-    paragraphs = function(paragraphBreak = "\n\n") {
+    paragraphs = function() {
 
-      private$execute(tokenUnit = 'Paragraph', paragraphBreak = paragraphBreak)
+      stop("This method is not implemented for this class.")
 
       invisible(self)
     },
@@ -212,10 +205,9 @@ Tokenizer <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                            NGrams Method                                #
     #-------------------------------------------------------------------------#
-    nGrams = function(n = 3, stopwords = character(), nGramDelim = " ") {
+    nGrams = function() {
 
-      private$execute(tokenUnit = 'nGram', n = n,  stopwords = stopwords,
-                      nGramDelim = nGramDelim)
+      stop("This method is not implemented for this class.")
 
       invisible(self)
     },
@@ -229,7 +221,7 @@ Tokenizer <- R6::R6Class(
     #                           Visitor Method                                #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$tokenizer(self)
+      visitor$tokenizerNLP(self)
     }
   )
 )

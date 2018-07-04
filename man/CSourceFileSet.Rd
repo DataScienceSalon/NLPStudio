@@ -35,8 +35,8 @@ corpus <- CSource$new(x = dir, name = "Foo")$dir()
 }
 \seealso{
 Other Corpus Source Classes: \code{\link{CSource0}},
-  \code{\link{CSourceDir}}, \code{\link{CSourceQuanteda}},
-  \code{\link{CSourceTM}}, \code{\link{CSourceVector}}
+  \code{\link{CSourceDir}}, \code{\link{CSourceQ}},
+  \code{\link{CSourceTM}}, \code{\link{CSourceV}}
 }
 \author{
 John James, \email{jjames@datasciencesalon.org}

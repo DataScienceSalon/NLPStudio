@@ -28,8 +28,7 @@ Converted object.
 
 \seealso{
 Other Converter Classes: \code{\link{Converter0}},
-  \code{\link{ConverterQuanteda}},
-  \code{\link{ConverterTM}}
+  \code{\link{ConverterQ}}, \code{\link{ConverterTM}}
 }
 \author{
 John James, \email{jjames@datasciencesalon.org}

@@ -27,9 +27,8 @@ or a corpus object from a supported package.}
 
 \seealso{
 Other Corpus Source Classes: \code{\link{CSourceDir}},
-  \code{\link{CSourceFileSet}},
-  \code{\link{CSourceQuanteda}}, \code{\link{CSourceTM}},
-  \code{\link{CSourceVector}}
+  \code{\link{CSourceFileSet}}, \code{\link{CSourceQ}},
+  \code{\link{CSourceTM}}, \code{\link{CSourceV}}
 }
 \author{
 John James, \email{jjames@datasciencesalon.org}

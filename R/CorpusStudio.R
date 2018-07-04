@@ -105,10 +105,10 @@ CorpusStudio <- R6::R6Class(
 
       private$..corpus <- switch(sourceType,
                                  FileSet = CSourceFileSet$new()$source(x, name),
-                                 corpus = CSourceQuanteda$new()$source(x, name),
+                                 corpus = CSourceQ$new()$source(x, name),
                                  VCorpus = CSourceTM$new()$source(x, name),
                                  SimpleCorpus = CSourceTM$new()$source(x, name),
-                                 character = CSourceVector$new()$source(x, name),
+                                 character = CSourceV$new()$source(x, name),
                                  directory = CSourceDir$new()$source(x, name))
 
       event <- paste0("Constructed Corpus from ", sourceType, ".")

@@ -23,7 +23,7 @@ level metadata must be added separately to the tm Corpus object.
 }
 \seealso{
 Other Converter Classes: \code{\link{Converter0}},
-  \code{\link{ConverterQuanteda}}, \code{\link{Converter}}
+  \code{\link{ConverterQ}}, \code{\link{Converter}}
 }
 \author{
 John James, \email{jjames@datasciencesalon.org}

@@ -1,13 +1,13 @@
-#' Tokenizer
+#' TokenizerQ
 #'
-#' \code{Tokenizer} Wrapper class for the tokenizer package.
+#' \code{TokenizerQ} Wrapper class for the token functionality in the Quanteda package.
 #'
 #' Creates character, word, sentence and paragraph tokens and nGrams using the
 #' tokenizer package.
 #'
 #' @section Methods:
 #'  \itemize{
-#'   \item{\code{new()}{Initializes an object of the Tokenizer class.}}
+#'   \item{\code{new()}{Initializes an object of the TokenizerQ class.}}
 #'   \item{\code{character(x)}}
 #'   \item{\code{word(x)}}
 #'   \item{\code{sentence(x)}}
@@ -17,15 +17,15 @@
 #'
 #' @param x Corpus object
 #' @param n Numeric for the nGram method. Indicates the nGram size.
-#' @return Tokenizer object
+#' @return TokenizerQ object
 #'
 #' @docType class
 #' @author John James, \email{jjames@@datasciencesalon.org}
-#' @family Corpus Tokenizer Family of Classes
+#' @family Corpus TokenizerQ Family of Classes
 #' @family CorpusStudio Family of Classes
 #' @export
-Tokenizer <- R6::R6Class(
-  classname = "Tokenizer",
+TokenizerQ <- R6::R6Class(
+  classname = "TokenizerQ",
   lock_objects = FALSE,
   lock_class = FALSE,
   inherit = Super,
@@ -55,37 +55,42 @@ Tokenizer <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Tokenize Method                               #
     #-------------------------------------------------------------------------#
-    tokenize = function(x, n, tokenUnit, stopwords = character(),
-                        paragraphBreak = "\n\n",  nGramDelim = " ") {
+    tokenize = function(x, n, tokenUnit, nGramDelim = " ") {
 
       if (grepl("^c", tokenUnit, ignore.case = TRUE)) {
-        return(unlist(tokenizers::tokenize_characters(x = x,
-                                               lowercase = FALSE,
-                                               strip_non_alphanum = FALSE,
-                                               simplify = FALSE)))
+        return(as.character(quanteda::tokens(x = x, what = 'character',
+                                remove_numbers = FALSE,
+                                remove_punct = FALSE,
+                                remove_symbols = FALSE,
+                                remove_separators = FALSE,
+                                remove_twitter = FALSE,
+                                remove_hyphens = FALSE,
+                                remove_url = FALSE)))
       } else if (grepl("^w", tokenUnit, ignore.case = TRUE)) {
-        return(unlist(tokenizers::tokenize_words(x = x,
-                                   lowercase = FALSE,
-                                   strip_punct = FALSE,
-                                   strip_numeric = FALSE,
-                                   simplify = FALSE)))
+        return(as.character(quanteda::tokens(x = x, what = 'word',
+                                remove_numbers = FALSE,
+                                remove_punct = FALSE,
+                                remove_symbols = FALSE,
+                                remove_separators = FALSE,
+                                remove_twitter = FALSE,
+                                remove_hyphens = FALSE,
+                                remove_url = FALSE)))
       } else if (grepl("^s", tokenUnit, ignore.case = TRUE)) {
-        return(unlist(tokenizers::tokenize_sentences(x = x,
-                                              lowercase = FALSE,
-                                              strip_punct = FALSE,
-                                              simplify = FALSE)))
-      } else if (grepl("^p", tokenUnit, ignore.case = TRUE)) {
-        return(unlist(tokenizers::tokenize_paragraphs(x = x,
-                                              paragraph_break = paragraphBreak,
-                                              simplify = FALSE)))
+        return(as.character(quanteda::tokens(x = x, what = 'sentence',
+                                remove_numbers = FALSE,
+                                remove_punct = FALSE,
+                                remove_symbols = FALSE,
+                                remove_separators = FALSE,
+                                remove_twitter = FALSE,
+                                remove_hyphens = FALSE,
+                                remove_url = FALSE)))
       } else if (grepl("^n", tokenUnit, ignore.case = TRUE)) {
-        return(unlist(tokenizers::tokenize_ngrams(x = x, lowercase = FALSE,
-                                           n = n, stopwords = stopwords,
-                                           ngram_delim = nGramDelim,
-                                           simplify = FALSE)))
+        tokenObject <- quanteda::tokens(x,what = 'word')
+        return(as.character(quanteda::tokens_ngrams(x = tokenObject, n = n,
+                                       concatenator = nGramDelim)))
       } else {
         event <- paste0("Invalid token unit. Must be c('character', 'word',",
-                        " 'sentence', 'paragraph'). See ?", class(self)[1],
+                        " 'sentence'). See ?", class(self)[1],
                         " for further assistance.")
         private$logR$log(method = 'tokenize', event = event, level = "Error")
         stop()
@@ -95,8 +100,7 @@ Tokenizer <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Execute Method                                #
     #-------------------------------------------------------------------------#
-    execute = function(tokenUnit, n = NULL, paragraphBreak = "\n\n",
-                       stopwords = character(), nGramDelim = " ") {
+    execute = function(tokenUnit, n = NULL, nGramDelim = " ") {
 
       # Format nGram Type
       tokenType <- tokenUnit
@@ -123,11 +127,9 @@ Tokenizer <- R6::R6Class(
 
 
         # Tokenize
-        document$content <- private$tokenize(document$content,
+        document$content <- private$tokenize(paste(document$content, collapse = " "),
                                              n = n,
-                                             paragraphBreak = paragraphBreak,
                                              tokenUnit = tokenUnit,
-                                             stopwords = stopwords,
                                              nGramDelim = nGramDelim)
 
         # Get Counts
@@ -138,7 +140,7 @@ Tokenizer <- R6::R6Class(
         name <- document$getName()
         name <- paste0(name, " (", tokenType, " Tokens)")
         document$setName(name)
-        document$setMeta(key = 'tokenizer', value = 'Tokenizer package', type = 'f')
+        document$setMeta(key = 'tokenizer', value = 'quanteda package', type = 'f')
         document$setMeta(key = 'tokenUnit', value = tokenType, type = 'f')
         document$setMeta(key = paste(tokenType, 'Tokens'), value = counts, type = 'q')
 
@@ -150,7 +152,7 @@ Tokenizer <- R6::R6Class(
       name <- private$..tokens$getName()
       name <- paste0(name, " (", tokenType," Tokens)")
       private$..tokens$setName(name)
-      private$..tokens$setMeta(key = 'tokenizer', value = 'Tokenizer package', type = 'f')
+      private$..tokens$setMeta(key = 'tokenizer', value = 'quanteda package', type = 'f')
       private$..tokens$setMeta(key = 'tokenUnit', value = tokenType, type = 'f')
       private$..tokens$setMeta(key = paste(tokenType, 'Tokens'), value = totalCounts, type = 'q')
       return(TRUE)
@@ -202,9 +204,9 @@ Tokenizer <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                       Paragraph Tokens Method                           #
     #-------------------------------------------------------------------------#
-    paragraphs = function(paragraphBreak = "\n\n") {
+    paragraphs = function() {
 
-      private$execute(tokenUnit = 'Paragraph', paragraphBreak = paragraphBreak)
+      stop("This method is not implemented for this class." )
 
       invisible(self)
     },
@@ -212,10 +214,9 @@ Tokenizer <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                            NGrams Method                                #
     #-------------------------------------------------------------------------#
-    nGrams = function(n = 3, stopwords = character(), nGramDelim = " ") {
+    nGrams = function(n = 3, nGramDelim = " ") {
 
-      private$execute(tokenUnit = 'nGram', n = n,  stopwords = stopwords,
-                      nGramDelim = nGramDelim)
+      private$execute(tokenUnit = 'nGram', n = n, nGramDelim = nGramDelim)
 
       invisible(self)
     },
@@ -229,7 +230,7 @@ Tokenizer <- R6::R6Class(
     #                           Visitor Method                                #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$tokenizer(self)
+      visitor$tokenizerQ(self)
     }
   )
 )

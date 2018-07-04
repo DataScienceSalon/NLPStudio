@@ -41,8 +41,7 @@ corpus <- CSource$new(x = txt, name = "Goldman")$vector()
 \seealso{
 Other Corpus Source Classes: \code{\link{CSource0}},
   \code{\link{CSourceDir}}, \code{\link{CSourceFileSet}},
-  \code{\link{CSourceQuanteda}},
-  \code{\link{CSourceVector}}
+  \code{\link{CSourceQ}}, \code{\link{CSourceV}}
 }
 \author{
 John James, \email{jjames@datasciencesalon.org}

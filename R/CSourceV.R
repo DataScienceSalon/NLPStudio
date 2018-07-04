@@ -1,6 +1,6 @@
-#' CSourceVector
+#' CSourceV
 #'
-#' \code{CSourceVector} Sources a Corpus object from a character vector or vectors.
+#' \code{CSourceV} Sources a Corpus object from a character vector or vectors.
 #'
 #' Sources a Corpus object from a character vector or vectors. Each vector element
 #' is treated as a separate document unless the collapse paramter is set to TRUE.
@@ -10,7 +10,7 @@
 #'
 #' @section Methods:
 #'  \itemize{
-#'   \item{\code{new(x, name = NULL)}}{Initializes an object of the CSourceVector class.}
+#'   \item{\code{new(x, name = NULL)}}{Initializes an object of the CSourceV class.}
 #'   \item{\code{execute()}}{Executes the process of sourcing the Corpus object.}
 #'  }
 #'
@@ -36,8 +36,8 @@
 #' @author John James, \email{jjames@@datasciencesalon.org}
 #' @family Corpus Source Classes
 #' @export
-CSourceVector <- R6::R6Class(
-  classname = "CSourceVector",
+CSourceV <- R6::R6Class(
+  classname = "CSourceV",
   lock_objects = FALSE,
   lock_class = FALSE,
   inherit = CSource0,

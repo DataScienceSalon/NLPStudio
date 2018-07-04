@@ -1,11 +1,11 @@
 #------------------------------------------------------------------------------#
-#                            ConverterQuanteda                                 #
+#                            ConverterQ                                 #
 #------------------------------------------------------------------------------#
-#' ConverterQuanteda
+#' ConverterQ
 #'
-#' \code{ConverterQuanteda} Converts NLPStudio Corpus objects to and from Quanteda corpus objects.
+#' \code{ConverterQ} Converts NLPStudio Corpus objects to and from Quanteda corpus objects.
 #'
-#' @usage ConverterQuanteda$new()$convert(x)
+#' @usage ConverterQ$new()$convert(x)
 #'
 #' @param x Object to be converted
 #'
@@ -13,8 +13,8 @@
 #' @author John James, \email{jjames@@datasciencesalon.org}
 #' @family Converter Classes
 #' @export
-ConverterQuanteda <- R6::R6Class(
-  classname = "ConverterQuanteda",
+ConverterQ <- R6::R6Class(
+  classname = "ConverterQ",
   lock_objects = FALSE,
   lock_class = FALSE,
   inherit = Converter0,

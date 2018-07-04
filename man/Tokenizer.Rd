@@ -9,36 +9,40 @@
 Tokenizer
 }
 \arguments{
-\item{x}{Corpus object.}
+\item{x}{Corpus object}
 
-\item{tokenUnit}{Character string indicating the token unit. Valid values
-are 'character', 'word', 'sentence', and 'paragraph'. Abbreviations
-are permitted.}
+\item{n}{Numeric for the nGram method. Indicates the nGram size.}
 }
 \value{
 Tokenizer object
 }
 \description{
-\code{Tokenizer} Creates a Tokenizer object from a Corpus.
+\code{Tokenizer} Wrapper class for the tokenizer package.
 }
 \details{
-Class creates a character, word, sentence or paragraph Tokenizer object
-from a Corpus object.
+Creates character, word, sentence and paragraph tokens and nGrams using the
+tokenizer package.
 }
 \section{Methods}{
 
  \itemize{
-  \item{\code{new()}}{Initializes an object of the Tokenizer class.}
-  \item{\code{execute(x, train = 0.75, validation = 0, test = 0.25,
-  stratify = TRUE, seed = NULL)}}{Executes the corpus Tokenizers.}
+  \item{\code{new()}{Initializes an object of the Tokenizer class.}}
+  \item{\code{character(x)}}
+  \item{\code{word(x)}}
+  \item{\code{sentence(x)}}
+  \item{\code{paragraph(x)}}
+  \item{\code{nGrams(x, n)}}
  }
 }
 
 \seealso{
+Other Corpus Tokenizer Family of Classes: \code{\link{Token}}
+
 Other CorpusStudio Family of Classes: \code{\link{CorpusStudio}},
   \code{\link{Sample0}}, \code{\link{Sample}},
   \code{\link{Segment}}, \code{\link{SplitKFold}},
-  \code{\link{Split}}
+  \code{\link{Split}}, \code{\link{TokenizerNLP}},
+  \code{\link{TokenizerQ}}, \code{\link{Token}}
 }
 \author{
 John James, \email{jjames@datasciencesalon.org}

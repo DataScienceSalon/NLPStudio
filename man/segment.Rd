@@ -38,7 +38,8 @@ Other Corpus Sample Family of Classes: \code{\link{Sample0}},
 Other CorpusStudio Family of Classes: \code{\link{CorpusStudio}},
   \code{\link{Sample0}}, \code{\link{Sample}},
   \code{\link{SplitKFold}}, \code{\link{Split}},
-  \code{\link{Tokenizer}}
+  \code{\link{TokenizerNLP}}, \code{\link{TokenizerQ}},
+  \code{\link{Tokenizer}}, \code{\link{Token}}
 }
 \author{
 John James, \email{jjames@datasciencesalon.org}

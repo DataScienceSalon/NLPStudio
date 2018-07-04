@@ -30,7 +30,7 @@ Converter <- R6::R6Class(
     initialize = function() { invisible(self) },
 
     quanteda = function(x) {
-      return(ConverterQuanteda$new()$convert(x))
+      return(ConverterQ$new()$convert(x))
     },
 
     tm = function(x) {

@@ -183,21 +183,25 @@ ValidationVisitor <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                    Validate Data Factory Classes                        #
+    #                       Validate Token Classes                            #
     #-------------------------------------------------------------------------#
+    token = function(object) {
+      return(private$validate(object))
+    },
+
     tokenizer = function(object) {
       return(private$validate(object))
     },
 
+    tokenizerNLP = function(object) {
+      return(private$validate(object))
+    },
+
+    tokenizerQ = function(object) {
+      return(private$validate(object))
+    },
+
     tagger = function(object) {
-      return(private$validate(object))
-    },
-
-    counter = function(object) {
-      return(private$validate(object))
-    },
-
-    nGrammer = function(object) {
       return(private$validate(object))
     },
 

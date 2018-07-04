@@ -27,7 +27,7 @@ Defines interface for concrete Converter classes.
 }
 
 \seealso{
-Other Converter Classes: \code{\link{ConverterQuanteda}},
+Other Converter Classes: \code{\link{ConverterQ}},
   \code{\link{ConverterTM}}, \code{\link{Converter}}
 }
 \author{

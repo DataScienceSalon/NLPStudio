@@ -1,10 +1,10 @@
-#' CSourceQuanteda
+#' CSourceQ
 #'
-#' \code{CSourceQuanteda} Sources a Corpus object from a Quanteda object.
+#' \code{CSourceQ} Sources a Corpus object from a Quanteda object.
 #'
 #' @section Methods:
 #'  \itemize{
-#'   \item{\code{new(x, name = NULL)}}{Initializes an object of the CSourceQuanteda class.}
+#'   \item{\code{new(x, name = NULL)}}{Initializes an object of the CSourceQ class.}
 #'   \item{\code{source()}}{Executes the process of sourcing the Corpus object.}
 #'  }
 #'
@@ -28,8 +28,8 @@
 #' @author John James, \email{jjames@@datasciencesalon.org}
 #' @family Corpus Source Classes
 #' @export
-CSourceQuanteda <- R6::R6Class(
-  classname = "CSourceQuanteda",
+CSourceQ <- R6::R6Class(
+  classname = "CSourceQ",
   lock_objects = FALSE,
   lock_class = FALSE,
   inherit = CSource0,
@@ -63,7 +63,7 @@ CSourceQuanteda <- R6::R6Class(
         stop()
       }
 
-      corpus <- ConverterQuanteda$new()$convert(x)
+      corpus <- ConverterQ$new()$convert(x)
       if (!is.null(name))  corpus$setName(name = name)
       corpus$setMeta(key = 'source', value = 'Quanteda Corpus',
                      type = 'f')
