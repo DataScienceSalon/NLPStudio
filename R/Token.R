@@ -64,7 +64,7 @@ Token <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                       Character Tokens Method                           #
     #-------------------------------------------------------------------------#
-    chars = function(tokenizer) {
+    chars = function(tokenizer = 'tokenizer') {
 
       if (grepl("^t", tokenizer, ignore.case = TRUE)) {
         private$..tokens <-
@@ -85,7 +85,7 @@ Token <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                         Word Tokens Method                              #
     #-------------------------------------------------------------------------#
-    words = function(tokenizer) {
+    words = function(tokenizer = 'tokenizer') {
 
       if (grepl("^o", tokenizer, ignore.case = TRUE)) {
         private$..tokens <-
@@ -109,7 +109,7 @@ Token <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                       Sentence Tokens Method                            #
     #-------------------------------------------------------------------------#
-    sentences = function(tokenizer) {
+    sentences = function(tokenizer = 'openNLP') {
 
       if (grepl("^o", tokenizer, ignore.case = TRUE)) {
         private$..tokens <-
@@ -133,7 +133,7 @@ Token <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                       Paragraph Tokens Method                           #
     #-------------------------------------------------------------------------#
-    paragraphs = function(tokenizer, paragraphBreak = "\n\n") {
+    paragraphs = function(tokenizer = 'tokenizer', paragraphBreak = "\n\n") {
 
       if (grepl("^t", tokenizer, ignore.case = TRUE)) {
         private$..tokens <-
@@ -151,7 +151,7 @@ Token <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                         nGram Tokens Method                             #
     #-------------------------------------------------------------------------#
-    nGrams = function(tokenizer, n = 3, nGramDelim = " ") {
+    nGrams = function(tokenizer = 'tokenizer', n = 3, nGramDelim = " ") {
 
       # Validate N
       private$..params <- list()

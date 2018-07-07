@@ -161,11 +161,10 @@ MKN <- R6::R6Class(
       modelTypes <- private$..settings$modelTypes
       train <- private$..corpora$train
 
-      document <- train$getDocuments()[[1]]
-
       private$..model$nGrams <- lapply(seq(1:modelSize), function(n) {
-        nGrams <- unlist(NLPStudio::tokenize(document$content, tokenUnit = 'word',
-                                             nGrams = n, lowercase = FALSE))
+        corpus <- Token$new(train)$nGrams('tokenizer',n)$getTokens()
+        documents <- corpus$getDocuments()
+        nGrams <- unlist(lapply(documents, function(d) {d$content}))
         private$createTable(nGrams, n)
       })
 
@@ -304,8 +303,7 @@ MKN <- R6::R6Class(
     fit = function() {
 
       # Create Training and Test Corpora for Modeling
-      private$prepTrain()
-      private$prepTest()
+      private$prepCorpora()
 
       # Build ngram tables with raw frequency counts
       private$buildTables()

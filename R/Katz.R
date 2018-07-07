@@ -1,9 +1,9 @@
 #==============================================================================#
-#                                   KN                                         #
+#                                   Katz                                       #
 #==============================================================================#
-#' KN
+#' Katz
 #'
-#' \code{KN} Kneser Ney Statistical Learning Model
+#' \code{Katz} Kneser Ney Statistical Learning Model
 #'
 #' Encapsulates a Statistical Language Model implementing the Kneser-Ney
 #' algorithm.
@@ -21,8 +21,8 @@
 #' @author John James, \email{jjames@@dataScienceSalon.org}
 #' @family Statistical Language Model Classes
 #' @export
-KN <- R6::R6Class(
-  classname = "KN",
+Katz <- R6::R6Class(
+  classname = "Katz",
   lock_objects = FALSE,
   lock_class = FALSE,
   inherit = SLM0,
@@ -30,100 +30,157 @@ KN <- R6::R6Class(
   private = list(
 
     #-------------------------------------------------------------------------#
-    #                       Model Building Methods                            #
+    #                                    qBO                                  #
+    #  Computes back-off probabilities for observed and unobserved nGrams     #
     #-------------------------------------------------------------------------#
-    cStar = function() {
-
-      k <- 5
+    qBO = function() {
 
       for (i in 2:private$..settings$modelSize) {
 
-        # Obtain frequency spectrum
-        s <- as.data.frame(table(private$..model$nGrams[[i]]$r))
-        s$Var1 <- as.numeric(s$Var1)
-        df <- data.frame(nGram = rep(n, nrow(s)),
-                         r = s$Var1,
-                         rPlus1 = s$Var1 + 1,
-                         n_r = s$Freq)
-
-        # Compute adjusted r count, rStar
-        df2 <- df %>% select(r, n_r)
-        df <- merge(df, df2,
-                    by.x = c("rPlus1"),
-                    by.y = c("r"))
-        df <- data.frame(nGram = df$nGram,
-                         r = df$r,
-                         rPlus1 = df$rPlus1,
-                         n_r = df$n_r.x,
-                         n_rPlus1 = df$n_r.y)
-        df$rStar <- df$rPlus1 * df$n_rPlus1 / df$n_r
-
-        # Compute discount ratio
-        n_kPLus1 <- as.numeric(df %>% filter(r == (k+1)) %>% select(n_r))
-        n_1 <- as.numeric(df %>% filter(r == 1) %>% select(n_r))
-        df$d_r <- ifelse(df$r > k, 1, (((df$rStar / df$r) - ((k+1)*n_kPLus1 / n_1)) /
-                     1 - ((k+1) * n_kPLus1 / n_1)))
-
-        # Add discount ratio to nGram and compute cKatz
-        df <- df %>% select(r, d_r)
-        private$..model$nGrams[[i]] <- merge(private$..model$nGrams[[i]],
-                                             df,
-                                             by = 'r')
-        private$..model$nGrams[[i]]$cStar <- private$..model$nGrams[[i]]$r *
-          private$..model$nGrams[[i]]$d_r
-      }
-      return(TRUE)
-    },
-
-    pKatz = function() {
-      for (i in 2:private$..settings$modelSize) {
-        lower <- private$..model$nGrams[[i-1]] %>% select(nGram, r)
-        names(lower)[names(lower) == 'r'] <- 'cPrefix'
-        private$..model$nGrams[[i]] <- merge(private$..model$nGrams[[i]],
-                                             lower,
-                                             by.x = 'prefix',
-                                             by.y = 'nGram')
-        private$..model$nGrams[[i]]$pKatz <- private$..model$nGrams[[i]]$cStar /
+        private$..model$nGrams[[i]]$qBOA <- private$..model$nGrams[[i]]$cKatz /
           private$..model$nGrams[[i]]$cPrefix
+
+        private$..model$nGrams[[i]]$qBOTail <- private$..model$nGrams[[i]]$cSuffix /
+          sum(private$..model$nGrams[[i-1]]$cNGram)
+
+        private$..model$nGrams[[i]]$sumqBOBTail <-
+          (sum(private$..model$nGrams[[i-1]]$cNGram) -
+          private$..model$nGrams[[i]]$cSuffix) /
+          sum(private$..model$nGrams[[i-1]]$cNGram)
+
+        private$..model$nGrams[[i]]$gBOB <-
+          private$..model$nGrams[[i]]$alpha *
+          private$..model$nGrams[[i]]$qBOTail /
+          private$..model$nGrams[[i]]$sumqBOBTail
       }
+
     },
 
-    pML = function() {
-      private$..model$nGrams[[1]]$pML <-
-        private$..model$nGrams[[1]]$r / sum(private$..model$nGrams[[1]]$r)
+    #-------------------------------------------------------------------------#
+    #                              Compute Alpha                              #
+    #-------------------------------------------------------------------------#
+    alpha = function() {
+
+      for (i in 2:(private$..settings$modelSize)) {
+        cKatzSum <- private$..model$nGrams[[i]] %>% group_by(prefix) %>%
+          summarise(cKatzSum = sum(cKatz))
+        private$..model$nGrams[[i]] <- merge(private$..model$nGrams[[i]],
+                       cKatzSum, by.x = 'prefix',
+                       by.y = 'prefix')
+        private$..model$nGrams[[i]]$alpha <-
+          1 - (private$..model$nGrams[[i]]$cKatzSum /
+                 private$..model$nGrams[[i]]$cPrefix)
+      }
       return(TRUE)
     },
 
+    #-------------------------------------------------------------------------#
+    #                               cPrefix                                   #
+    #                      Counts the nGram prefixes                          #
+    #-------------------------------------------------------------------------#
+    cFix = function() {
 
-    createTable = function(nGrams, n) {
-      nGrams <- as.data.frame(table(nGrams), stringsAsFactors = FALSE)
-      dt <- data.table(nGram = nGrams[,1],
-                       r = nGrams[,2])
-      if (n > 1) {
-        dt$prefix <- gsub(private$..regex$prefix[[n-1]], "\\1", dt$nGram, perl = TRUE)
-        dt$suffix  <- gsub(private$..regex$suffix[[n-1]], "\\1", dt$nGram, perl = TRUE)
+      for (i in 2:private$..settings$modelSize) {
+        lower <- private$..model$nGrams[[i-1]] %>% select(nGram, cNGram)
+        names(lower) <- c("nGram", "cPrefix")
+        private$..model$nGrams[[i]] <- merge(private$..model$nGrams[[i]],
+                                             lower, by.x = "prefix",
+                                             by.y = "nGram", all = TRUE)
 
+        names(lower) <- c("nGram", "cSuffix")
+        private$..model$nGrams[[i]] <- merge(private$..model$nGrams[[i]],
+                                             lower, by.x = "suffix",
+                                             by.y = "nGram")
       }
-      return(dt)
     },
 
-    buildTables = function() {
+    #-------------------------------------------------------------------------#
+    #                                cKatz                                    #
+    #                 Discounted Counts for Observed Unigrams                 #
+    #-------------------------------------------------------------------------#
+    cKatz = function() {
 
-      # Obtain model parameters and training Corpus object.
-      modelSize <- private$..settings$modelSize
-      modelTypes <- private$..settings$modelTypes
-      train <- private$..corpora$train
+      for (i in 2:private$..settings$modelSize) {
+        if (private$..settings$gtDiscount) {
+          discounts <- as.numeric(private$..model$discounts[i])
+          private$..model$nGrams[[i]]$cKatz <-
+            ifelse (private$..model$nGrams[[i]]$cNGram > 5,
+                    private$..model$nGrams[[i]]$cNGram,
+                    private$..model$nGrams[[i]]$cNGram *
+                      discounts[private$..model$nGrams[[i]]$cNGram+1])
+        } else {
+          private$..model$nGrams[[i]]$cKatz <-
+            ifelse (private$..model$nGrams[[i]]$cNGram > 5,
+                    private$..model$nGrams[[i]]$cNGram,
+                    private$..model$nGrams[[i]]$cNGram -
+                      private$..settings$fixedDiscount)
+        }
+      }
+      return(TRUE)
+    },
 
-      document <- train$getDocuments()[[1]]
+    #-------------------------------------------------------------------------#
+    #                              discounts                                  #
+    #         Computes discount rates to be applied to raw nGram counts       #
+    #-------------------------------------------------------------------------#
+    discounts = function() {
 
-      private$..model$nGrams <- lapply(seq(1:modelSize), function(n) {
-        nGrams <- unlist(NLPStudio::tokenize(document$content, tokenUnit = 'word',
-                                             nGrams = n, lowercase = FALSE))
-        private$createTable(nGrams, n)
-      })
+      k <- private$..settings$k
+      n <- private$..settings$modelSize
 
-      names(private$..model$nGrams) <- modelTypes[1:modelSize]
+      private$..model$discounts <- rbindlist(lapply(seq(1:n), function(i) {
 
+        nTotal <- as.numeric(private$..model$totals %>% filter(n == i) %>%
+                               select(nGramTypes))
+        d_r <- list()
+        for (r in 1:k) {
+
+          n_1 <- nrow(private$..model$nGrams[[i]] %>% filter(cNGram == 1))
+          if (private$..settings$estimateGT) {
+            # Use expected value of counts instead of counts
+            rStar <-  (r / (r+1)) * (1 - (n_1 / nTotal))
+          } else {
+            # Use actual counts
+            n_rPLus1 <- nrow(private$..model$nGrams[[i]] %>% filter(cNGram == (r + 1)))
+            n_r <- nrow(private$..model$nGrams[[i]] %>% filter(cNGram == r))
+            rStar <- (r + 1) * n_rPLus1 / n_r
+          }
+
+          # Compute Discount Rate
+          n_kPLus1 <- nrow(private$..model$nGrams[[i]] %>% filter(cNGram == (k+1)))
+          k_ratio <- (k+1) * n_kPLus1 / n_1
+          d_r[[r]] <- ((rStar / r) - k_ratio) / (1 - k_ratio)
+        }
+        df <- cbind(as.data.frame(d_r))
+        df <- cbind(i, df)
+        names(df) <- c('nGram',seq(1:k))
+        df
+      }))
+      return(TRUE)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                           Validation Methods                            #
+    #-------------------------------------------------------------------------#
+    validateParams = function(train = NULL, name = NULL, modelSize, k,
+                              gtDiscount, estimateGT, fixedDiscount,
+                              openVocabulary, bos) {
+
+      private$..params <- list()
+      private$..params$classes$name <- list('train')
+      private$..params$classes$objects <- list(train)
+      private$..params$classes$valid <- list('Corpus')
+      private$..params$range$variable <- c('modelSize', 'fixedDiscount')
+      private$..params$range$value <- c(modelSize, fixedDiscount)
+      private$..params$range$low <- c(1,0.1)
+      private$..params$range$high <- c(5, 0.95)
+      private$..params$logicals$variables <- c('openVocabulary', "bos")
+      private$..params$logicals$values <- c(openVocabulary, bos)
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = 'initialize', event = v$msg, level = "Error")
+        stop()
+      }
       return(TRUE)
     }
   ),
@@ -133,19 +190,27 @@ KN <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                                Constructor                              #
     #-------------------------------------------------------------------------#
-    initialize = function(train = NULL, test = NULL, name = NULL,
-                           modelSize = 3, openVocabulary = TRUE) {
+    initialize = function(train = NULL, name = NULL, modelSize = 3, k = 5,
+                          gtDiscount = TRUE, estimateGT = FALSE, bos = TRUE,
+                          fixedDiscount = 0.5, openVocabulary = TRUE) {
 
       private$loadServices(name)
 
-      private$validateParams(train, test, name, modelSize, openVocabulary)
+      private$validateParams(train, name, modelSize, k, gtDiscount,
+                             estimateGT, fixedDiscount, openVocabulary,
+                             bos)
 
       # Update settings
       private$..settings$modelName <- name
       private$..settings$modelSize <- modelSize
+      private$..settings$k <- k
+      private$..settings$gtDiscount <- gtDiscount
+      private$..settings$estimateGT <- estimateGT
+      private$..settings$fixedDiscount <- fixedDiscount
       private$..settings$algorithm <- 'Kneser-Ney'
       private$..settings$modelType <- private$..settings$modelTypes[modelSize]
       private$..settings$openVocabulary <- openVocabulary
+      private$..settings$bos <- bos
 
       # Update meta data
       private$meta$set(key = 'algorithm', value = 'Kneser-Ney', type = 'f')
@@ -154,49 +219,68 @@ KN <- R6::R6Class(
       private$meta$set(key = 'modelType',
                        value = private$..settings$modelTypes[modelSize],
                        type = 'f')
+      private$meta$set(key = 'k', value = k, type = 'f')
+      private$meta$set(key = 'estimateGT', value = estimateGT, type = 'f')
+      private$meta$set(key = 'gtDiscount', value = gtDiscount, type = 'f')
+      private$meta$set(key = 'fixedDiscount', value = fixedDiscount, type = 'f')
+
 
       private$..corpora$train <- train
-      private$..corpora$test <- test
 
       invisible(self)
     },
 
     #-------------------------------------------------------------------------#
-    #                                Build Model                              #
+    #                                Fit Method                               #
     #-------------------------------------------------------------------------#
     fit = function() {
 
-      # Create Training and Test Corpora for Modeling
+      # Prepare training corpus
       private$prepTrain()
-      private$prepTest()
 
-      # Build ngram tables with raw frequency counts
-      private$buildTables()
+      # Initialize ngram tables with raw frequency counts
+      private$initTables()
 
-      # Add prefix and continuation counts
-      private$rStar()
+      # Compute unigram maximum likelihood probability
+      private$pML()
 
-      # Compute discounts
-      private$discounts()
+      # Add discounted counts
+      private$cKatz()
 
-      # Compute pseudo probability alpha
+      # Add discounted probability mass from observed nGrams
+      private$pKatz()
+
+      # Compute alpha, the discounted probability mass
       private$alpha()
 
-      # Compute backoff weight lambda
-      private$lambda()
+      names(private$..model$nGrams) <- modelTypes[1:modelSize]
 
-      # Compute probabilities
-      private$pSmooth()
 
       invisible(self)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                            Predict Method                               #
+    #-------------------------------------------------------------------------#
+    predict = function(test = NULL) {
+
+      # Validate and store test set.
+      private$validateClass(x = test, fieldName = 'testSet',
+                            className = 'Katz' , methodName = 'predict')
+      private$..corpora$test <- test
+
+      # Preprocess test set
+      private$prepTest()
+
+      # Estimate test set
+      private$estimate()
     },
 
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$kn(self)
+      visitor$katz(self)
     }
-
   )
 )

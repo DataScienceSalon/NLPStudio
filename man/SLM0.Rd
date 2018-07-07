@@ -13,7 +13,7 @@ SLM0
 }
 \seealso{
 Other Statistical Language Model Classes: \code{\link{KN}},
-  \code{\link{MKN}}
+  \code{\link{Katz}}, \code{\link{MKN}}
 }
 \author{
 John James, \email{jjames@dataScienceSalon.org}

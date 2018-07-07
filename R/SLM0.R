@@ -40,54 +40,25 @@ SLM0 <- R6::R6Class(
     ),
     ..corpora = list(
       train = character(),
-      test = character()
+      test = character(),
+      vocabulary = character()
     ),
     ..model = list(
-      discounts = data.table(),
-      totals = data.table(),
-      nGrams = list()
+      nGrams = list(),
+      totals = data.frame()
     ),
-    ..scores = data.table(),
-    ..evaluation = data.frame(),
+    ..prediction = list(
+      nGrams = character(),
+      scores = data.table(),
+      evaluation = data.frame()
+    ),
 
     #-------------------------------------------------------------------------#
-    #                       Corpus Preparation Methods                        #
+    #               Gsub - Replaces selected words with 'UNK'                 #
     #-------------------------------------------------------------------------#
-    combine = function(corpus) {
-
-      # Creates a new Corpus object that will contain a single combined
-      # Document object.
-
-      # Create Clone Corpus
-      modelCorpus <- Clone$new()$this(x = corpus, reference = FALSE)
-
-      # Combine and extract corpus text
-      documents <- corpus$getDocuments()
-      text <- unname(unlist(lapply(documents, function(d) { d$content })))
-
-      # Create new Document object and copy metadata from the Corpus object
-      document <- Document$new(x = text)
-      document <- Copy$new()$this(x = corpus, to = document)
-
-      # Set metadata
-      name <- corpus$getName()
-      name <- paste0(name, " Document")
-      document$setName(name)
-
-      # Add document to modelCorpus object
-      modelCorpus$addDocument(document)
-      return(modelCorpus)
-    },
-
-    countWords = function(tokens) {
-      # Computes net words = total words - BOS tokens
-      bosTokens <- sum(grepl("BOS", tokens, ignore.case = FALSE, fixed = TRUE))
-      netWords <- length(tokens) - bosTokens
-      return(netWords)
-
-    },
-
     gsubq = function(text, words) {
+      # Replaces OOV words with the 'UNK' pseudo-word in chunks of 1000 words
+
       size <- length(words) %% 1000
       wordChunks <- base::split(words, ceiling(seq_along(words)/size))
       for (i in 1:length(wordChunks)) {
@@ -98,186 +69,164 @@ SLM0 <- R6::R6Class(
       text <- gsub("\\s+"," ",text)
       return(text)
     },
-
-    processTrain = function() {
-
-      train <- private$..corpora$train$getDocuments()[[1]]
-
-      tokens <- unlist(NLPStudio::tokenize(x = train$content, tokenUnit = 'word'))
-      freq <- as.data.frame(table(tokens), stringsAsFactors = FALSE)
-      hapax  <- (freq %>% filter(Freq == 1) %>% select(tokens))$tokens
-
-      train$content <- private$gsubq(text = train$content, words = hapax)
-
-      # Compute and update quantitative data
-      netWords <- private$countWords(tokens = tokens)
-      train$setMeta(key = 'netWords', value = netWords, type = 'q')
-      train$setMeta(key = 'OOV', value = length(hapax), type = 'q')
-      private$..corpora$train$setMeta(key = 'netWords', value = netWords, type = 'q')
-      private$..corpora$train$setMeta(key = 'OOV', value = length(hapax), type = 'q')
-      private$..corpora$train$addDocument(train)
-      return(TRUE)
-    },
-
-    processTest = function() {
-
-      # Assumes a single document Corpus
-      train <- private$..corpora$train$getDocuments()[[1]]
-      test <- private$..corpora$test$getDocuments()[[1]]
-
-      trainTokens <- unlist(NLPStudio::tokenize(x = train$content, tokenUnit = 'word'))
-      vocabulary <- unique(trainTokens)
-      testTokens <- unlist(NLPStudio::tokenize(x = test$content, tokenUnit = 'word'))
-      testVocabulary <- unique(testTokens)
-      oov <- unique(testVocabulary[!testVocabulary %fin% vocabulary])
-
-      test$content <- private$gsubq(text = test$content, words = oov)
-
-      # Compute and update quantitative data
-      netWords <- private$countWords(tokens = testTokens)
-      test$setMeta(key = 'netWords', value = netWords, type = 'q')
-      test$setMeta(key = 'OOV', value = length(oov), type = 'q')
-      private$..corpora$test$setMeta(key = 'netWords', value = netWords, type = 'q')
-      private$..corpora$test$setMeta(key = 'OOV', value = length(oov), type = 'q')
-      private$..corpora$test$addDocument(test)
-      return(TRUE)
-    },
-
-    annotate = function(corpus) {
-      # Annotates text with appropriate start and end of sentence tokens.
-      document <- corpus$getDocuments()[[1]]
-      document$content <-
-        paste(paste0(rep("BOS", times = private$..settings$modelSize-1), collapse = " "),
-              document$content,
-              "EOS", sep = " ")
-
-      corpus$addDocument(document)
-      return(corpus)
-    },
-
+    #-------------------------------------------------------------------------#
+    #                               prepTrain                                 #
+    #   Annotates Training Set with BOS/EOS and sets hapax legomena to 'UNK'  #
+    #-------------------------------------------------------------------------#
     prepTrain = function() {
 
-      private$..corpora$train <- private$combine(private$..corpora$train)
+      # Extract tokens and vocabulary from training set
+      train <- Token$new(private$..corpora$train)$words('tokenizer')$getTokens()
+      documents <- train$getDocuments()
+      tokens <- unlist(lapply(documents,  function(d) {d$content}))
+      private$..corpora$vocabulary <- unique(tokens)
 
+      # Annotate training corpus with sentence boundary tokens
       private$..corpora$train <- private$annotate(private$..corpora$train)
 
-      if (private$..settings$openVocabulary) private$processTrain()
+      # If open vocabulary, replace hapax legomena with the 'UNK' pseudo word
+      if (private$..settings$openVocabulary) {
 
-      invisible(self)
+        # Create frequency table, identify hapax legomena and mark as UNK.
+        freq <- as.data.frame(table(tokens), stringsAsFactors = FALSE)
+        hapax  <- (freq %>% filter(Freq == 1) %>% select(tokens))$tokens
+
+        # Replace hapax legomena in each document with the UNK pseudo word
+        documents <- private$..corpora$train$getDocuments()
+        for (i in 1:length(documents)) {
+          documents[[i]]$content <- private$gsubq(text = documents[[i]]$content,
+                                                  words = hapax)
+          private$..corpora$train$addDocument(documents[[i]])
+        }
+        private$..corpora$train$setMeta(key = 'OOV', value = length(hapax), type = 'q')
+      }
+
+      return()
     },
 
     prepTest = function() {
+      #-------------------------------------------------------------------------#
+      #                               prepTest                                  #
+      #   Annotates Training Set with BOS/EOS and closes Vocabulary by setting  #
+      #   words not in training set to pseudo work 'UNK'                        #
+      #-------------------------------------------------------------------------#
 
-      private$..corpora$test <- private$combine(private$..corpora$test)
+      # If open vocabulary replace any word not in vocabulary with 'UNK'token
+      if (private$..settings$openVocabulary) {
+        testVocabulary <- unique(tokens)
+        oov <- unique(testVocabulary[!testVocabulary %fin% private$..corpora$vocabulary])
 
+        # Replace OOV words with UNK pseudo-word in each document
+        documents <- private$..corpora$test$getDocuments()
+        for (i in 1:length(documents)) {
+          documents[[i]]$content <- private$gsubq(text = documents[[i]]$content,
+                                                  words = oov)
+          private$..corpora$test$addDocument(documents[[i]])
+        }
+      }
+
+      # Annotate test corpus with sentence boundary tokens
       private$..corpora$test <- private$annotate(private$..corpora$test)
 
-      if (private$..settings$openVocabulary) private$processTest()
-
-      invisible(self)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                           Evaluation Methods                            #
-    #-------------------------------------------------------------------------#
-    score = function() {
-
-      # Obtain networds and subtract zero probability words
-      netWords <- private$..corpora$test$getMeta(key = 'netWords')
-      OOV = private$..corpora$test$getMeta(key = 'OOV')
-      exact <- nrow(private$..scores[ Match == private$..settings$modelSize])
-      exactRate <- exact / nrow(private$..scores)
-      zeroProbs <- nrow(private$..scores[ pSmooth == 0])
-      scores <- private$..scores[ pSmooth > 0]
-      scores[, logProb := log2(pSmooth)]
-      H <- -1 * 1/netWords * sum(scores$logProb)
-      pp <- 2^H
-
-      private$..evaluation <- data.frame(N = netWords,
-                                         OOV = OOV,
-                                         OOV.Rate = OOV / netWords,
-                                         ZeroProbs = zeroProbs,
-                                         Exact = exact,
-                                         ExactRate = exactRate,
-                                         Entropy = H,
-                                         Perplexity = pp)
+      private$..corpora$test$setMeta(key = 'OOV', value = length(oov), type = 'q')
       return(TRUE)
     },
-
-    computeProbs = function() {
-
-      i <- private$..settings$modelSize
-
-      while (i > 0) {
-        # Obtain training probabilities
-        setkey(private$..model$nGrams[[i]], nGram)
-        probs <- private$..model$nGrams[[i]][,.(nGram, pSmooth, Match = i)]
-
-        if (i == 1) {
-          setkey(private$..scores, Unigram)
-          private$..scores <- merge(private$..scores, probs, by.x = 'Unigram',
-                                    by.y = 'nGram', all.x = TRUE,
-                                    suffixes = c("", ".update"))
-          private$..scores[(!is.na(pSmooth.update) & (Match == 0)),
-                           c("Match", "pSmooth") := list(Match.update, pSmooth.update)]
-          private$..scores[, c('pSmooth.update', 'Match.update') := NULL]
-        } else if (i == 2) {
-          setkey(private$..scores, Bigram)
-          private$..scores <- merge(private$..scores, probs, by.x = 'Bigram',
-                                    by.y = 'nGram', all.x = TRUE,
-                                    suffixes = c("", ".update"))
-          private$..scores[(!is.na(pSmooth.update) & (Match == 0)),
-                           c("Match", "pSmooth") := list(Match.update, pSmooth.update)]
-          private$..scores[, c('pSmooth.update', 'Match.update') := NULL]
-
-        } else if (i == 3) {
-          setkey(private$..scores, Trigram)
-          private$..scores <- merge(private$..scores, probs, by.x = 'Trigram',
-                                    by.y = 'nGram', all.x = TRUE,
-                                    suffixes = c("", ".update"))
-          private$..scores[(!is.na(pSmooth.update) & (Match == 0)),
-                           c("Match", "pSmooth") := list(Match.update, pSmooth.update)]
-          private$..scores[, c('pSmooth.update', 'Match.update') := NULL]
-
-        } else if (i == 4) {
-          setkey(private$..scores, Quadgram)
-          private$..scores <- merge(private$..scores, probs, by.x = 'Quadgram',
-                                    by.y = 'nGram', all.x = TRUE,
-                                    suffixes = c("", ".update"))
-          private$..scores[(!is.na(pSmooth.update) & (Match == 0)),
-                           c("Match", "pSmooth") := list(Match.update, pSmooth.update)]
-          private$..scores[, c('pSmooth.update', 'Match.update') := NULL]
-        } else if (i == 5) {
-          setkey(private$..scores, Quintgram)
-          private$..scores <- merge(private$..scores, probs, by.x = 'Quintgram',
-                                    by.y = 'nGram', all.x = TRUE,
-                                    suffixes = c("", ".update"))
-          private$..scores[(!is.na(pSmooth.update) & (Match == 0)),
-                           c("Match", "pSmooth") := list(Match.update, pSmooth.update)]
-          private$..scores[, c('pSmooth.update', 'Match.update') := NULL]
-        }
-        i <- i - 1
+    #-------------------------------------------------------------------------#
+    #                               annotate                                  #
+    #                  Annotates text with BOS/EOS tags                       #
+    #-------------------------------------------------------------------------#
+    annotate = function(corpus) {
+      # Annotates text with appropriate start and end of sentence tokens.
+      documents <- corpus$getDocuments()
+      for (i in 1:length(documents)) {
+        documents[[i]]$content <-
+          paste(paste0(rep("BOS", times = private$..settings$modelSize-1), collapse = " "),
+                documents[[i]]$content,
+                "EOS", sep = " ")
+        corpus$addDocument(documents[[i]])
       }
+      return(corpus)
+    },
+    #-------------------------------------------------------------------------#
+    #                             NGRAM TABLES                                #
+    #-------------------------------------------------------------------------#
 
+    #-------------------------------------------------------------------------#
+    #                                 totals                                  #
+    #                 Summarizes totals from nGram Tables                     #
+    #-------------------------------------------------------------------------#
+    # Note: Defaults to counting nGrams that start with one or several
+    # start of sentence tags. Therefore, there total nGram counts are equal
+    # across all nGrams.
+    totals = function() {
+      private$..model$totals <- rbindlist(lapply(seq_along(private$..model$nGrams), function (n) {
+        df <- private$..model$nGrams[[n]] %>% filter(nGram != paste(rep('BOS',n), collapse = " "))
+        nGramTypes <- data.frame(nGramTypes = nrow(df))
+        nums <- unlist(lapply(df, is.numeric))
+        df <- as.data.frame(df[,nums])
+        total <- as.data.frame(colSums(df))
+        names(total) <- names(private$..model$nGrams[[n]])[nums]
+        total <- cbind(n, nGramTypes, total)
+      }))
     },
 
-    buildTestNGrams = function() {
-      document <- private$..corpora$test$getDocuments()[[1]]
-      nGrams <- unlist(NLPStudio::tokenize(document$content, tokenUnit = 'word',
-                                           nGrams = private$..settings$modelSize,
-                                           lowercase = FALSE))
-      nBackOff <- 1
-      private$..scores <- data.table(nGrams = nGrams)
-      while (nBackOff < private$..settings$modelSize) {
-        nGrams <- gsub(pattern = "^([\\w'\\-]+) ",
-                       replacement = "",x = nGrams, perl = TRUE)
-        private$..scores <- cbind(private$..scores, nGrams)
-        nBackOff <- nBackOff + 1
+    #-------------------------------------------------------------------------#
+    #                           createTable                                   #
+    #         Creates and initializes an nGram table with raw counts          #
+    #-------------------------------------------------------------------------#
+    createTable = function(nGrams, n) {
+      nGrams <- as.data.frame(table(nGrams), stringsAsFactors = FALSE)
+      dt <- data.table(nGram = nGrams[,1],
+                       cNGram = nGrams[,2])
+
+      if (!private$..settings$bos) {
+        dt <- dt %>% filter(!grepl("BOS", nGram))
       }
-      modelTypes <- private$..settings$modelTypes[1:private$..settings$modelSize]
-      modelTypes <- rev(modelTypes)
-      names(private$..scores) <- modelTypes[seq(1:private$..settings$modelSize)]
-      private$..scores <- cbind(private$..scores, Match = 0, pSmooth = 0)
+
+      # Add prefix and suffix to nGram Table
+      if (n > 1) {
+        dt$prefix <- gsub(private$..regex$prefix[[n-1]], "\\1", dt$nGram, perl = TRUE)
+        dt$suffix  <- gsub(private$..regex$suffix[[n-1]], "\\1", dt$nGram, perl = TRUE)
+      }
+
+      return(dt)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                              buildTables                                #
+    #       Builds and initializes nGram tables from the training text        #
+    #-------------------------------------------------------------------------#
+    initTables = function() {
+
+      # Obtain model parameters and training Corpus object.
+      modelSize <- private$..settings$modelSize
+      modelTypes <- private$..settings$modelTypes
+      train <- private$..corpora$train
+
+      # Initialize Tables
+      private$..model$nGrams <- list()
+      private$..model$nGrams <- lapply(seq(1:modelSize), function(n) {
+        corpus <- Token$new(train)$nGrams('tokenizer', n)$getTokens()
+        documents <- corpus$getDocuments()
+        nGrams <- unlist(lapply(documents, function(d) {d$content}))
+        private$createTable(nGrams, n)
+      })
+
+      private$totals()
+
+      return(TRUE)
+    },
+    #-------------------------------------------------------------------------#
+    #                           buildTestNGrams                               #
+    #       Builds and initializes nGram tables from the training text        #
+    #-------------------------------------------------------------------------#
+    buildTestNGrams = function() {
+
+      # Prepare nGrams
+      test <- Token$new(private$..corpora$test)$nGrams('tokenizer', private$..settings$modelSize)$getTokens()
+      documents <- test$getDocuments()
+      private$..prediction$nGrams <- unlist(lapply(documents, function(d) {d$content}))
+
       return(TRUE)
     },
 
@@ -355,46 +304,6 @@ SLM0 <- R6::R6Class(
       NLPStudio::printHeading(text = heading, symbol = "-", newlines = 2)
       print(private$..evaluation)
       return(TRUE)
-
-    },
-
-
-    #-------------------------------------------------------------------------#
-    #                           Validation Methods                            #
-    #-------------------------------------------------------------------------#
-    validateClass = function(x, fieldName, className, methodName) {
-
-      private$..params <- list()
-      private$..params$classes$name <- list(fieldName)
-      private$..params$classes$objects <- list(x)
-      private$..params$classes$valid <- list(className)
-      v <- private$validator$validate(self)
-      if (v$code == FALSE) {
-        private$logR$log(method = methodName, event = v$msg, level = "Error")
-        return(FALSE)
-      } else {
-        return(TRUE)
-      }
-    },
-
-    validateParams = function(train, test, name, modelSize, openVocabulary) {
-
-      private$..params <- list()
-      private$..params$classes$name <- list('train', 'test')
-      private$..params$classes$objects <- list(train, test)
-      private$..params$classes$valid <- list('Corpus', 'Corpus')
-      private$..params$range$variable <- c('modelSize')
-      private$..params$range$value <- c(modelSize)
-      private$..params$range$low <- 1
-      private$..params$range$high <- 5
-      private$..params$logicals$variables <- c('openVocabulary')
-      private$..params$logicals$values <- c(openVocabulary)
-      v <- private$validator$validate(self)
-      if (v$code == FALSE) {
-        private$logR$log(method = 'initialize', event = v$msg, level = "Error")
-        stop()
-      }
-      return(TRUE)
     }
   ),
 
@@ -404,16 +313,6 @@ SLM0 <- R6::R6Class(
     #                                Constructor                              #
     #-------------------------------------------------------------------------#
     initialize = function() stop("This method is not implemented for this base class."),
-    #-------------------------------------------------------------------------#
-    #                             Evaluate Model                              #
-    #-------------------------------------------------------------------------#
-    evaluate = function() {
-
-      private$buildTestNGrams()
-      private$computeProbs()
-      private$score()
-      invisible(self)
-    },
 
     #-------------------------------------------------------------------------#
     #                          Accessor Methods                               #

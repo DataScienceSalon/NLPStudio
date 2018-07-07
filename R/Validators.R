@@ -240,18 +240,20 @@ validateRange <- function(object) {
 
   params <- object$getParams()
 
-  if (length(params$range$value) > 0) {
-    if (params$range$value < params$range$low |
-        params$range$value > params$range$high ) {
-        status[['code']] <- FALSE
-        status[['msg']] <- paste0("Invalid ", params$range$variable,
-                                  " parameter. Valid values must be between ",
-                                  params$range$low, " and ", params$range$high,
-                                  ". See ?", class(object)[1],
-                                  " for further assistance.")
-        return(status)
+  if (length(params$range$variable) > 0) {
+    for (i in 1:length(params$range$variable)) {
+      if (params$range$value[i] < params$range$low[i] |
+          params$range$value[i] > params$range$high[i] ) {
+          status[['code']] <- FALSE
+          status[['msg']] <- paste0("Invalid ", params$range$variable[i],
+                                    " parameter. Valid values must be between ",
+                                    params$range$low[i], " and ", params$range$high[i],
+                                    ". See ?", class(object)[1],
+                                    " for further assistance.")
+          return(status)
       }
     }
+  }
   return(status)
 }
 

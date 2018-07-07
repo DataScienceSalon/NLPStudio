@@ -67,6 +67,7 @@ CorpusStudio <- R6::R6Class(
       x = character(),
       name = character(),
       tokenize = logical(),
+      tokenizer = character(),
       tokenUnits = character(),
       clean = logical(),
       textConfig = character(),
@@ -95,7 +96,8 @@ CorpusStudio <- R6::R6Class(
 
       sourceType <- class(private$..settings$x)[1]
       if (sourceType == 'character') {
-        if (isDirectory(private$..settings$x)) {
+        filepath <- "(^\\.+[/]((\\w.+)))+.(\\w)+"
+        if (grepl(filepath, private$..settings$x, perl = TRUE)) {
           sourceType <- 'directory'
         }
       }
@@ -121,13 +123,28 @@ CorpusStudio <- R6::R6Class(
     #                      Corpus Tokenize Method                             #
     #-------------------------------------------------------------------------#
     tokenizeCorpus = function() {
-      private$..tokens <- Tokenizer$new()$execute(private$..corpus,
-                                                  private$..settings$tokenUnit)
 
-      event <- paste0("Created ", private$..settings$tokenUnit, " object from Corpus.")
+      tokenizer <- private$..settings$tokenizer
+      tokenUnit <- private$..settings$tokenUnit
+
+      if (grepl("^c", tokenUnit, ignore.case = TRUE)) {
+        private$..tokens <- Token$new(private$..corpus)$chars(tokenizer)$getTokens()
+      } else if (grepl("^w", tokenUnit, ignore.case = TRUE)) {
+        private$..tokens <- Token$new(private$..corpus)$words(tokenizer)$getTokens()
+      } else if (grepl("^s", tokenUnit, ignore.case = TRUE)) {
+        private$..tokens <- Token$new(private$..corpus)$sentences(tokenizer)$getTokens()
+      } else if (grepl("^p", tokenUnit, ignore.case = TRUE)) {
+        private$..tokens <- Token$new(private$..corpus)$paragraphs(tokenizer)$getTokens()
+      } else {
+        event <- "Invalid tokenUnit."
+        private$logR$log(method = 'tokenize', event = event, level = "Error")
+        stop()
+      }
+
+      event <- paste0("Created ", tokenUnit, " object from Corpus.")
       private$..tokens$message(event)
       private$..corpus$message(event)
-      private$logR$log(method = 'tokenize', event = event, level = "Info")
+      private$logR$log(method = 'tokenizeCorpus', event = event, level = "Info")
       return(TRUE)
     },
 
@@ -271,6 +288,25 @@ CorpusStudio <- R6::R6Class(
         invisible(self)
       }
     },
+
+    tokenizer = function(x) {
+      if (missing(x)) {
+        return(private$..settings$tokenizer)
+      } else {
+        private$..params <- list()
+        private$..params$discrete$variables = list('tokenizer')
+        private$..params$discrete$values = list(x)
+        private$..params$discrete$valid = list(c('openNLP', 'quanteda', 'tokenizer'))
+        v <- private$validator$validate(self)
+        if (v$code == FALSE) {
+          private$logR$log(method = 'tokenizer', event = v$msg, level = "Error")
+        } else {
+          private$..settings$tokenizer <- x
+        }
+        invisible(self)
+      }
+    },
+
 
     tokenUnits = function(x) {
       if (missing(x)) {
@@ -524,7 +560,7 @@ CorpusStudio <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                             Constructor                                 #
     #-------------------------------------------------------------------------#
-    initialize = function(x, name = NULL, tokenize = TRUE,
+    initialize = function(x, name = NULL, tokenize = TRUE, tokenizer = 'openNLP',
                           tokenUnits = 'sentence', clean = TRUE,
                           textConfig = NULL, sample = FALSE, stratify = TRUE,
                           sampleSize = 1, replace = FALSE, cv = 'standard',
@@ -539,10 +575,11 @@ CorpusStudio <- R6::R6Class(
       private$..params$classes$valid = list(c('character', 'FileSet', 'corpus',
                                               'VCorpus', 'SimpleCorpus'),
                                             c('numeric'))
-      private$..params$discrete$variables = list('tokenUnits', 'cv')
-      private$..params$discrete$values = list(tokenUnits, cv)
+      private$..params$discrete$variables = list('tokenUnits','tokenizer', 'cv')
+      private$..params$discrete$values = list(tokenUnits, tokenizer, cv)
       private$..params$discrete$valid = list(c('word', 'sentence', 'paragraph',
                                               'w', 's', 'p'),
+                                             c('openNLP', 'quanteda', 'tokenizer'),
                                              c('standard', 'kFold'))
       private$..params$logicals$variables <- c( 'tokenize', 'clean', 'sample',
                                                 'stratify', 'replace')
@@ -572,22 +609,23 @@ CorpusStudio <- R6::R6Class(
         }
       }
 
-      private$..settings$x = x
-      private$..settings$name = name
-      private$..settings$tokenize = tokenize
-      private$..settings$tokenUnits = tokenUnits
-      private$..settings$clean = clean
-      private$..settings$textConfig = textConfig
-      private$..settings$sample = sample
-      private$..settings$stratify = stratify
-      private$..settings$sampleSize = sampleSize
-      private$..settings$replace = replace
-      private$..settings$cv = cv
-      private$..settings$train = train
-      private$..settings$validation = validation
-      private$..settings$test = test
-      private$..settings$k = k
-      private$..settings$seed = seed
+      private$..settings$x <- x
+      private$..settings$name <- name
+      private$..settings$tokenize <- tokenize
+      private$..settings$tokenizer <- tokenizer
+      private$..settings$tokenUnits <- tokenUnits
+      private$..settings$clean <- clean
+      private$..settings$textConfig <- textConfig
+      private$..settings$sample <- sample
+      private$..settings$stratify <- stratify
+      private$..settings$sampleSize <- sampleSize
+      private$..settings$replace <- replace
+      private$..settings$cv <- cv
+      private$..settings$train <- train
+      private$..settings$validation <- validation
+      private$..settings$test <- test
+      private$..settings$k <- k
+      private$..settings$seed <- seed
 
       invisible(self)
     },
