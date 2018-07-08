@@ -30,33 +30,6 @@ Katz <- R6::R6Class(
   private = list(
 
     #-------------------------------------------------------------------------#
-    #                                    qBO                                  #
-    #  Computes back-off probabilities for observed and unobserved nGrams     #
-    #-------------------------------------------------------------------------#
-    qBO = function() {
-
-      for (i in 2:private$..settings$modelSize) {
-
-        private$..model$nGrams[[i]]$qBOA <- private$..model$nGrams[[i]]$cKatz /
-          private$..model$nGrams[[i]]$cPrefix
-
-        private$..model$nGrams[[i]]$qBOTail <- private$..model$nGrams[[i]]$cSuffix /
-          sum(private$..model$nGrams[[i-1]]$cNGram)
-
-        private$..model$nGrams[[i]]$sumqBOBTail <-
-          (sum(private$..model$nGrams[[i-1]]$cNGram) -
-          private$..model$nGrams[[i]]$cSuffix) /
-          sum(private$..model$nGrams[[i-1]]$cNGram)
-
-        private$..model$nGrams[[i]]$gBOB <-
-          private$..model$nGrams[[i]]$alpha *
-          private$..model$nGrams[[i]]$qBOTail /
-          private$..model$nGrams[[i]]$sumqBOBTail
-      }
-
-    },
-
-    #-------------------------------------------------------------------------#
     #                              Compute Alpha                              #
     #-------------------------------------------------------------------------#
     alpha = function() {
@@ -65,8 +38,8 @@ Katz <- R6::R6Class(
         cKatzSum <- private$..model$nGrams[[i]] %>% group_by(prefix) %>%
           summarise(cKatzSum = sum(cKatz))
         private$..model$nGrams[[i]] <- merge(private$..model$nGrams[[i]],
-                       cKatzSum, by.x = 'prefix',
-                       by.y = 'prefix')
+                                             cKatzSum, by.x = 'prefix',
+                                             by.y = 'prefix')
         private$..model$nGrams[[i]]$alpha <-
           1 - (private$..model$nGrams[[i]]$cKatzSum /
                  private$..model$nGrams[[i]]$cPrefix)
@@ -74,9 +47,72 @@ Katz <- R6::R6Class(
       return(TRUE)
     },
 
+
+    #-------------------------------------------------------------------------#
+    #                                    qBO                                  #
+    #  Computes back-off probabilities for observed and unobserved nGrams     #
+    #-------------------------------------------------------------------------#
+    qBO = function() {
+
+      for (i in 1:private$..settings$modelSize) {
+
+        if (i == 1) {
+
+          # Compute maximum likelihood probabilities for unigrams
+          private$..model$nGrams[[i]]$pML <-
+            private$..model$nGrams[[i]]$cNGram /
+            sum(private$..model$nGrams[[i]]$cNGram)
+        } else {
+
+          # Compute backoff probabilities for higher order nGrams
+
+          # Obtain lower order backoff (or maximum likelihood) probabilities
+          if (i == 2) {
+            lower <- private$..model$nGrams[[i-1]] %>% select(nGram, pML)
+          } else {
+            lower <- private$..model$nGrams[[i-1]] %>% select(nGram, qBO)
+          }
+
+          # Compute probability mass of observed nGrams
+          # Add backoff probability for suffix to current ngram table
+          names(lower) <- c("nGram", "qBOSuffix")
+          private$..model$nGrams[[i]] <- merge(private$..model$nGrams[[i]],
+                                               lower, by.x = "suffix",
+                                               by.y = "nGram")
+
+          # Compute sum of probabilities for unobserved nGrams
+          qBOB <- private$..model$nGrams[[i]] %>% group_by(suffix) %>%
+            summarise(sumqBOA = sum(qBOSuffix))
+          qBOB <- qBOB %>% mutate(qBOB = 1 - sumqBOA) %>% select(suffix, qBOB)
+          private$..model$nGrams[[i]] <- merge(private$..model$nGrams[[i]],
+                                               qBOB, by = "suffix")
+
+          # Compute back-off weight
+          private$..model$nGrams[[i]]$qBO <-
+            private$..model$nGrams[[i]]$alpha *
+            private$..model$nGrams[[i]]$qBOA /
+            private$..model$nGrams[[i]]$qBOB
+        }
+      }
+    },
+
+    #-------------------------------------------------------------------------#
+    #                                 qBOA                                    #
+    #              Computes probablities of observed nGrams                   #
+    #-------------------------------------------------------------------------#
+    qBOA = function() {
+      for (i in 2:private$..settings$modelSize) {
+        private$..model$nGrams[[i]]$qBOA <-
+          private$..model$nGrams[[i]]$cKatz /
+          private$..model$nGrams[[i]]$cPrefix
+      }
+      return(TRUE)
+    },
+
+
     #-------------------------------------------------------------------------#
     #                               cPrefix                                   #
-    #                      Counts the nGram prefixes                          #
+    #             Counts the nGram prefixes and suffixes                      #
     #-------------------------------------------------------------------------#
     cFix = function() {
 
@@ -116,6 +152,15 @@ Katz <- R6::R6Class(
                       private$..settings$fixedDiscount)
         }
       }
+      return(TRUE)
+    },
+    #-------------------------------------------------------------------------#
+    #                                  pML                                    #
+    #         Computes maximum likelihood probability of unigrams             #
+    #-------------------------------------------------------------------------#
+    pML = function() {
+      private$..model$nGrams[[1]]$pML <- private$..model$nGrams[[1]]$cNGram /
+        sum(private$..model$nGrams[[1]]$cNGram)
       return(TRUE)
     },
 
