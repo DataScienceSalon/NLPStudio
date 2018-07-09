@@ -146,15 +146,14 @@ Katz <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                              Compute Alpha                              #
     #-------------------------------------------------------------------------#
-    alpha = function(pfx, n) {
+    alpha = function(ngram, n) {
 
-      cKatz <- as.numeric(private$..model$nGrams[[i]] %>% filter(prefix == pfx) %>%
-        summarise(cKatz = sum(cKatz)))
+      pfx <- gsub(private$..regex$prefix[[n-1]], "\\1", ngram, perl = TRUE)
 
-      cPrefix <- as.numeric(private$..model$nGrams[[i]] %>% filter(prefix == pfx) %>%
-                             summarise(cPrefix = sum(cPrefix)))
+      alpha <- private$..model$nGrams[[n]] %>% filter(prefix == pfx) %>%
+        summarise(cKatz = sum(cKatz), cPrefix = unique(cPrefix))
 
-      alpha <- 1 - (cKatz / cPrefix)
+      alpha <- 1 - (alpha$cKatz / alpha$cPrefix)
 
       return(alpha)
     },
@@ -164,23 +163,27 @@ Katz <- R6::R6Class(
     #-------------------------------------------------------------------------#
     qBOB = function(pfx, sfx, n) {
 
-      # Divide trigrams starting with pfx into observed (A) and unobserved (B)
+      # Divide nGrams starting with pfx into observed (A) and unobserved (B)
       A <- (private$..model$nGrams[[n+1]] %>%
                filter(prefix == pfx) %>% select(tail))$tail
       B <- private$..corpora$vocabulary[!private$..corpora$vocabulary %in% A]
 
-      # Format nGrams that complete unobserved n + 1 Grams
-      newPrefix <- gsub(private$..regex$suffix[[i-2]], "\\1", pfx, perl = TRUE)
-      unobservedNGrams <- unlist(lapply(B, function(b) {
-            paste(paste(newPrefix, b), collapse = " ")
-      }))
+      if (n == 1) {
+        unobservedNGrams <- B
+      } else {
+        # Format nGrams that complete unobserved n + 1 Grams
+        newPrefix <- gsub(private$..regex$suffix[[n-1]], "\\1", pfx, perl = TRUE)
+        unobservedNGrams <- unlist(lapply(B, function(b) {
+              paste(paste(newPrefix, b), collapse = " ")
+        }))
+      }
 
       # Compute sums back of probabilities
       qBOBSum <- sum(unlist(lapply(unobservedNGrams, function(u) {
         private$qBO(u, n)
       })))
 
-      return(qBOSum)
+      return(qBOBSum)
     },
 
     #-------------------------------------------------------------------------#
@@ -203,7 +206,7 @@ Katz <- R6::R6Class(
         sfx <- gsub(private$..regex$suffix[[n-1]], "\\1", ngram, perl = TRUE)
 
         # Compute alpha
-        alpha <- private$alpha(pfx, n)
+        alpha <- private$alpha(ngram, n)
 
         # Compute lambda numerator: the backoff probability of nGram tail
         qBOSfx <- private$qBO(sfx, n-1)
