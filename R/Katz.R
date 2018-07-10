@@ -3,9 +3,9 @@
 #==============================================================================#
 #' Katz
 #'
-#' \code{Katz} Kneser Ney Statistical Learning Model
+#' \code{Katz} Katz Statistical Learning Model
 #'
-#' Encapsulates a Statistical Language Model implementing the Kneser-Ney
+#' Encapsulates a Statistical Language Model implementing the Katz backoff
 #' algorithm.
 #'
 #' @param x a CVSet containing training and test Corpus objects
@@ -36,6 +36,7 @@ Katz <- R6::R6Class(
     qBOA = function(i) {
 
       if (i == 1) {
+
         private$..model$nGrams[[i]]$pML <- private$..model$nGrams[[i]]$cNGram /
           sum(private$..model$nGrams[[i]]$cNGram)
       } else {
@@ -57,6 +58,10 @@ Katz <- R6::R6Class(
         private$..model$nGrams[[i]] <- merge(private$..model$nGrams[[i]],
                                              lower, by.x = "prefix",
                                              by.y = "nGram", all.x = TRUE)
+        private$..model$nGrams[[i]]$cPrefix <-
+          ifelse(is.na(private$..model$nGrams[[i]]$cPrefix),
+                 private$..corporaStats$train$sentences,
+                 private$..model$nGrams[[i]]$cPrefix)
       }
       return(TRUE)
     },
@@ -131,7 +136,8 @@ Katz <- R6::R6Class(
     #-------------------------------------------------------------------------#
     build = function() {
 
-      private$initTrainTables()
+      private$prepTrain()
+      private$initNGramTables()
       private$discounts()
 
       for (i in 1:private$..settings$modelSize) {
@@ -150,10 +156,14 @@ Katz <- R6::R6Class(
 
       pfx <- gsub(private$..regex$prefix[[n-1]], "\\1", ngram, perl = TRUE)
 
-      alpha <- private$..model$nGrams[[n]] %>% filter(prefix == pfx) %>%
-        summarise(cKatz = sum(cKatz), cPrefix = unique(cPrefix))
-
-      alpha <- 1 - (alpha$cKatz / alpha$cPrefix)
+      # If nGrams sharing the prefix are observed, compute alpha from counts
+      observed <- private$..model$nGrams[[n]] %>% filter(prefix == pfx)
+      if (nrow(observed) > 0) {
+        counts <- observed %>% summarise(cKatz = sum(cKatz), cPrefix = unique(cPrefix))
+        alpha <- 1 - (counts$cKatz / counts$cPrefix)
+      } else {
+        alpha <- 1
+      }
 
       return(alpha)
     },
@@ -163,25 +173,12 @@ Katz <- R6::R6Class(
     #-------------------------------------------------------------------------#
     qBOB = function(pfx, sfx, n) {
 
-      # Divide nGrams starting with pfx into observed (A) and unobserved (B)
-      A <- (private$..model$nGrams[[n+1]] %>%
-               filter(prefix == pfx) %>% select(tail))$tail
-      B <- private$..corpora$vocabulary[!private$..corpora$vocabulary %in% A]
-
-      if (n == 1) {
-        unobservedNGrams <- B
-      } else {
-        # Format nGrams that complete unobserved n + 1 Grams
-        newPrefix <- gsub(private$..regex$suffix[[n-1]], "\\1", pfx, perl = TRUE)
-        unobservedNGrams <- unlist(lapply(B, function(b) {
-              paste(paste(newPrefix, b), collapse = " ")
-        }))
-      }
-
-      # Compute sums back of probabilities
-      qBOBSum <- sum(unlist(lapply(unobservedNGrams, function(u) {
-        private$qBO(u, n)
-      })))
+      # Obtain observed ngram suffix, that start with prefix
+      suffixes <- private$..model$nGrams[[n]] %>% filter(prefix == pfx) %>%
+        select(suffix)
+      qBOA <- merge(private$..model$nGrams[[n-1]], suffixes,
+                    by.x = "nGram", by.y = 'suffix')
+      qBOBSum <- 1 - sum(qBOA$qBO)
 
       return(qBOBSum)
     },
@@ -192,75 +189,68 @@ Katz <- R6::R6Class(
     #-------------------------------------------------------------------------#
     qBO = function(ngram, n) {
 
+      # If unigram order, obtain pML. If unigram unobserved, set probability to zero
+      # and increment the number of OOV words.
       if (n == 1) {
         qBO <- as.numeric(private$..model$nGrams[[n]] %>% filter(nGram == ngram) %>%
           select(pML))
+        if (is.na(qBO)) {
+          qBO <- 0
+          private$..evaluation$performance$oov <-
+            private$..evaluation$performance$oov + 1
+        }
+      # Otherwise recursively estimate backoff probabilities
       } else {
         qBO <- as.numeric(private$..model$nGrams[[n]] %>% filter(nGram == ngram) %>%
           select(qBO))
-      }
 
-      if (is.na(qBO)) {
-        # Split nGram into prefix and suffix
-        pfx <- gsub(private$..regex$prefix[[n-1]], "\\1", ngram, perl = TRUE)
-        sfx <- gsub(private$..regex$suffix[[n-1]], "\\1", ngram, perl = TRUE)
+        if (is.na(qBO)) {
+          # Split nGram into prefix and suffix
+          pfx <- gsub(private$..regex$prefix[[n-1]], "\\1", ngram, perl = TRUE)
+          sfx <- gsub(private$..regex$suffix[[n-1]], "\\1", ngram, perl = TRUE)
 
-        # Compute alpha
-        alpha <- private$alpha(ngram, n)
+          # Compute alpha
+          alpha <- private$alpha(ngram, n)
 
-        # Compute lambda numerator: the backoff probability of nGram tail
-        qBOSfx <- private$qBO(sfx, n-1)
+          # Compute lambda numerator: the backoff probability of nGram tail
+          qBOSfx <- private$qBO(sfx, n-1)
 
-        # Compute the probability mass for the n-1 ngrams that complete
-        # unobserved  nGrams that share the same prefix
-        qBOBSum <- private$qBOB(pfx, sfx, n-1)
+          # Compute the probability mass for the n-1 ngrams that complete
+          # unobserved  nGrams that share the same prefix
+          qBOBSum <- private$qBOB(pfx, sfx, n)
 
-        # Compute qBO
-        qBO <- alpha * qBOSfx / qBOBSum
+          # Compute qBO
+          qBO <- alpha * qBOSfx / qBOBSum
+        }
       }
       return(qBO)
     },
-
-    #-------------------------------------------------------------------------#
-    #                           scoreNGram                                    #
-    #               Assigns a probability to each test nGram                  #
-    #-------------------------------------------------------------------------#
-    scoreNGram = function(ngram, n) {
-
-      # If exact match return discounted probability
-      score <- as.numeric(private$..model$nGrams[[n]] %>%
-        filter(nGram == ngram) %>% select(qBO))
-
-      # Otherwise estimate score from unobserved nGrams
-      if (is.na(score)) {
-        score <- private$qBO(ngram, n)
-      }
-      return(score)
-    },
-
     #-------------------------------------------------------------------------#
     #                                score                                    #
     #               Prepare perplexity scores for test set                    #
     #-------------------------------------------------------------------------#
     score = function() {
 
-      private$initTestTable()
+      private$initScoresTable()
 
-      private$..evaluation$scores %>% private$..evaluation$scores %>%
-        mutate(score = scoreNGram(nGram, n = private$..settings$modelSize),
-               logScore = log(score),
-               exact = checkMatch(nGram))
+      nGrams <- private$..evaluation$scores$nGram
+      scores <- rbindlist(lapply(nGrams, function(nGram) {
+        p <- list()
+        p$p <- private$qBO(nGram, n = private$..settings$modelSize)
+        p
+      }))
+
+      private$..evaluation$scores <- cbind(private$..evaluation$scores, scores)
+      private$prepEvalReport()
 
       return(TRUE)
     },
 
-
     #-------------------------------------------------------------------------#
     #                           Validation Methods                            #
     #-------------------------------------------------------------------------#
-    validateParams = function(train = NULL, name = NULL, modelSize, k,
-                              gtDiscount, estimateGT, fixedDiscount,
-                              openVocabulary, bos) {
+    validateParams = function(train, modelSize, k, gtDiscount, estimateGT,
+                              fixedDiscount, openVocabulary) {
 
       private$..params <- list()
       private$..params$classes$name <- list('train')
@@ -270,8 +260,12 @@ Katz <- R6::R6Class(
       private$..params$range$value <- c(modelSize, fixedDiscount)
       private$..params$range$low <- c(1,0.1)
       private$..params$range$high <- c(5, 0.95)
-      private$..params$logicals$variables <- c('openVocabulary', "bos")
-      private$..params$logicals$values <- c(openVocabulary, bos)
+      private$..params$logicals$variables <- c('openVocabulary',
+                                               "gtDiscount",
+                                               "estimateGT")
+      private$..params$logicals$values <- c(openVocabulary,
+                                            gtDiscount,
+                                            estimateGT)
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
         private$logR$log(method = 'initialize', event = v$msg, level = "Error")
@@ -286,15 +280,14 @@ Katz <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                                Constructor                              #
     #-------------------------------------------------------------------------#
-    initialize = function(train = NULL, name = NULL, modelSize = 3, k = 5,
-                          gtDiscount = TRUE, estimateGT = FALSE, bos = TRUE,
+    initialize = function(train, name = NULL, modelSize = 3, k = 5,
+                          gtDiscount = FALSE, estimateGT = TRUE,
                           fixedDiscount = 0.5, openVocabulary = TRUE) {
 
       private$loadServices(name)
 
-      private$validateParams(train, name, modelSize, k, gtDiscount,
-                             estimateGT, fixedDiscount, openVocabulary,
-                             bos)
+      private$validateParams(train, modelSize, k, gtDiscount, estimateGT,
+                             fixedDiscount, openVocabulary)
 
       # Update settings
       private$..settings$modelName <- name
@@ -303,13 +296,12 @@ Katz <- R6::R6Class(
       private$..settings$gtDiscount <- gtDiscount
       private$..settings$estimateGT <- estimateGT
       private$..settings$fixedDiscount <- fixedDiscount
-      private$..settings$algorithm <- 'Kneser-Ney'
+      private$..settings$algorithm <- 'Katz'
       private$..settings$modelType <- private$..settings$modelTypes[modelSize]
       private$..settings$openVocabulary <- openVocabulary
-      private$..settings$bos <- bos
 
       # Update meta data
-      private$meta$set(key = 'algorithm', value = 'Kneser-Ney', type = 'f')
+      private$meta$set(key = 'algorithm', value = 'Katz', type = 'f')
       private$meta$set(key = 'openVocabulary', value = openVocabulary, type = 'f')
       private$meta$set(key = 'modelSize', value = modelSize, type = 'f')
       private$meta$set(key = 'modelType',
@@ -321,7 +313,8 @@ Katz <- R6::R6Class(
       private$meta$set(key = 'fixedDiscount', value = fixedDiscount, type = 'f')
 
 
-      private$..corpora$train <- train
+      private$..corpora$train <- Clone$new()$this(x = train, reference = TRUE,
+                                                  content = TRUE)
 
       invisible(self)
     },
@@ -330,9 +323,6 @@ Katz <- R6::R6Class(
     #                                Fit Method                               #
     #-------------------------------------------------------------------------#
     fit = function() {
-
-      # Prepare training corpus
-      private$prepTrain()
 
       # Build tables
       private$build()
@@ -356,7 +346,8 @@ Katz <- R6::R6Class(
         stop()
       }
 
-      private$..corpora$test <- test
+      private$..corpora$test <- Clone$new()$this(x = test, reference = TRUE,
+                                                 content = TRUE)
 
       # Prepare test corpus
       private$prepTest()
@@ -364,15 +355,9 @@ Katz <- R6::R6Class(
       # Score test set
       private$score()
 
-      invisble(self)
+      invisible(self)
     },
 
-    #-------------------------------------------------------------------------#
-    #                            getEval Method                               #
-    #-------------------------------------------------------------------------#
-    getEval = function() {
-
-    },
 
     #-------------------------------------------------------------------------#
     #                            Predict Method                               #

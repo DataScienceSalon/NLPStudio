@@ -25,6 +25,7 @@ SLM0 <- R6::R6Class(
       modelTypes = c('Unigram', 'Bigram', 'Trigram', 'Quadgram', 'Quintgram')
     ),
     ..regex = list(
+      tail = "^.* ([[:alnum:]]+)$",
       prefix = list(
         bigrams   = "^((\\S+\\s+){0}\\S+).*$",
         trigrams  = "^((\\S+\\s+){1}\\S+).*$",
@@ -43,6 +44,22 @@ SLM0 <- R6::R6Class(
       test = character(),
       vocabulary = character()
     ),
+    ..corporaStats = list(
+      train = list(
+        vocabulary = numeric(),
+        words = numeric(),
+        sentences = numeric(),
+        oov = numeric(),
+        N = numeric()
+      ),
+      test = list(
+        vocabulary = numeric(),
+        words = numeric(),
+        sentences = numeric(),
+        oov = numeric(),
+        N = numeric()
+      )
+    ),
     ..model = list(
       nGrams = list(),
       discounts = data.frame(),
@@ -50,21 +67,63 @@ SLM0 <- R6::R6Class(
     ),
     ..evaluation = list(
       scores = data.table(),
-      summary = list(
-        trainVocabulary = numeric(),
-        testVocabulary = numeric(),
-        oov = numeric(),
+      performance = list(
+        nGrams = numeric(),
+        oov = 0,
         oovRate = numeric(),
-        exact = numeric(),
-        exactRate = numeric(),
         zeroProbs = numeric(),
         zeroProbRate = numeric(),
-        score = numeric(),
-        logScore = numeric(),
-        entropy = numeric(),
+        logProb = numeric(),
         perplexity = numeric()
       )
     ),
+    #-------------------------------------------------------------------------#
+    #                           EVALUATION METHODS                            #
+    #-------------------------------------------------------------------------#
+
+    #-------------------------------------------------------------------------#
+    #                           initScoresTables                              #
+    #                     Initialize nGram scores table                       #
+    #-------------------------------------------------------------------------#
+    initScoresTable = function() {
+      test <- private$..corpora$test
+      size <- private$..settings$modelSize
+
+      tokens <- Token$new(test)$nGrams('tokenizer', size)$getTokens()
+      documents <- tokens$getDocuments()
+      nGrams <- unlist(lapply(documents, function(d) {d$content}))
+
+      private$..evaluation$scores <- data.table(n = seq(1:length(nGrams)),
+                                                nGram = nGrams)
+      return(TRUE)
+    },
+
+    prepEvalReport = function() {
+      # Test set nGram count
+      private$..evaluation$performance$nGrams <- nrow(private$..evaluation$scores)
+
+      # Test set OOV Rate
+      private$..evaluation$performance$oovRate <-
+        private$..evaluation$performance$oov /
+        private$..corporaStats$test$N
+
+      # Number of zero probability nGrams and zero probability rate
+      private$..evaluation$performance$zeroProbs <-
+        nrow(subset(private$..evaluation$scores, p == 0))
+      private$..evaluation$performance$zeroProbRate <-
+        private$..evaluation$performance$zeroProbs /
+        private$..evaluation$performance$nGrams
+
+      # Total Log probability
+      private$..evaluation$performance$logProb <-
+        as.numeric(sum(private$..evaluation$scores %>% filter(p != 0) %>%
+        mutate(logProb = log(p)) %>% select(logProb)))
+
+      # Perplexity
+      private$..evaluation$performance$perplexity <-
+        2^(-private$..evaluation$performance$logProb /
+             private$..corporaStats$test$N)
+    },
 
     #-------------------------------------------------------------------------#
     #                             NGRAM TABLES                                #
@@ -98,9 +157,7 @@ SLM0 <- R6::R6Class(
       dt <- data.table(nGram = nGrams[,1],
                        cNGram = nGrams[,2])
 
-      if (!private$..settings$bos) {
-        dt <- dt %>% filter(!grepl("BOS", nGram))
-      }
+      dt <- dt[nGram != paste(rep("BOS", n), collapse = " ")]
 
       # Add prefix and suffix to nGram Table
       if (n > 1) {
@@ -113,10 +170,10 @@ SLM0 <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                           initTrainTables                               #
+    #                           initNGramTables                               #
     #            Initialize  nGram tables from the training text              #
     #-------------------------------------------------------------------------#
-    initTrainTables = function() {
+    initNGramTables = function() {
 
       # Obtain model parameters and training Corpus object.
       modelSize <- private$..settings$modelSize
@@ -138,23 +195,6 @@ SLM0 <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                            initTestTables                               #
-    #            Initialize  nGram tables from the test text                  #
-    #-------------------------------------------------------------------------#
-    initTestTable = function() {
-      test <- private$..corpora$test
-      size <- private$..settings$modelSize
-
-      tokens <- Token$new(test)$nGrams('tokenizer', size)$getTokens()
-      documents <- tokens$getDocuments()
-      nGrams <- unlist(lapply(documents, function(d) {d$content}))
-
-      private$..evaluation$scores <- data.table(n = seq(1:length(nGrams)),
-                                                nGram = nGrams)
-      return(TRUE)
-    },
-
-    #-------------------------------------------------------------------------#
     #                        TEXT PROCESSING METHODS                          #
     #-------------------------------------------------------------------------#
     #-------------------------------------------------------------------------#
@@ -166,13 +206,33 @@ SLM0 <- R6::R6Class(
       size <- length(words) %% 1000
       wordChunks <- base::split(words, ceiling(seq_along(words)/size))
       for (i in 1:length(wordChunks)) {
-        pattern <- paste("\\b(?:", paste(wordChunks[[i]], collapse = "|"), ")\\b ?")
+        pattern <- paste0("\\b(?:", paste0(wordChunks[[i]], collapse = "|"), ")\\b ?")
         text <- gsub(pattern = pattern, replacement = " UNK ", text, perl = TRUE)
       }
       # Remove extra white space
       text <- gsub("\\s+"," ",text)
       return(text)
     },
+    #-------------------------------------------------------------------------#
+    #                               corpusStats                               #
+    #         Final summary of corpus statistics for evaluation report        #
+    #-------------------------------------------------------------------------#
+    corpusStats = function(corpus) {
+
+      stats <- list()
+      documents <- corpus$getDocuments()
+      content <- unlist(lapply(documents, function(d) { d$content }))
+
+      stats$vocabulary <-
+        length(unique(unlist(tokenizers::tokenize_words(content, strip_punct = FALSE, lowercase = FALSE))))
+      stats$words <- sum(tokenizers::count_words(content))
+      stats$sentences <- sum(tokenizers::count_sentences(content))
+      stats$oov <- sum(grepl("UNK", content, fixed = TRUE, ignore.case = FALSE))
+      stats$N <- stats$words + stats$sentences
+
+      return(stats)
+    },
+
     #-------------------------------------------------------------------------#
     #                               prepTrain                                 #
     #   Annotates Training Set with BOS/EOS and sets hapax legomena to 'UNK'  #
@@ -183,7 +243,7 @@ SLM0 <- R6::R6Class(
       train <- Token$new(private$..corpora$train)$words('tokenizer')$getTokens()
       documents <- train$getDocuments()
       tokens <- unlist(lapply(documents, function(d) {d$content}))
-      trainVocabulary <- unique(tokens)
+      private$..corpora$vocabulary <- unique(tokens)
 
       # If open vocabulary, replace hapax legomena with the 'UNK' pseudo word
       if (private$..settings$openVocabulary) {
@@ -199,20 +259,18 @@ SLM0 <- R6::R6Class(
                                                   words = hapax)
           private$..corpora$train$addDocument(documents[[i]])
         }
-        private$..corpora$train$setMeta(key = 'OOV', value = length(hapax), type = 'q')
-        private$..corpora$test$setMeta(key = 'OOV Rate',
-                                       value = length(hapax) / length(trainVocabulary), type = 'q')
+
+        # Remove hapax legomena from vocabulary
+        private$..corpora$vocabulary <-
+          private$..corpora$vocabulary[!private$..corpora$vocabulary %in% hapax]
       }
+
+      # Finalize corpus statistics for evaluation report
+      private$..corporaStats$train <-
+        private$corpusStats(private$..corpora$train)
 
       # Annotate training corpus with sentence boundary tokens
       private$..corpora$train <- private$annotate(private$..corpora$train)
-
-      # Update corpus settings and evaluation statistics
-      private$..corpora$vocabulary <- trainVocabulary
-      private$..evaluation$summary$trainVocabulary <- length(trainVocabulary)
-
-      # Update metadata
-      private$..corpora$test$setMeta(key = 'Vocabulary', value = length(traintVocabulary), type = 'q')
 
       return()
     },
@@ -241,18 +299,13 @@ SLM0 <- R6::R6Class(
         }
       }
 
+      # Finalize corpus statistics for evaluation report
+      private$..corporaStats$test <-
+        private$corpusStats(private$..corpora$test)
+
       # Annotate test corpus with sentence boundary tokens
       private$..corpora$test <- private$annotate(private$..corpora$test)
 
-      # Update evaluation statistics
-      private$..evaluation$summary$testVocabulary <- length(testVocabulary)
-      private$..evaluation$summary$oov <- length(oov)
-      private$..evaluation$summary$oovRate <- length(oov) / length(testVocabulary)
-
-      # Update metadata
-      private$..corpora$test$setMeta(key = 'Vocabulary', value = length(testVocabulary), type = 'q')
-      private$..corpora$test$setMeta(key = 'OOV', value = length(oov), type = 'q')
-      private$..corpora$test$setMeta(key = 'OOV Rate', value = length(oov) / length(testVocabulary), type = 'q')
       return(TRUE)
     },
 
@@ -345,7 +398,13 @@ SLM0 <- R6::R6Class(
                        private$..settings$modelType, "Evaluation")
 
       NLPStudio::printHeading(text = heading, symbol = "-", newlines = 2)
-      print(private$..evaluation)
+      cat("\nTraining Set Summary\n")
+      print(as.data.frame(private$..corporaStats$train), row.names = FALSE)
+      cat("\nTest Set Summary\n")
+      print(as.data.frame(private$..corporaStats$test), row.names = FALSE)
+      cat("\nPerformance Summary\n")
+      print(as.data.frame(private$..evaluation$performance), row.names = FALSE)
+      cat("\n")
       return(TRUE)
     }
   ),
@@ -360,14 +419,16 @@ SLM0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                          Accessor Methods                               #
     #-------------------------------------------------------------------------#
-    getConfig = function() private$..config,
     getCorpora = function() private$..corpora,
     getModel = function() private$..model,
     getNGrams = function() private$..model$nGrams,
     getDiscounts = function() private$..model$discounts,
     getTotals = function() private$..model$totals,
-    getScores = function() private$..scores,
-    getEval = function() private$..evaluation,
+    getScores = function() private$..evaluation$scores,
+    getEval = function() {
+      private$evalSummary()
+      return(private$..evaluation)
+    },
 
     #-------------------------------------------------------------------------#
     #                             Summary Method                              #
@@ -379,7 +440,7 @@ SLM0 <- R6::R6Class(
       if (length(private$..model$total) > 0) private$nGramSummary()
       if (length(private$..model$discounts) > 0) private$discountSummary()
       if (length(private$..model$nGrams) > 0) private$nGramDetail()
-      if (length(private$..evaluation) > 0) private$evalSummary()
+      if (length(private$..evaluation$performance$perplexity) > 0) private$evalSummary()
       invisible(self)
     }
   )

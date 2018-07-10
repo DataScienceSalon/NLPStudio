@@ -23,10 +23,10 @@ UNK. If FALSE, all words in test corpus are assumed to be in the training
 corpus. The default is TRUE.}
 }
 \description{
-\code{Katz} Kneser Ney Statistical Learning Model
+\code{Katz} Katz Statistical Learning Model
 }
 \details{
-Encapsulates a Statistical Language Model implementing the Kneser-Ney
+Encapsulates a Statistical Language Model implementing the Katz backoff
 algorithm.
 }
 \seealso{
