@@ -1,12 +1,12 @@
 #==============================================================================#
-#                                   KN                                         #
+#                               Kneser Ney                                     #
 #==============================================================================#
-#' KN
+#' Kneser Ney
 #'
-#' \code{KN} Kneser Ney Statistical Learning Model
+#' \code{KN} Kneser-Ney Statistical Learning Model
 #'
 #' Encapsulates a Statistical Language Model implementing the Kneser-Ney
-#' algorithm.
+#' smoothing algorithm.
 #'
 #' @param x a CVSet containing training and test Corpus objects
 #' @param train Train Corpus object. Ignored if x is a CVSet, required otherwise.
@@ -28,9 +28,103 @@ KN <- R6::R6Class(
   inherit = SLM0,
 
   private = list(
+    #-------------------------------------------------------------------------#
+    #                             SCORE METHODS                               #
+    #-------------------------------------------------------------------------#
 
     #-------------------------------------------------------------------------#
-    #                       Model Building Methods                            #
+    #                                 lambda                                  #
+    #                       Computes backoff weight                           #
+    #-------------------------------------------------------------------------#
+    lambda = function(pfx, n)  {
+      discount <- private$..model$discounts[n]
+      n1pPre_ <- nrow(private$..model$nGrams[[n]] %>% filter(prefix == pfx))
+      if (n < private$..settings$modelSize) {
+        n1p_pre_ <- nrow(private$..model$nGrams[[n+1]])
+        lambda <- discount / n1p_pre_ * n1pPre_
+      } else {
+        cPrefix <- as.numeric(private$..model$nGrams[[n-1]] %>% filter(nGram == pfx) %>%
+          select(cNGram))
+        lambda <- discount / cPrefix * n1pPre_
+      }
+      if (lambda == 0 | is.na(lambda)) lambda <- private$..settings$epsilon
+      return(lambda)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                                 alpha                                   #
+    #               Computes discounted probability for an nGram              #
+    #-------------------------------------------------------------------------#
+    alpha = function(ngram, pfx, n) {
+      discount <- private$..model$discounts[n]
+      if (n < private$..settings$modelSize) {
+        alpha <- max(nrow(private$..model$nGrams[[n+1]] %>%
+                            filter(suffix == ngram)) - discount, 0) /
+          nrow(private$..model$nGrams[[n+1]])
+      } else {
+        alpha <- max((as.numeric(private$..model$nGrams[[n]] %>% filter(nGram == ngram) %>%
+                       select(cNGram))) - discount, 0) /
+          as.numeric(private$..model$nGrams[[n-1]] %>% filter(nGram == pfx) %>%
+          select(cNGram))
+        if (is.na(alpha)) alpha <- 0
+      }
+      return(alpha)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                                 pKN                                     #
+    #               Computes Kneser-Ney probability of an nGram               #
+    #-------------------------------------------------------------------------#
+    pKN = function(ngram, n) {
+
+      if (n == 1) {
+        pKN <- nrow(private$..model$nGrams[[n+1]] %>% filter(suffix == ngram)) /
+          nrow(private$..model$nGrams[[n+1]])
+        if (pKN == 0) {
+          private$..evaluation$performance$oov <-
+            private$..evaluation$performance$oov + 1
+        }
+
+      } else {
+        # Split nGram into prefix and suffix
+        pfx <- gsub(private$..regex$prefix[[n-1]], "\\1", ngram, perl = TRUE)
+        sfx <- gsub(private$..regex$suffix[[n-1]], "\\1", ngram, perl = TRUE)
+        alpha <- private$alpha(ngram, pfx, n)
+        lambda <- private$lambda(pfx, n)
+        pKN <- alpha + (lambda * private$pKN(sfx, n-1))
+      }
+      return(pKN)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                                score                                    #
+    #               Prepare perplexity scores for test set                    #
+    #-------------------------------------------------------------------------#
+    score = function() {
+
+      private$initScoresTable()
+
+      nGrams <- private$..evaluation$scores$nGram
+      scores <- rbindlist(lapply(nGrams, function(nGram) {
+        p <- list()
+        p$p <- private$pKN(nGram, n = private$..settings$modelSize)
+        p
+      }))
+
+      private$..evaluation$scores <- cbind(private$..evaluation$scores, scores)
+      private$prepEvalReport()
+
+      return(TRUE)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                             BUILD METHODS                               #
+    #-------------------------------------------------------------------------#
+
+    #-------------------------------------------------------------------------#
+    #                               discounts                                 #
+    # Computes discounts based upon the number of nGrams that occur once and  #
+    # twice in the corpus                                                     #
     #-------------------------------------------------------------------------#
     discounts = function() {
       private$..model$discounts <- private$..model$totals$n1 /
@@ -38,204 +132,62 @@ KN <- R6::R6Class(
       return(TRUE)
     },
 
+    #-------------------------------------------------------------------------#
+    #                                totals                                   #
+    # Computes total nGrams and total nGrams occuring once and twice in the   #
+    # corpus                                                                  #
+    #-------------------------------------------------------------------------#
     totals = function() {
 
       modelSize <- private$..settings$modelSize
       modelTypes <- private$..settings$modelTypes
 
-      for (i in 1:modelSize) {
-
-        # Summarize counts and store in summary table
-        nGram <- modelTypes[i]
-        n <- nrow(private$..model$nGrams[[i]])
-
-        # Obtain frequency spectrum
-        spectrum <- as.data.frame(table(private$..model$nGrams[[i]]$cNGram), stringsAsFactors = FALSE)
-        names(spectrum) <- c('cNGram', 'freq')
-        spectrum$cNGram <- as.numeric(spectrum$cNGram)
-        for (j in 1:2) {
-          if (is.na(spectrum[j,]$freq))  {
-            spectrum <- rbind(spectrum, data.frame(cNGram = j, freq = 0))
-          }
-        }
-
-        dt_i <- data.table(nGram = nGram, n = n,
-                           n1 = spectrum$freq[1],
-                           n2 = spectrum$freq[2])
-        private$..model$totals <- rbind(private$..model$totals, dt_i)
-      }
+      private$..model$totals <- rbindlist(lapply(seq(1:modelSize), function(i) {
+        totals <- list()
+        totals$nGram <- modelTypes[i]
+        totals$n <- nrow(private$..model$nGrams[[i]])
+        totals$n1 <- nrow(private$..model$nGrams[[i]] %>% filter(cNGram == 1))
+        totals$n2 <- nrow(private$..model$nGrams[[i]] %>% filter(cNGram == 2))
+        totals
+      }))
       return(TRUE)
     },
 
 
-    prefix = function(n) {
-      # Compute the number of times a prefix occurs in the corpus
-      private$..model$nGrams[[n]][, ":=" (cPre = sum(cNGram)), by = prefix]
-    },
+    #-------------------------------------------------------------------------#
+    #                                build                                    #
+    #         Driver method for computing and building the nGram tables.      #
+    #-------------------------------------------------------------------------#
+    build = function() {
 
-    hist = function(n) {
-      # Compute the number of histories in which the prefix of an
-      # nGram occurs, e.g, the number of unique words that follow
-      # an nGram prefix.  This computed for all levels except
-      # the unigram level, which does not have a prefix.
-      N1pPre_ <-
-        private$..model$nGrams[[n]][,.(N1pPre_ = .N), by = .(prefix)]
-
-      private$..model$nGrams[[n]] <-
-        merge(private$..model$nGrams[[n]], N1pPre_, by = 'prefix',
-              all.x = TRUE)
-    },
-
-    ckn = function(n) {
-      # Compute continuation counts e.g. the number of words that
-      # precede an nGram.  This is compute for all levels except
-      # the highest.
-
-      modelSize <- private$..settings$modelSize
-
-      if (n < modelSize) {
-
-        # Compute the continuation count for the nGram
-        higher <- private$..model$nGrams[[n+1]][,.(suffix)]
-        higher <- higher[,.(cKN_nGram = .N), by = .(suffix)]
-        higher$cKN_nGram <- as.numeric(higher$cKN_nGram)
-        setkey(private$..model$nGrams[[n]], nGram)
-        setkey(higher, suffix)
-        private$..model$nGrams[[n]] <-
-          merge(private$..model$nGrams[[n]], higher, by.x = 'nGram',
-                by.y = 'suffix', all.x = TRUE)
-
-        # Handle special case where nGram is sequence of BOS tags
-        # The continuation count is the number of occurences
-        # of BOS tag.
-        private$..model$nGrams[[n]][like(nGram, "BOS"), cKN_nGram := as.numeric(cNGram)]
-
-      } else {
-        private$..model$nGrams[[n]]$cKN_nGram <- private$..model$nGrams[[n]]$cNGram
-      }
-
-      return(TRUE)
-    },
-
-    counts = function() {
-
-      modelSize <- private$..settings$modelSize
-
-      for (n in 1:modelSize) {
-
-        private$ckn(n)
-        if (n > 1) {
-          private$hist(n)
-        }
-        if (n == modelSize) private$prefix(n)
-
-        for (i in seq_along(private$..model$nGrams[[n]])) {
-          set(private$..model$nGrams[[n]],
-              i=which(is.na(private$..model$nGrams[[n]][[i]])), j=i, value=0)
-        }
-      }
+      private$prepTrain()
+      private$initNGramTables()
       private$totals()
-      return(TRUE)
-    },
-
-    createTable = function(nGrams, n) {
-      nGrams <- as.data.frame(table(nGrams), stringsAsFactors = FALSE)
-      dt <- data.table(nGram = nGrams[,1],
-                       cNGram = nGrams[,2])
-      if (n > 1) {
-        dt$prefix <- gsub(private$..regex$prefix[[n-1]], "\\1", dt$nGram, perl = TRUE)
-        dt$suffix  <- gsub(private$..regex$suffix[[n-1]], "\\1", dt$nGram, perl = TRUE)
-
-      }
-      return(dt)
-    },
-
-    buildTables = function() {
-
-      # Obtain model parameters and training Corpus object.
-      modelSize <- private$..settings$modelSize
-      modelTypes <- private$..settings$modelTypes
-
-      # Product nGrams
-      train <- private$..corpora$train
-
-      private$..model$nGrams <- lapply(seq(1:modelSize), function(n) {
-        corpus <- Token$new(train)$nGrams('tokenizer', n)$getTokens()
-        documents <- corpus$getDocuments()
-        nGrams <- unlist(lapply(documents, function(d) {d$content}))
-        private$createTable(nGrams, n)
-      })
-
-      names(private$..model$nGrams) <- modelTypes[1:modelSize]
-
+      private$discounts()
       return(TRUE)
     },
 
     #-------------------------------------------------------------------------#
-    #                       Model Estimation Methods                          #
+    #                           Validation Methods                            #
     #-------------------------------------------------------------------------#
-    alpha = function() {
+    validateParams = function(train, modelSize, openVocabulary) {
 
-      for (i in 1:private$..settings$modelSize) {
-
-        if (i == 1) {
-          private$..model$nGrams[[i]]$alpha <- private$..model$nGrams[[i]]$cKN_nGram /
-            private$..model$totals$n[i+1]
-
-        } else if (i < private$..settings$modelSize) {
-          private$..model$nGrams[[i]]$alpha <-
-            pmax(private$..model$nGrams[[i]]$cKN_nGram - private$..model$discounts[i],0) /
-            private$..model$totals$n[i+1]
-
-        } else {
-          private$..model$nGrams[[i]]$alpha <-
-            pmax(private$..model$nGrams[[i]]$cNGram - private$..model$discounts[i],0) /
-            private$..model$nGrams[[i]]$cPre
-        }
+      private$..params <- list()
+      private$..params$classes$name <- list('train')
+      private$..params$classes$objects <- list(train)
+      private$..params$classes$valid <- list('Corpus')
+      private$..params$range$variable <- c('modelSize')
+      private$..params$range$value <- c(modelSize)
+      private$..params$range$low <- c(1)
+      private$..params$range$high <- c(5)
+      private$..params$logicals$variables <- c('openVocabulary')
+      private$..params$logicals$values <- c(openVocabulary)
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = 'initialize', event = v$msg, level = "Error")
+        stop()
       }
-    },
-
-    lambda = function() {
-      for (i in 2:private$..settings$modelSize) {
-
-        if (i < private$..settings$modelSize) {
-          private$..model$nGrams[[i]]$lambda <-
-            private$..model$discounts[i] /
-            private$..model$totals$n[i+1] *
-            private$..model$nGrams[[i]]$N1pPre_
-        } else {
-          private$..model$nGrams[[i]]$lambda <-
-            private$..model$discounts[i] /
-            private$..model$nGrams[[i]]$cPre *
-            private$..model$nGrams[[i]]$N1pPre_
-        }
-      }
-    },
-
-    pSmooth = function() {
-      for (i in 1:private$..settings$modelSize) {
-
-        if (i == 1) {
-          private$..model$nGrams[[i]]$pSmooth <- private$..model$nGrams[[i]]$alpha
-
-        } else {
-          lower <- private$..model$nGrams[[i-1]][,.(nGram, pSmooth)]
-          setnames(lower, "pSmooth", "pSmoothSuffix")
-          setkey(lower, nGram)
-          setkey(private$..model$nGrams[[i]], suffix)
-          private$..model$nGrams[[i]] <-
-            merge(private$..model$nGrams[[i]], lower, by.x = 'suffix',
-                  by.y = 'nGram', all.x = TRUE)
-          for (j in seq_along(private$..model$nGrams[[i]])) {
-            set(private$..model$nGrams[[i]],
-                i=which(is.na(private$..model$nGrams[[i]][[j]])), j=j, value=0)
-          }
-          private$..model$nGrams[[i]]$pSmooth <-
-            private$..model$nGrams[[i]]$alpha +
-            private$..model$nGrams[[i]]$lambda *
-            private$..model$nGrams[[i]]$pSmoothSuffix
-        }
-      }
+      return(TRUE)
     }
   ),
 
@@ -244,17 +196,18 @@ KN <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                                Constructor                              #
     #-------------------------------------------------------------------------#
-    initialize = function(train = NULL, test = NULL, name = NULL,
-                           modelSize = 3, openVocabulary = TRUE) {
+    initialize = function(train, name = NULL, modelSize = 3, epsilon = 10^-7,
+                          openVocabulary = TRUE) {
 
       private$loadServices(name)
 
-      private$validateParams(train, test, name, modelSize, openVocabulary)
+      private$validateParams(train, modelSize, openVocabulary)
 
       # Update settings
       private$..settings$modelName <- name
       private$..settings$modelSize <- modelSize
       private$..settings$algorithm <- 'Kneser-Ney'
+      private$..settings$epsilon <- epsilon
       private$..settings$modelType <- private$..settings$modelTypes[modelSize]
       private$..settings$openVocabulary <- openVocabulary
 
@@ -266,39 +219,57 @@ KN <- R6::R6Class(
                        value = private$..settings$modelTypes[modelSize],
                        type = 'f')
 
-      private$..corpora$train <- train
-      private$..corpora$test <- test
+      private$..corpora$train <- Clone$new()$this(x = train, reference = TRUE,
+                                                  content = TRUE)
 
       invisible(self)
     },
 
     #-------------------------------------------------------------------------#
-    #                                Build Model                              #
+    #                                Fit Method                               #
     #-------------------------------------------------------------------------#
     fit = function() {
 
-      # Create Training and Test Corpora for Modeling
-      private$prepCorpora()
-
-      # Build ngram tables with raw frequency counts
-      private$buildTables()
-
-      # Add prefix and continuation counts
-      private$counts()
-
-      # Compute discounts
-      private$discounts()
-
-      # Compute pseudo probability alpha
-      private$alpha()
-
-      # Compute backoff weight lambda
-      private$lambda()
-
-      # Compute probabilities
-      private$pSmooth()
+      # Build tables
+      private$build()
 
       invisible(self)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                            Evaluate Method                              #
+    #-------------------------------------------------------------------------#
+    evaluate = function(test) {
+
+      # Validate
+      private$..params <- list()
+      private$..params$classes$name <- list('test')
+      private$..params$classes$objects <- list(test)
+      private$..params$classes$valid <- list('Corpus')
+      v <- private$validator$validate(self)
+      if (v$code == FALSE) {
+        private$logR$log(method = 'evaluate', event = v$msg, level = "Error")
+        stop()
+      }
+
+      private$..corpora$test <- Clone$new()$this(x = test, reference = TRUE,
+                                                 content = TRUE)
+
+      # Prepare test corpus
+      private$prepTest()
+
+      # Score test set
+      private$score()
+
+      invisible(self)
+    },
+
+
+    #-------------------------------------------------------------------------#
+    #                            Predict Method                               #
+    #-------------------------------------------------------------------------#
+    predict = function(nGram) {
+
     },
 
     #-------------------------------------------------------------------------#
@@ -307,6 +278,5 @@ KN <- R6::R6Class(
     accept = function(visitor)  {
       visitor$kn(self)
     }
-
   )
 )

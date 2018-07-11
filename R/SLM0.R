@@ -178,18 +178,15 @@ SLM0 <- R6::R6Class(
       # Obtain model parameters and training Corpus object.
       modelSize <- private$..settings$modelSize
       modelTypes <- private$..settings$modelTypes
-      train <- private$..corpora$train
 
       # Initialize Tables
       private$..model$nGrams <- list()
       private$..model$nGrams <- lapply(seq(1:modelSize), function(n) {
-        corpus <- Token$new(train)$nGrams('tokenizer', n)$getTokens()
+        corpus <- Token$new(private$..corpora$train)$nGrams('quanteda', n)$getTokens()
         documents <- corpus$getDocuments()
         nGrams <- unlist(lapply(documents, function(d) {d$content}))
         private$createTable(nGrams, n)
       })
-
-      private$totals()
 
       return(TRUE)
     },
@@ -240,9 +237,9 @@ SLM0 <- R6::R6Class(
     prepTrain = function() {
 
       # Extract vocabulary
-      train <- Token$new(private$..corpora$train)$words('tokenizer')$getTokens()
+      train <- Token$new(private$..corpora$train)$words('quanteda')$getTokens()
       documents <- train$getDocuments()
-      tokens <- unlist(lapply(documents, function(d) {d$content}))
+      tokens <- unname(unlist(lapply(documents, function(d) {d$content})))
       private$..corpora$vocabulary <- unique(tokens)
 
       # If open vocabulary, replace hapax legomena with the 'UNK' pseudo word
@@ -272,7 +269,7 @@ SLM0 <- R6::R6Class(
       # Annotate training corpus with sentence boundary tokens
       private$..corpora$train <- private$annotate(private$..corpora$train)
 
-      return()
+      return(TRUE)
     },
     #-------------------------------------------------------------------------#
     #                               prepTest                                  #
@@ -282,7 +279,7 @@ SLM0 <- R6::R6Class(
     prepTest = function() {
 
       # Extract vocabulary
-      test <- Token$new(private$..corpora$test)$words('tokenizer')$getTokens()
+      test <- Token$new(private$..corpora$test)$words('quanteda')$getTokens()
       documents <- test$getDocuments()
       testVocabulary <- unique(unlist(lapply(documents, function(d) {d$content})))
       oov <- unique(testVocabulary[!testVocabulary %fin% private$..corpora$vocabulary])

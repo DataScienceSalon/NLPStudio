@@ -132,12 +132,13 @@ Katz <- R6::R6Class(
 
     #-------------------------------------------------------------------------#
     #                                build                                    #
-    #         Driver method for computing nad building the nGram tables.      #
+    #         Driver method for computing and building the nGram tables.      #
     #-------------------------------------------------------------------------#
     build = function() {
 
       private$prepTrain()
       private$initNGramTables()
+      private$totals()
       private$discounts()
 
       for (i in 1:private$..settings$modelSize) {
@@ -227,7 +228,7 @@ Katz <- R6::R6Class(
     },
     #-------------------------------------------------------------------------#
     #                                score                                    #
-    #               Prepare perplexity scores for test set                    #
+    #               Compute probabilities or each nGram                       #
     #-------------------------------------------------------------------------#
     score = function() {
 
@@ -362,18 +363,8 @@ Katz <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                            Predict Method                               #
     #-------------------------------------------------------------------------#
-    predict = function(test = NULL) {
+    predict = function(nGram) {
 
-      # Validate and store test set.
-      private$validateClass(x = test, fieldName = 'testSet',
-                            className = 'Katz' , methodName = 'predict')
-      private$..corpora$test <- test
-
-      # Preprocess test set
-      private$prepTest()
-
-      # Estimate test set
-      private$estimate()
     },
 
     #-------------------------------------------------------------------------#

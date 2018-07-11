@@ -62,7 +62,7 @@ TokenizerQ <- R6::R6Class(
                                 remove_numbers = FALSE,
                                 remove_punct = FALSE,
                                 remove_symbols = FALSE,
-                                remove_separators = FALSE,
+                                remove_separators = TRUE,
                                 remove_twitter = FALSE,
                                 remove_hyphens = FALSE,
                                 remove_url = FALSE)))
@@ -71,7 +71,7 @@ TokenizerQ <- R6::R6Class(
                                 remove_numbers = FALSE,
                                 remove_punct = FALSE,
                                 remove_symbols = FALSE,
-                                remove_separators = FALSE,
+                                remove_separators = TRUE,
                                 remove_twitter = FALSE,
                                 remove_hyphens = FALSE,
                                 remove_url = FALSE)))
@@ -80,7 +80,7 @@ TokenizerQ <- R6::R6Class(
                                 remove_numbers = FALSE,
                                 remove_punct = FALSE,
                                 remove_symbols = FALSE,
-                                remove_separators = FALSE,
+                                remove_separators = TRUE,
                                 remove_twitter = FALSE,
                                 remove_hyphens = FALSE,
                                 remove_url = FALSE)))
