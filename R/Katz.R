@@ -72,7 +72,7 @@ Katz <- R6::R6Class(
     #-------------------------------------------------------------------------#
     cKatz = function(i) {
 
-      if (private$..settings$gtDiscount) {
+      if (private$..parameters$gtDiscount) {
         discounts <- as.numeric(private$..model$discounts[i])
         private$..model$nGrams[[i]]$cKatz <-
           ifelse (private$..model$nGrams[[i]]$cNGram > 5,
@@ -84,7 +84,7 @@ Katz <- R6::R6Class(
           ifelse (private$..model$nGrams[[i]]$cNGram > 5,
                   private$..model$nGrams[[i]]$cNGram,
                   private$..model$nGrams[[i]]$cNGram -
-                    private$..settings$fixedDiscount)
+                    private$..parameters$fixedDiscount)
       }
       return(TRUE)
     },
@@ -95,8 +95,8 @@ Katz <- R6::R6Class(
     #-------------------------------------------------------------------------#
     discounts = function() {
 
-      k <- private$..settings$k
-      n <- private$..settings$modelSize
+      k <- private$..parameters$k
+      n <- private$..parameters$modelSize
 
       private$..model$discounts <- rbindlist(lapply(seq(1:n), function(i) {
 
@@ -106,7 +106,7 @@ Katz <- R6::R6Class(
         for (r in 1:k) {
 
           n_1 <- nrow(private$..model$nGrams[[i]] %>% filter(cNGram == 1))
-          if (private$..settings$estimateGT) {
+          if (private$..parameters$estimateGT) {
             # Use expected value of counts instead of counts
             rStar <-  (r / (r+1)) * (1 - (n_1 / nTotal))
           } else {
@@ -141,7 +141,7 @@ Katz <- R6::R6Class(
       private$totals()
       private$discounts()
 
-      for (i in 1:private$..settings$modelSize) {
+      for (i in 1:private$..parameters$modelSize) {
         private$cKatz(i)
         private$cPrefix(i)
         private$qBOA(i)
@@ -155,7 +155,7 @@ Katz <- R6::R6Class(
     #-------------------------------------------------------------------------#
     alpha = function(ngram, n) {
 
-      pfx <- gsub(private$..regex$prefix[[n-1]], "\\1", ngram, perl = TRUE)
+      pfx <- gsub(private$..settings$regex$prefix[[n-1]], "\\1", ngram, perl = TRUE)
 
       # If nGrams sharing the prefix are observed, compute alpha from counts
       observed <- private$..model$nGrams[[n]] %>% filter(prefix == pfx)
@@ -207,8 +207,8 @@ Katz <- R6::R6Class(
 
         if (is.na(qBO)) {
           # Split nGram into prefix and suffix
-          pfx <- gsub(private$..regex$prefix[[n-1]], "\\1", ngram, perl = TRUE)
-          sfx <- gsub(private$..regex$suffix[[n-1]], "\\1", ngram, perl = TRUE)
+          pfx <- gsub(private$..settings$regex$prefix[[n-1]], "\\1", ngram, perl = TRUE)
+          sfx <- gsub(private$..settings$regex$suffix[[n-1]], "\\1", ngram, perl = TRUE)
 
           # Compute alpha
           alpha <- private$alpha(ngram, n)
@@ -237,7 +237,7 @@ Katz <- R6::R6Class(
       nGrams <- private$..evaluation$scores$nGram
       scores <- rbindlist(lapply(nGrams, function(nGram) {
         p <- list()
-        p$p <- private$qBO(nGram, n = private$..settings$modelSize)
+        p$p <- private$qBO(nGram, n = private$..parameters$modelSize)
         p
       }))
 
@@ -281,9 +281,12 @@ Katz <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                                Constructor                              #
     #-------------------------------------------------------------------------#
-    initialize = function(train, name = NULL, modelSize = 3, k = 5,
+    initialize = function(train, modelSize = 3, k = 5,
                           gtDiscount = FALSE, estimateGT = TRUE,
                           fixedDiscount = 0.5, openVocabulary = TRUE) {
+
+      name <- paste0("Modified Kneser-Ney ",
+                     private$..settings$modelTypes[modelSize], " Model")
 
       private$loadServices(name)
 
@@ -291,15 +294,19 @@ Katz <- R6::R6Class(
                              fixedDiscount, openVocabulary)
 
       # Update settings
-      private$..settings$modelName <- name
-      private$..settings$modelSize <- modelSize
-      private$..settings$k <- k
-      private$..settings$gtDiscount <- gtDiscount
-      private$..settings$estimateGT <- estimateGT
-      private$..settings$fixedDiscount <- fixedDiscount
-      private$..settings$algorithm <- 'Katz'
-      private$..settings$modelType <- private$..settings$modelTypes[modelSize]
-      private$..settings$openVocabulary <- openVocabulary
+      private$..parameters$modelId <- private$meta$get(key = 'id')
+      private$..parameters$modelName <- name
+      private$..parameters$modelSize <- modelSize
+      private$..parameters$k <- k
+      private$..parameters$gtDiscount <- gtDiscount
+      private$..parameters$estimateGT <- ifelse(gtDiscount == TRUE,
+                                                estimateGT, "NA")
+      private$..parameters$fixedDiscount <- ifelse(gtDiscount == TRUE,
+                                                   "NA", fixedDiscount)
+      private$..parameters$algorithm <- 'Katz'
+      private$..parameters$modelType <- private$..settings$modelTypes[modelSize]
+      private$..parameters$vocabulary <- ifelse(openVocabulary == TRUE,
+                                                'Open', 'Closed')
 
       # Update meta data
       private$meta$set(key = 'algorithm', value = 'Katz', type = 'f')
@@ -325,8 +332,14 @@ Katz <- R6::R6Class(
     #-------------------------------------------------------------------------#
     fit = function() {
 
+      # Note start time
+      private$startTime()
+
       # Build tables
       private$build()
+
+      # Note end time
+      private$endTime()
 
       invisible(self)
     },
@@ -347,6 +360,9 @@ Katz <- R6::R6Class(
         stop()
       }
 
+      # Note start time
+      private$startTime(train = FALSE)
+
       private$..corpora$test <- Clone$new()$this(x = test, reference = TRUE,
                                                  content = TRUE)
 
@@ -355,6 +371,9 @@ Katz <- R6::R6Class(
 
       # Score test set
       private$score()
+
+      # Note end time
+      private$endTime(train = FALSE)
 
       invisible(self)
     },

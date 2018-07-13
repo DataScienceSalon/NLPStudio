@@ -171,7 +171,23 @@ ValidationVisitor <- R6::R6Class(
       return(private$validate(object))
     },
 
-    cvSetKFold = function(object) {
+    KFolds = function(object) {
+      return(private$validate(object))
+    },
+
+    cvKN = function(object) {
+      return(private$validate(object))
+    },
+
+    cvMKN = function(object) {
+      return(private$validate(object))
+    },
+
+    cvKatz = function(object) {
+      return(private$validate(object))
+    },
+
+    cvSBO = function(object) {
       return(private$validate(object))
     },
 

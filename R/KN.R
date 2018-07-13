@@ -38,16 +38,15 @@ KN <- R6::R6Class(
     #-------------------------------------------------------------------------#
     lambda = function(pfx, n)  {
       discount <- private$..model$discounts[n]
-      n1pPre_ <- nrow(private$..model$nGrams[[n]] %>% filter(prefix == pfx))
-      if (n < private$..settings$modelSize) {
+      n1pPre_ <- max(nrow(private$..model$nGrams[[n]] %>% filter(prefix == pfx)), 1)
+      if (n < private$..parameters$modelSize) {
         n1p_pre_ <- nrow(private$..model$nGrams[[n+1]])
         lambda <- discount / n1p_pre_ * n1pPre_
       } else {
-        cPrefix <- as.numeric(private$..model$nGrams[[n-1]] %>% filter(nGram == pfx) %>%
-          select(cNGram))
+        cPrefix <- max(as.numeric(private$..model$nGrams[[n-1]] %>% filter(nGram == pfx) %>%
+          select(cNGram)), 1)
         lambda <- discount / cPrefix * n1pPre_
       }
-      if (lambda == 0 | is.na(lambda)) lambda <- private$..settings$epsilon
       return(lambda)
     },
 
@@ -57,7 +56,7 @@ KN <- R6::R6Class(
     #-------------------------------------------------------------------------#
     alpha = function(ngram, pfx, n) {
       discount <- private$..model$discounts[n]
-      if (n < private$..settings$modelSize) {
+      if (n < private$..parameters$modelSize) {
         alpha <- max(nrow(private$..model$nGrams[[n+1]] %>%
                             filter(suffix == ngram)) - discount, 0) /
           nrow(private$..model$nGrams[[n+1]])
@@ -87,8 +86,8 @@ KN <- R6::R6Class(
 
       } else {
         # Split nGram into prefix and suffix
-        pfx <- gsub(private$..regex$prefix[[n-1]], "\\1", ngram, perl = TRUE)
-        sfx <- gsub(private$..regex$suffix[[n-1]], "\\1", ngram, perl = TRUE)
+        pfx <- gsub(private$..settings$regex$prefix[[n-1]], "\\1", ngram, perl = TRUE)
+        sfx <- gsub(private$..settings$regex$suffix[[n-1]], "\\1", ngram, perl = TRUE)
         alpha <- private$alpha(ngram, pfx, n)
         lambda <- private$lambda(pfx, n)
         pKN <- alpha + (lambda * private$pKN(sfx, n-1))
@@ -107,7 +106,7 @@ KN <- R6::R6Class(
       nGrams <- private$..evaluation$scores$nGram
       scores <- rbindlist(lapply(nGrams, function(nGram) {
         p <- list()
-        p$p <- private$pKN(nGram, n = private$..settings$modelSize)
+        p$p <- private$pKN(nGram, n = private$..parameters$modelSize)
         p
       }))
 
@@ -139,7 +138,7 @@ KN <- R6::R6Class(
     #-------------------------------------------------------------------------#
     totals = function() {
 
-      modelSize <- private$..settings$modelSize
+      modelSize <- private$..parameters$modelSize
       modelTypes <- private$..settings$modelTypes
 
       private$..model$totals <- rbindlist(lapply(seq(1:modelSize), function(i) {
@@ -196,20 +195,25 @@ KN <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                                Constructor                              #
     #-------------------------------------------------------------------------#
-    initialize = function(train, name = NULL, modelSize = 3, epsilon = 10^-7,
+    initialize = function(train, modelSize = 3, epsilon = 10^-7,
                           openVocabulary = TRUE) {
+
+      name <- paste0("Kneser-Ney ",
+                     private$..settings$modelTypes[modelSize], " Model")
 
       private$loadServices(name)
 
       private$validateParams(train, modelSize, openVocabulary)
 
       # Update settings
-      private$..settings$modelName <- name
-      private$..settings$modelSize <- modelSize
-      private$..settings$algorithm <- 'Kneser-Ney'
-      private$..settings$epsilon <- epsilon
-      private$..settings$modelType <- private$..settings$modelTypes[modelSize]
-      private$..settings$openVocabulary <- openVocabulary
+      private$..parameters$modelId <- private$meta$get(key = 'id')
+      private$..parameters$modelName <- name
+      private$..parameters$modelSize <- modelSize
+      private$..parameters$algorithm <- 'Kneser-Ney'
+      private$..parameters$epsilon <- epsilon
+      private$..parameters$modelType <- private$..settings$modelTypes[modelSize]
+      private$..parameters$vocabulary <- ifelse(openVocabulary == TRUE,
+                                            'Open', 'Closed')
 
       # Update meta data
       private$meta$set(key = 'algorithm', value = 'Kneser-Ney', type = 'f')
@@ -230,8 +234,14 @@ KN <- R6::R6Class(
     #-------------------------------------------------------------------------#
     fit = function() {
 
+      # Note start time
+      private$startTime()
+
       # Build tables
       private$build()
+
+      # Note end time
+      private$endTime()
 
       invisible(self)
     },
@@ -252,6 +262,9 @@ KN <- R6::R6Class(
         stop()
       }
 
+      # Note start time
+      private$startTime(train = FALSE)
+
       private$..corpora$test <- Clone$new()$this(x = test, reference = TRUE,
                                                  content = TRUE)
 
@@ -260,6 +273,9 @@ KN <- R6::R6Class(
 
       # Score test set
       private$score()
+
+      # Note end time
+      private$endTime(train = FALSE)
 
       invisible(self)
     },

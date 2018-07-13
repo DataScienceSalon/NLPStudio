@@ -155,17 +155,15 @@ TokenizerNLP <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                             Constructor                                 #
     #-------------------------------------------------------------------------#
-    initialize = function(x) {
-      private$loadServices()
-      private$validate(x)
-      private$..x <- x
+    initialize = function() {
+      private$loadServices("TokenizerNLP")
       invisible(self)
     },
 
     #-------------------------------------------------------------------------#
     #                        Character Tokens Method                          #
     #-------------------------------------------------------------------------#
-    chars = function() {
+    chars = function(x) {
 
       stop("This method is not implemented for this class.")
 
@@ -175,8 +173,10 @@ TokenizerNLP <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Word Tokens Method                            #
     #-------------------------------------------------------------------------#
-    words = function() {
+    words = function(x) {
 
+      private$validate(x)
+      private$..x <- x
       private$execute(tokenUnit = 'Word')
 
       invisible(self)
@@ -185,8 +185,10 @@ TokenizerNLP <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                       Sentence Tokens Method                            #
     #-------------------------------------------------------------------------#
-    sentences = function() {
+    sentences = function(x) {
 
+      private$validate(x)
+      private$..x <- x
       private$execute(tokenUnit = 'Sentence')
 
       invisible(self)
@@ -195,7 +197,7 @@ TokenizerNLP <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                       Paragraph Tokens Method                           #
     #-------------------------------------------------------------------------#
-    paragraphs = function() {
+    paragraphs = function(x) {
 
       stop("This method is not implemented for this class.")
 
@@ -205,7 +207,7 @@ TokenizerNLP <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                            NGrams Method                                #
     #-------------------------------------------------------------------------#
-    nGrams = function() {
+    nGrams = function(x) {
 
       stop("This method is not implemented for this class.")
 

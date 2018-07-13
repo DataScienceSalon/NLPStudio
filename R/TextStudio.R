@@ -22,6 +22,7 @@ TextStudio <- R6::R6Class(
       punct = "(?![\'-])[[:punct:]]",
       hyphen = '[-]',
       apostrophe = '[\']',
+      trailingApostrophe = '[\']\\B',
       numbers = "\\d+\\S*",
       symbols  = "(?![.?!'-])[[:punct:]]",
       twitter = '\\B[@#]\\w*[a-zA-Z]+\\w*',
@@ -31,7 +32,7 @@ TextStudio <- R6::R6Class(
       strayHyphen = "\\s*-\\B|\\B-\\s*",
       strayComma = "\\s,\\B|\\B,\\s*",
       singles = '\\b[b-hj-z]{1}\\b',
-      backTick = list(
+      backtick = list(
         pattern = "\\`",
         replacement = "\\'"
       ),
@@ -50,30 +51,47 @@ TextStudio <- R6::R6Class(
         content <- tolower(content)
       }
 
+      # Remove apostrophe, trailingApostrophe, numbers, twitter, url and email
+      regex <- c()
+      if (private$..config$..remove$apostrophe)
+        regex <- c(regex, private$..regex$apostrophe)
+      if (private$..config$..remove$trailingApostrophe)
+        regex <- c(regex, private$..regex$trailingApostrophe)
+      if (private$..config$..remove$twitter)
+        regex <- c(regex, private$..regex$twitter)
+      if (private$..config$..remove$url)
+        regex <- c(regex, private$..regex$url)
+      if (private$..config$..remove$email)
+        regex <- c(regex, private$..regex$email)
+
+      content <- gsub(paste(regex, collapse = '|'), "", content, perl = TRUE, ignore.case = TRUE)
+      regex <- NULL
+
       # Remove sentences/vectors with profanity
-      if (private$..config$..remove$profanity) {
+      if (private$..config$..remove$profanitySentences) {
         if (length(private$..config$profanity) == 0) {
           profanity <- NLPLists::profanity[,1]
         } else {
           profanity <- private$..config$profanity
         }
-        pattern <- paste("\\b", paste(profanity, collapse = "|"), "(?!\\w)", sep = "")
+        pattern <- paste0("\\b", paste0(profanity, collapse = "|"), "(?!\\w)", sep = "")
         content <- content[!grepl(pattern, content, perl = TRUE)]
       }
 
-      # Process Stopwords
-      if (private$..config$..remove$stopwords) {
-        if (length(private$..config$..stopwords) == 0) {
-          stopwords <- NLPLists::stopwords
+      # Remove words/vectors with profanity
+      if (private$..config$..remove$profanityWords) {
+        if (length(private$..config$profanity) == 0) {
+          profanity <- NLPLists::profanity[,1]
         } else {
-          stopwords <- private$..config$..stopwords
+          profanity <- private$..config$profanity
         }
-        pattern <- paste0("\\b",unlist(stopwords),"\\b")
-        replacement <- ""
-        content <- stringi::stri_replace_all_regex(content,
-                                                   replacement = replacement,
-                                                   pattern = pattern, mode = all,
-                                                   vectorize_all = FALSE)
+        content <- textclean::mgsub_fixed(content, pattern = profanity,
+                                          replacement = "",
+                                          leadspace = FALSE,
+                                          trailspace = FALSE,
+                                          fixed = TRUE,
+                                          trim = FALSE,
+                                          order.pattern = TRUE)
       }
 
       # Process Abbreviations
@@ -114,8 +132,8 @@ TextStudio <- R6::R6Class(
 
       # Process Backtick
       if (private$..config$..replace$backtick) {
-        pattern <- private$..regex$backTick$pattern
-        replacement <- private$..regex$backTick$replacement
+        pattern <- private$..regex$backtick$pattern
+        replacement <- private$..regex$backtick$replacement
         content <- gsub(pattern = pattern, replacement = replacement,
                         content, perl = TRUE, ignore.case = TRUE)
       }
@@ -155,6 +173,11 @@ TextStudio <- R6::R6Class(
         content <- textclean::replace_kern(x = content)
       }
 
+      # Process Numbers
+      if (private$..config$..replace$numbers) {
+        content <- textclean::replace_number(x = content, num.paste = TRUE)
+      }
+
       # Process Ordinal
       if (private$..config$..replace$ordinal) {
         content <- textclean::replace_ordinal(x = content)
@@ -177,29 +200,21 @@ TextStudio <- R6::R6Class(
         content <- gsub(pattern = pattern, replacement = replacement,
                         content, perl = TRUE, ignore.case = TRUE)
       }
-      # Remove punctuation, numbers, symbols, twitter, url and email
-      regex <- c()
+
+      # Clean symbols, punctuation, numbers, stray apostrophe, commas, and extra whitespace.
+      regex <- NULL
+      if (private$..config$..remove$symbols)
+        regex <- c(regex, private$..regex$symbols)
       if (private$..config$..remove$punct)
         regex <- c(regex, private$..regex$punct)
       if (private$..config$..remove$numbers)
         regex <- c(regex, private$..regex$numbers)
-      if (private$..config$..remove$symbols)
-        regex <- c(regex, private$..regex$symbols)
-      if (private$..config$..remove$twitter)
-        regex <- c(regex, private$..regex$twitter)
-      if (private$..config$..remove$url)
-        regex <- c(regex, private$..regex$url)
-      if (private$..config$..remove$email)
-        regex <- c(regex, private$..regex$email)
 
-      content <- gsub(paste(regex, collapse = '|'), "", content, perl = TRUE, ignore.case = TRUE)
-      regex <- NULL
-
-
-      # Clean remove stray hyphens and apostrophes, and extra whitespace.
-      regex <- c(private$..regex$strayApostrophe, regex$strayComma,
+      regex <- c(regex, private$..regex$strayApostrophe,
+                 private$..regex$strayComma,
                  private$..regex$strayHyphen)
-      content <- gsub(paste(regex, collapse = '|'), "", content, perl = TRUE, ignore.case = TRUE)
+
+      content <- gsub(paste0(regex, collapse = '|'), "", content, perl = TRUE, ignore.case = TRUE)
       content <- textclean::replace_white(x = content)
 
       document$content <- content
@@ -264,7 +279,7 @@ TextStudio <- R6::R6Class(
       private$processCorpus()
       invisible(self)
     },
-    getCorpus = function()  private$..corpus,
+    getClean = function()  private$..corpus,
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #
     #-------------------------------------------------------------------------#

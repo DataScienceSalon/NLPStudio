@@ -3,7 +3,7 @@
 \docType{class}
 \name{MKN}
 \alias{MKN}
-\title{MKN}
+\title{Modified Kneser Ney}
 \format{An object of class \code{R6ClassGenerator} of length 24.}
 \usage{
 MKN
@@ -23,11 +23,11 @@ UNK. If FALSE, all words in test corpus are assumed to be in the training
 corpus. The default is TRUE.}
 }
 \description{
-\code{MKN} Modified Kneser Ney Statistical Learning Model
+\code{MKN} Modified Kneser-Ney Statistical Learning Model
 }
 \details{
-Encapsulates a Statistical Language Model implementing the Modified
-Kneser-Ney algorithm.
+Encapsulates a Statistical Language Model implementing the Modified Kneser-Ney
+smoothing algorithm.
 }
 \seealso{
 Other Statistical Language Model Classes: \code{\link{KN}},

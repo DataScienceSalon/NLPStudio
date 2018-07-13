@@ -162,19 +162,21 @@ Tokenizer <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                             Constructor                                 #
     #-------------------------------------------------------------------------#
-    initialize = function(x) {
-      private$loadServices()
-      private$validate(x)
-      private$..x <- x
+    initialize = function() {
+      private$loadServices("Tokenizer")
       invisible(self)
     },
 
     #-------------------------------------------------------------------------#
     #                        Character Tokens Method                          #
     #-------------------------------------------------------------------------#
-    chars = function() {
+    chars = function(x) {
 
-      private$execute(tokenUnit = 'Character')
+      private$validate(x)
+
+      private$..x <- x
+
+      private$execute(x, tokenUnit = 'Character')
 
       invisible(self)
     },
@@ -182,8 +184,10 @@ Tokenizer <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Word Tokens Method                            #
     #-------------------------------------------------------------------------#
-    words = function() {
+    words = function(x) {
 
+      private$validate(x)
+      private$..x <- x
       private$execute(tokenUnit = 'Word')
 
       invisible(self)
@@ -192,8 +196,10 @@ Tokenizer <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                       Sentence Tokens Method                            #
     #-------------------------------------------------------------------------#
-    sentences = function() {
+    sentences = function(x) {
 
+      private$validate(x)
+      private$..x <- x
       private$execute(tokenUnit = 'Sentence')
 
       invisible(self)
@@ -202,8 +208,10 @@ Tokenizer <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                       Paragraph Tokens Method                           #
     #-------------------------------------------------------------------------#
-    paragraphs = function(paragraphBreak = "\n\n") {
+    paragraphs = function(x, paragraphBreak = "\n\n") {
 
+      private$validate(x)
+      private$..x <- x
       private$execute(tokenUnit = 'Paragraph', paragraphBreak = paragraphBreak)
 
       invisible(self)
@@ -212,8 +220,10 @@ Tokenizer <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                            NGrams Method                                #
     #-------------------------------------------------------------------------#
-    nGrams = function(n = 3, stopwords = character(), nGramDelim = " ") {
+    nGrams = function(x, n = 3, stopwords = character(), nGramDelim = " ") {
 
+      private$validate(x)
+      private$..x <- x
       private$execute(tokenUnit = 'nGram', n = n,  stopwords = stopwords,
                       nGramDelim = nGramDelim)
 

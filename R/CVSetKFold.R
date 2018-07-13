@@ -98,7 +98,7 @@ CVSetKFold <- R6::R6Class(
     #                           Visitor Method                                #
     #-------------------------------------------------------------------------#
     accept = function(visitor)  {
-      visitor$cvSetKFold(self)
+      visitor$KFolds(self)
     }
   )
 )

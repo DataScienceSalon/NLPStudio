@@ -51,8 +51,8 @@ are combined into a single cross-validation set or CVSet object.
 
 \seealso{
 Other CorpusStudio Family of Classes: \code{\link{CorpusStudio}},
-  \code{\link{Sample0}}, \code{\link{Sample}},
-  \code{\link{Segment}}, \code{\link{SplitKFold}},
+  \code{\link{KFold}}, \code{\link{Sample0}},
+  \code{\link{Sample}}, \code{\link{Segment}},
   \code{\link{TokenizerNLP}}, \code{\link{TokenizerQ}},
   \code{\link{Tokenizer}}, \code{\link{Token}}
 }

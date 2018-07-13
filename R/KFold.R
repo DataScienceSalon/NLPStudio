@@ -1,6 +1,6 @@
-#' SplitKFold
+#' KFold
 #'
-#' \code{SplitKFold} Creates a K-Fold cross-validation set.
+#' \code{KFold} Creates a K-Fold cross-validation set.
 #'
 #' @section Methods:
 #'  \itemize{
@@ -9,7 +9,7 @@
 #'
 #' @param x Corpus object.
 #' @param k Numeric of cvSets
-#' @param stratify Logical. If TRUE (default), SplitKFolds will be taken from
+#' @param stratify Logical. If TRUE (default), KFolds will be taken from
 #' each document in accordance with the proportions or counts indicated
 #' in the 'n' parameter.
 #' @param seed Numeric used to initialize a pseudorandom number generator.
@@ -19,8 +19,8 @@
 #' @family Corpus Sample Family of Classes
 #' @family CorpusStudio Family of Classes
 #' @export
-SplitKFold <- R6::R6Class(
-  classname = "SplitKFold",
+KFold <- R6::R6Class(
+  classname = "KFold",
   lock_objects = FALSE,
   lock_class = FALSE,
   inherit = Sample0,
@@ -72,10 +72,9 @@ SplitKFold <- R6::R6Class(
       cvSet$addCorpus(train)
       cvSet$addCorpus(test)
 
-      private$..cvSetKFold$addCVSet(cvSet)
+      private$..KFolds$addCVSet(cvSet)
 
       event <- paste0("Fold #", k, " created.")
-      cvSet$message(event)
       private$logR$log(method = 'processFold', event = event, level = "Info")
 
       return(TRUE)
@@ -87,7 +86,7 @@ SplitKFold <- R6::R6Class(
       if (is.null(cvSetName)) cvSetName <- paste0(private$..corpus$getName(),
                                              " KFold CV Set")
 
-      private$..cvSetKFold <- CVSetKFold$new(name = cvSetName)
+      private$..KFolds <- CVSetKFold$new(name = cvSetName)
 
       for (i in 1:k) {
         private$processFold(k = i, name = name)
@@ -123,12 +122,12 @@ SplitKFold <- R6::R6Class(
     #                             Constructor                                 #
     #-------------------------------------------------------------------------#
     initialize = function() {
-      private$loadServices("SplitKFold")
+      private$loadServices("KFold")
       invisible(self)
     },
 
     #-------------------------------------------------------------------------#
-    #                             SplitKFold Method                           #
+    #                             KFold Method                           #
     #-------------------------------------------------------------------------#
     execute = function(x, k, name = NULL, stratify = TRUE, seed = NULL) {
 
@@ -144,7 +143,7 @@ SplitKFold <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                                Get KFolds                               #
     #-------------------------------------------------------------------------#
-    getKFolds = function() private$..cvSetKFold,
+    getKFolds = function() private$..KFolds,
 
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #

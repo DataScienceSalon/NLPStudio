@@ -34,12 +34,12 @@ Creates a Corpus object from a sample of a Corpus object.
 }
 
 \seealso{
-Other Corpus Sample Family of Classes: \code{\link{Sample0}},
-  \code{\link{Segment}}, \code{\link{SplitKFold}}
+Other Corpus Sample Family of Classes: \code{\link{KFold}},
+  \code{\link{Sample0}}, \code{\link{Segment}}
 
 Other CorpusStudio Family of Classes: \code{\link{CorpusStudio}},
-  \code{\link{Sample0}}, \code{\link{Segment}},
-  \code{\link{SplitKFold}}, \code{\link{Split}},
+  \code{\link{KFold}}, \code{\link{Sample0}},
+  \code{\link{Segment}}, \code{\link{Split}},
   \code{\link{TokenizerNLP}}, \code{\link{TokenizerQ}},
   \code{\link{Tokenizer}}, \code{\link{Token}}
 }

@@ -37,8 +37,8 @@ tokenizer package.
 
 \seealso{
 Other CorpusStudio Family of Classes: \code{\link{CorpusStudio}},
-  \code{\link{Sample0}}, \code{\link{Sample}},
-  \code{\link{Segment}}, \code{\link{SplitKFold}},
+  \code{\link{KFold}}, \code{\link{Sample0}},
+  \code{\link{Sample}}, \code{\link{Segment}},
   \code{\link{Split}}, \code{\link{TokenizerNLP}},
   \code{\link{Tokenizer}}, \code{\link{Token}}
 }

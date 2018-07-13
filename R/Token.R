@@ -54,25 +54,25 @@ Token <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                             Constructor                                 #
     #-------------------------------------------------------------------------#
-    initialize = function(x) {
-      private$loadServices()
-      private$validate(x)
-      private$..x <- x
+    initialize = function() {
+      private$loadServices("Token")
       invisible(self)
     },
 
     #-------------------------------------------------------------------------#
     #                       Character Tokens Method                           #
     #-------------------------------------------------------------------------#
-    chars = function(tokenizer = 'tokenizer') {
+    chars = function(x, tokenizer = 'tokenizer') {
+
+      private$validate(x)
 
       if (grepl("^t", tokenizer, ignore.case = TRUE)) {
         private$..tokens <-
-          Tokenizer$new(x = private$..x)$chars()
+          Tokenizer$new()$chars(x)
 
       } else if (grepl("^q", tokenizer, ignore.case = TRUE)) {
         private$..tokens <-
-          TokenizerQ$new(x = private$..x)$chars()
+          TokenizerQ$new()$chars(x)
       } else {
         event <- paste("Invalid tokenizer type. Valid types include ",
                        "c('tokenizer', 'quanteda').  See ?",
@@ -85,19 +85,21 @@ Token <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                         Word Tokens Method                              #
     #-------------------------------------------------------------------------#
-    words = function(tokenizer = 'tokenizer') {
+    words = function(x, tokenizer = 'tokenizer') {
+
+      private$validate(x)
 
       if (grepl("^o", tokenizer, ignore.case = TRUE)) {
         private$..tokens <-
-          TokenizerNLP$new(x = private$..x)$words()
+          TokenizerNLP$new()$words(x)
 
       } else if (grepl("^t", tokenizer, ignore.case = TRUE)) {
         private$..tokens <-
-          Tokenizer$new(x = private$..x)$words()
+          Tokenizer$new()$words(x)
 
       } else if (grepl("^q", tokenizer, ignore.case = TRUE)) {
         private$..tokens <-
-          TokenizerQ$new(x = private$..x)$words()
+          TokenizerQ$new()$words(x)
       } else {
         event <- paste("Invalid tokenizer type. Valid types include ",
                        "c('openNLP', 'tokenizer', 'quanteda').  See ?",
@@ -109,19 +111,21 @@ Token <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                       Sentence Tokens Method                            #
     #-------------------------------------------------------------------------#
-    sentences = function(tokenizer = 'openNLP') {
+    sentences = function(x, tokenizer = 'openNLP') {
+
+      private$validate(x)
 
       if (grepl("^o", tokenizer, ignore.case = TRUE)) {
         private$..tokens <-
-          TokenizerNLP$new(x = private$..x)$sentences()
+          TokenizerNLP$new()$sentences(x)
 
       } else if (grepl("^t", tokenizer, ignore.case = TRUE)) {
         private$..tokens <-
-          Tokenizer$new(x = private$..x)$sentences()
+          Tokenizer$new()$sentences(x)
 
       } else if (grepl("^q", tokenizer, ignore.case = TRUE)) {
         private$..tokens <-
-          TokenizerQ$new(x = private$..x)$sentences()
+          TokenizerQ$new()$sentences(x)
       } else {
         event <- paste("Invalid tokenizer type. Valid types include ",
                        "c('openNLP', 'tokenizer', 'quanteda').  See ?",
@@ -133,11 +137,13 @@ Token <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                       Paragraph Tokens Method                           #
     #-------------------------------------------------------------------------#
-    paragraphs = function(tokenizer = 'tokenizer', paragraphBreak = "\n\n") {
+    paragraphs = function(x, tokenizer = 'tokenizer', paragraphBreak = "\n\n") {
+
+      private$validate(x)
 
       if (grepl("^t", tokenizer, ignore.case = TRUE)) {
         private$..tokens <-
-          Tokenizer$new(x = private$..x)$paragraphs(paragraphBreak = paragraphBreak)
+          Tokenizer$new()$paragraphs(x, paragraphBreak = paragraphBreak)
 
       } else {
         event <- paste0("Tokenizer, ", tokenizer, ", does not support paragraph ",
@@ -151,7 +157,9 @@ Token <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                         nGram Tokens Method                             #
     #-------------------------------------------------------------------------#
-    nGrams = function(tokenizer = 'tokenizer', n = 3, nGramDelim = " ") {
+    nGrams = function(x, tokenizer = 'tokenizer', n = 3, nGramDelim = " ") {
+
+      private$validate(x)
 
       # Validate N
       private$..params <- list()
@@ -168,13 +176,11 @@ Token <- R6::R6Class(
 
       if (grepl("^t", tokenizer, ignore.case = TRUE)) {
         private$..tokens <-
-          Tokenizer$new(x = private$..x)$nGrams(n = n,
-                                                nGramDelim = nGramDelim)
+          Tokenizer$new()$nGrams(x, n = n, nGramDelim = nGramDelim)
 
       } else if (grepl("^q", tokenizer, ignore.case = TRUE)) {
         private$..tokens <-
-          TokenizerQ$new(x = private$..x)$nGrams(n = n,
-                                                 nGramDelim = nGramDelim)
+          TokenizerQ$new()$nGrams(x, n = n, nGramDelim = nGramDelim)
       } else {
         event <- paste("Invalid tokenizer type. Valid types include ",
                        "c('tokenizer', 'quanteda').  See ?",

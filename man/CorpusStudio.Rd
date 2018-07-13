@@ -72,9 +72,9 @@ training and test set. The cross-validation product is the final product
 and forms the data basis for the modeling phase.
 }
 \seealso{
-Other CorpusStudio Family of Classes: \code{\link{Sample0}},
-  \code{\link{Sample}}, \code{\link{Segment}},
-  \code{\link{SplitKFold}}, \code{\link{Split}},
+Other CorpusStudio Family of Classes: \code{\link{KFold}},
+  \code{\link{Sample0}}, \code{\link{Sample}},
+  \code{\link{Segment}}, \code{\link{Split}},
   \code{\link{TokenizerNLP}}, \code{\link{TokenizerQ}},
   \code{\link{Tokenizer}}, \code{\link{Token}}
 }

@@ -16,28 +16,13 @@ SLM0 <- R6::R6Class(
   inherit = Super,
 
   private = list(
-    ..settings = list(
+    ..parameters = list(
+      modelId = character(),
       modelName = character(),
-      modelSize = numeric(),
-      openVocabulary = logical(),
       algorithm = character(),
+      modelSize = numeric(),
       modelType = character(),
-      modelTypes = c('Unigram', 'Bigram', 'Trigram', 'Quadgram', 'Quintgram')
-    ),
-    ..regex = list(
-      tail = "^.* ([[:alnum:]]+)$",
-      prefix = list(
-        bigrams   = "^((\\S+\\s+){0}\\S+).*$",
-        trigrams  = "^((\\S+\\s+){1}\\S+).*$",
-        quadgrams = "^((\\S+\\s+){2}\\S+).*$",
-        quintgrams = "^((\\S+\\s+){3}\\S+).*$"
-      ),
-      suffix = list(
-        bigrams = "^.*\\s+((?:\\S+\\s+){0}\\S+)$",
-        trigrams = "^.*\\s+((?:\\S+\\s+){1}\\S+)$",
-        quadgrams = "^.*\\s+((?:\\S+\\s+){2}\\S+)$",
-        quintgrams = "^.*\\s+((?:\\S+\\s+){3}\\S+)$"
-      )
+      vocabulary = character()
     ),
     ..corpora = list(
       train = character(),
@@ -67,6 +52,20 @@ SLM0 <- R6::R6Class(
     ),
     ..evaluation = list(
       scores = data.table(),
+      timing = list(
+        train = list(
+          process = character(),
+          start = character(),
+          end = character(),
+          duration = character()
+        ),
+        evaluation = list(
+          process = character(),
+          start = character(),
+          end = character(),
+          duration = character()
+        )
+      ),
       performance = list(
         nGrams = numeric(),
         oov = 0,
@@ -77,9 +76,54 @@ SLM0 <- R6::R6Class(
         perplexity = numeric()
       )
     ),
+    ..settings = list(
+      modelTypes = c('Unigram', 'Bigram', 'Trigram', 'Quadgram', 'Quintgram'),
+      regex = list(
+        tail = "^.* ([[:alnum:]]+)$",
+        prefix = list(
+          bigrams   = "^((\\S+\\s+){0}\\S+).*$",
+          trigrams  = "^((\\S+\\s+){1}\\S+).*$",
+          quadgrams = "^((\\S+\\s+){2}\\S+).*$",
+          quintgrams = "^((\\S+\\s+){3}\\S+).*$"
+        ),
+        suffix = list(
+          bigrams = "^.*\\s+((?:\\S+\\s+){0}\\S+)$",
+          trigrams = "^.*\\s+((?:\\S+\\s+){1}\\S+)$",
+          quadgrams = "^.*\\s+((?:\\S+\\s+){2}\\S+)$",
+          quintgrams = "^.*\\s+((?:\\S+\\s+){3}\\S+)$"
+        )
+      )
+    ),
     #-------------------------------------------------------------------------#
     #                           EVALUATION METHODS                            #
     #-------------------------------------------------------------------------#
+    #-------------------------------------------------------------------------#
+    #                                timing                                   #
+    #                 Captures process start and end times                    #
+    #-------------------------------------------------------------------------#
+    startTime = function(train = TRUE) {
+      if (train) {
+        private$..evaluation$timing$train$process <- "Training"
+        private$..evaluation$timing$train$start <- as.character(Sys.time())
+      } else {
+        private$..evaluation$timing$evaluation$process <- "Evaluation"
+        private$..evaluation$timing$evaluation$start <- as.character(Sys.time())
+      }
+    },
+
+    endTime = function(train = TRUE) {
+      if (train) {
+        private$..evaluation$timing$train$end <- as.character(Sys.time())
+        private$..evaluation$timing$train$duration <- as.character(format(difftime(
+          private$..evaluation$timing$train$end,
+          private$..evaluation$timing$train$start, units = "auto")))
+      } else {
+        private$..evaluation$timing$evaluation$end <- as.character(Sys.time())
+        private$..evaluation$timing$evaluation$duration <- as.character(format(difftime(
+          private$..evaluation$timing$evaluation$end,
+          private$..evaluation$timing$evaluation$start, units = "auto")))
+      }
+    },
 
     #-------------------------------------------------------------------------#
     #                           initScoresTables                              #
@@ -87,7 +131,7 @@ SLM0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     initScoresTable = function() {
       test <- private$..corpora$test
-      size <- private$..settings$modelSize
+      size <- private$..parameters$modelSize
 
       tokens <- Token$new(test)$nGrams('tokenizer', size)$getTokens()
       documents <- tokens$getDocuments()
@@ -161,9 +205,9 @@ SLM0 <- R6::R6Class(
 
       # Add prefix and suffix to nGram Table
       if (n > 1) {
-        dt$prefix <- gsub(private$..regex$prefix[[n-1]], "\\1", dt$nGram, perl = TRUE)
-        dt$suffix  <- gsub(private$..regex$suffix[[n-1]], "\\1", dt$nGram, perl = TRUE)
-        dt$tail  <- sub(private$..regex$tail, "\\1", dt$nGram, perl = TRUE)
+        dt$prefix <- gsub(private$..settings$regex$prefix[[n-1]], "\\1", dt$nGram, perl = TRUE)
+        dt$suffix  <- gsub(private$..settings$regex$suffix[[n-1]], "\\1", dt$nGram, perl = TRUE)
+        dt$tail  <- sub(private$..settings$regex$tail, "\\1", dt$nGram, perl = TRUE)
       }
 
       return(dt)
@@ -176,7 +220,7 @@ SLM0 <- R6::R6Class(
     initNGramTables = function() {
 
       # Obtain model parameters and training Corpus object.
-      modelSize <- private$..settings$modelSize
+      modelSize <- private$..parameters$modelSize
       modelTypes <- private$..settings$modelTypes
 
       # Initialize Tables
@@ -243,7 +287,7 @@ SLM0 <- R6::R6Class(
       private$..corpora$vocabulary <- unique(tokens)
 
       # If open vocabulary, replace hapax legomena with the 'UNK' pseudo word
-      if (private$..settings$openVocabulary) {
+      if (private$..parameters$vocabulary == 'Open') {
 
         # Create frequency table, identify hapax legomena and mark as UNK.
         freq <- as.data.frame(table(tokens), stringsAsFactors = FALSE)
@@ -285,7 +329,7 @@ SLM0 <- R6::R6Class(
       oov <- unique(testVocabulary[!testVocabulary %fin% private$..corpora$vocabulary])
 
       # If open vocabulary replace any word not in vocabulary with 'UNK'token
-      if (private$..settings$openVocabulary) {
+      if (private$..parameters$vocabulary == 'Open') {
 
         # Replace OOV words with UNK pseudo-word in each document
         documents <- private$..corpora$test$getDocuments()
@@ -315,7 +359,7 @@ SLM0 <- R6::R6Class(
       documents <- corpus$getDocuments()
       for (i in 1:length(documents)) {
         documents[[i]]$content <-
-          paste(paste0(rep("BOS", times = private$..settings$modelSize-1), collapse = " "),
+          paste(paste0(rep("BOS", times = private$..parameters$modelSize-1), collapse = " "),
                 documents[[i]]$content,
                 "EOS", sep = " ")
         corpus$addDocument(documents[[i]])
@@ -330,27 +374,22 @@ SLM0 <- R6::R6Class(
 
       meta <- private$meta$get()
 
-      heading <- paste(private$..settings$modelName,
-                       private$..settings$algorithm,
-                       private$..settings$modelType, "Summary")
+      heading <- paste(private$..parameters$modelName, "Summary")
 
 
       NLPStudio::printHeading(text = heading, symbol = "=", newlines = 2)
 
       cat(paste0("\nId         : ", meta$identity$id))
-      cat(paste0("\nName       : ", private$..settings$modelName))
-      cat(paste0("\nType       : ", private$..settings$modelType))
-      cat(paste0("\nAlgorithm  : ", private$..settings$algorithm))
-      cat(paste0("\nVocabulary : ", private$..settings$openVocabulary))
+      cat(paste0("\nName       : ", private$..parameters$modelName))
+      cat(paste0("\nType       : ", private$..parameters$modelType))
+      cat(paste0("\nAlgorithm  : ", private$..parameters$algorithm))
       return(TRUE)
 
     },
 
     nGramSummary = function() {
 
-      heading <- paste(private$..settings$modelName,
-                       private$..settings$algorithm,
-                       private$..settings$modelType, "nGram Summary")
+      heading <- paste(private$..parameters$modelName, "nGram Summary")
 
       NLPStudio::printHeading(text = heading, symbol = "-", newlines = 2)
       print(private$..model$totals)
@@ -360,9 +399,7 @@ SLM0 <- R6::R6Class(
 
     discountSummary = function() {
 
-      heading <- paste(private$..settings$modelName,
-                       private$..settings$algorithm,
-                       private$..settings$modelType, "Discount Summary")
+      heading <- paste(private$..parameters$modelName, "Discount Summary")
 
       NLPStudio::printHeading(text = heading, symbol = "-", newlines = 2)
       print(private$..model$discounts)
@@ -374,10 +411,8 @@ SLM0 <- R6::R6Class(
 
       if (length(private$..model$nGrams) > 0) {
 
-        for (i in 1:private$..settings$modelSize) {
-          heading <- paste(private$..settings$modelName,
-                           private$..settings$algorithm,
-                           private$..settings$modelTypes[i], "Detail")
+        for (i in 1:private$..parameters$modelSize) {
+          heading <- paste(private$..parameters$modelName, "nGram Detail")
           NLPStudio::printHeading(text = heading,
                                   symbol = "-",
                                   newlines = 2)
@@ -390,15 +425,23 @@ SLM0 <- R6::R6Class(
 
     evalSummary = function() {
 
-      heading <- paste(private$..settings$modelName,
-                       private$..settings$algorithm,
-                       private$..settings$modelType, "Evaluation")
+      heading <- paste(private$..parameters$modelName, "Evaluation")
 
       NLPStudio::printHeading(text = heading, symbol = "-", newlines = 2)
-      cat("\nTraining Set Summary\n")
-      print(as.data.frame(private$..corporaStats$train), row.names = FALSE)
-      cat("\nTest Set Summary\n")
-      print(as.data.frame(private$..corporaStats$test), row.names = FALSE)
+      cat("\nParameters\n")
+      print(as.data.frame(private$..parameters), row.names = FALSE)
+
+      cat("\nData Summary\n")
+      train <- as.data.frame(private$..corporaStats$train)
+      test <- as.data.frame(private$..corporaStats$test)
+      dataSummary <- rbind(train, test)
+      dataSummary <- cbind(data.frame(data = names(private$..corporaStats)), dataSummary)
+      print(dataSummary, row.names = FALSE)
+
+      cat("\nTiming Summary\n")
+      timings <- rbindlist(private$..evaluation$timing, fill = TRUE)
+      print(timings, row.names = FALSE)
+
       cat("\nPerformance Summary\n")
       print(as.data.frame(private$..evaluation$performance), row.names = FALSE)
       cat("\n")
@@ -424,7 +467,11 @@ SLM0 <- R6::R6Class(
     getScores = function() private$..evaluation$scores,
     getEval = function() {
       private$evalSummary()
-      return(private$..evaluation)
+      eval <- list()
+      eval$parameters <- as.data.frame(private$..parameters)
+      eval$timing <- rbindlist(private$..evaluation$timing)
+      eval$performance <- as.data.frame(private$..evaluation$performance)
+      return(eval)
     },
 
     #-------------------------------------------------------------------------#
