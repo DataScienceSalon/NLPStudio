@@ -101,7 +101,7 @@ KN <- R6::R6Class(
     #-------------------------------------------------------------------------#
     score = function() {
 
-      private$initScoresTable()
+      private$initTestTables()
 
       nGrams <- private$..evaluation$scores$nGram
       scores <- rbindlist(lapply(nGrams, function(nGram) {

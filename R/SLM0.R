@@ -22,6 +22,7 @@ SLM0 <- R6::R6Class(
       algorithm = character(),
       modelSize = numeric(),
       modelType = character(),
+      openVocabulary = logical(),
       vocabulary = character()
     ),
     ..corpora = list(
@@ -51,7 +52,7 @@ SLM0 <- R6::R6Class(
       totals = data.frame()
     ),
     ..evaluation = list(
-      scores = data.table(),
+      nGrams = list(),
       timing = list(
         train = list(
           process = character(),
@@ -126,22 +127,9 @@ SLM0 <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                           initScoresTables                              #
-    #                     Initialize nGram scores table                       #
+    #                           prepEvalReport                                #
+    # Computes OOV Rates, Zero Probabilities Log probabilities and Perplexity #
     #-------------------------------------------------------------------------#
-    initScoresTable = function() {
-      test <- private$..corpora$test
-      size <- private$..parameters$modelSize
-
-      tokens <- Token$new()$nGrams(x = test,'tokenizer', size)$getTokens()
-      documents <- tokens$getDocuments()
-      nGrams <- unlist(lapply(documents, function(d) {d$content}))
-
-      private$..evaluation$scores <- data.table(n = seq(1:length(nGrams)),
-                                                nGram = nGrams)
-      return(TRUE)
-    },
-
     prepEvalReport = function() {
       # Test set nGram count
       private$..evaluation$performance$nGrams <- nrow(private$..evaluation$scores)
@@ -190,6 +178,7 @@ SLM0 <- R6::R6Class(
         names(total) <- names(private$..model$nGrams[[n]])[nums]
         total <- cbind(n, nGramTypes, total)
       }))
+      return(TRUE)
     },
 
     #-------------------------------------------------------------------------#
@@ -217,22 +206,21 @@ SLM0 <- R6::R6Class(
     #                           initNGramTables                               #
     #            Initialize  nGram tables from the training text              #
     #-------------------------------------------------------------------------#
-    initNGramTables = function() {
+    initNGramTables = function(corpus) {
 
       # Obtain model parameters and training Corpus object.
       modelSize <- private$..parameters$modelSize
       modelTypes <- private$..settings$modelTypes
 
       # Initialize Tables
-      private$..model$nGrams <- list()
-      private$..model$nGrams <- lapply(seq(1:modelSize), function(n) {
-        corpus <- Token$new()$nGrams(x = private$..corpora$train, 'quanteda', n)$getTokens()
+      tables <- lapply(seq(1:modelSize), function(n) {
+        corpus <- Token$new()$nGrams(x = corpus, 'quanteda', n)$getTokens()
         documents <- corpus$getDocuments()
         nGrams <- unlist(lapply(documents, function(d) {d$content}))
         private$createTable(nGrams, n)
       })
 
-      return(TRUE)
+      return(tables)
     },
 
     #-------------------------------------------------------------------------#

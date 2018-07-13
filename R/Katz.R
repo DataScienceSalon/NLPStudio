@@ -28,67 +28,107 @@ Katz <- R6::R6Class(
   inherit = SLM0,
 
   private = list(
-
     #-------------------------------------------------------------------------#
-    #                                 qBOA                                    #
-    #                      Counts the nGram prefixes                          #
+    #                             BUILD METHODS                               #
     #-------------------------------------------------------------------------#
-    qBOA = function(i) {
+    #-------------------------------------------------------------------------#
+    #                                  pML                                    #
+    #                 Conputes maximum likelihood of unigrams                 #
+    #-------------------------------------------------------------------------#
+    pML = function(nGrams) {
+      nGrams$pML <- nGrams$cNGram / sum(nGrams$cNGram)
+      return(nGrams)
+    },
+    #-------------------------------------------------------------------------#
+    #                                cKatz                                    #
+    #                 Discounted Counts for Observed Unigrams                 #
+    #-------------------------------------------------------------------------#
+    cKatz = function(i, nGrams) {
 
-      if (i == 1) {
-
-        private$..model$nGrams[[i]]$pML <- private$..model$nGrams[[i]]$cNGram /
-          sum(private$..model$nGrams[[i]]$cNGram)
-      } else {
-        private$..model$nGrams[[i]]$qBO <- private$..model$nGrams[[i]]$cKatz /
-          private$..model$nGrams[[i]]$cPrefix
-      }
-      return(TRUE)
+      if (i > 1)
+        if (private$..parameters$gtDiscount) {
+          discounts <- as.numeric(private$..model$discounts[i])
+          nGrams$cKatz <-
+            ifelse (private$..model$nGrams[[i]]$cNGram > 5,
+                    private$..model$nGrams[[i]]$cNGram,
+                    private$..model$nGrams[[i]]$cNGram *
+                      discounts[private$..model$nGrams[[i]]$cNGram])
+        } else {
+          nGrams$cKatz <-
+            ifelse (private$..model$nGrams[[i]]$cNGram > 5,
+                    private$..model$nGrams[[i]]$cNGram,
+                    private$..model$nGrams[[i]]$cNGram -
+                      private$..parameters$fixedDiscount)
+        }
+      return(nGrams)
     },
 
     #-------------------------------------------------------------------------#
     #                               cPrefix                                   #
     #                      Counts the nGram prefixes                          #
     #-------------------------------------------------------------------------#
-    cPrefix = function(i) {
+    cPrefix = function(i, nGrams) {
 
       if (i > 1) {
         lower <- private$..model$nGrams[[i-1]] %>% select(nGram, cNGram)
         names(lower) <- c("nGram", "cPrefix")
-        private$..model$nGrams[[i]] <- merge(private$..model$nGrams[[i]],
-                                             lower, by.x = "prefix",
-                                             by.y = "nGram", all.x = TRUE)
-        private$..model$nGrams[[i]]$cPrefix <-
-          ifelse(is.na(private$..model$nGrams[[i]]$cPrefix),
-                 private$..corporaStats$train$sentences,
-                 private$..model$nGrams[[i]]$cPrefix)
+        nGrams <- merge(nGrams,lower, by.x = "prefix",
+                             by.y = "nGram", all.x = TRUE)
+
+        # Count start of sentence tokens
+        nGrams$cPrefix <- ifelse(nGrams$prefix == paste(rep("BOS", i), collapse = " "),
+                                private$..corporaStats$train$sentences,
+                                nGrams$cPrefix)
       }
-      return(TRUE)
+      return(nGrams)
+    },
+    #-------------------------------------------------------------------------#
+    #                                 qBOA                                    #
+    #                      Counts the nGram prefixes                          #
+    #-------------------------------------------------------------------------#
+    qBOA = function(i, nGrams) {
+
+      if (i > 1)  nGrams$qBOA <- nGrams$cKatz / nGrams$cPrefix
+
+      return(nGrams)
     },
 
     #-------------------------------------------------------------------------#
-    #                                cKatz                                    #
-    #                 Discounted Counts for Observed Unigrams                 #
+    #                              Compute Alpha                              #
     #-------------------------------------------------------------------------#
-    cKatz = function(i) {
+    alpha = function(i, nGrams) {
 
-      if (private$..parameters$gtDiscount) {
-        discounts <- as.numeric(private$..model$discounts[i])
-        private$..model$nGrams[[i]]$cKatz <-
-          ifelse (private$..model$nGrams[[i]]$cNGram > 5,
-                  private$..model$nGrams[[i]]$cNGram,
-                  private$..model$nGrams[[i]]$cNGram *
-                    discounts[private$..model$nGrams[[i]]$cNGram+1])
-      } else {
-        private$..model$nGrams[[i]]$cKatz <-
-          ifelse (private$..model$nGrams[[i]]$cNGram > 5,
-                  private$..model$nGrams[[i]]$cNGram,
-                  private$..model$nGrams[[i]]$cNGram -
-                    private$..parameters$fixedDiscount)
+        if (i > 1) nGrams$alpha <- 1 - qBOA
+
+      return(nGrams)
+    },
+    #-------------------------------------------------------------------------#
+    #                               qBOB                                      #
+    #            Computes sum of probabilities from unobserved nGrams         #
+    #-------------------------------------------------------------------------#
+    qBOB = function(i, nGrams, lower) {
+
+      if (i > 1) {
+        if (i == 2) {
+          qBOA <- lower %>% select(nGram, pML)
+        } else {
+          qBOA <- lower %>% select(nGram, qBOA)
+        }
+        names(qBOA) <- c("nGram", "qBOASfx")
+        nGrams <- merge(nGrams, qBOA, by.x = 'suffix', by.y = 'nGram')
+        nGrams$qBOB <- 1 - nGrams$qBOASfx
       }
-      return(TRUE)
+      return(nGrams)
     },
 
+    #-------------------------------------------------------------------------#
+    #                           scoreNGram                                    #
+    #               Assigns a probability to each test nGram                  #
+    #-------------------------------------------------------------------------#
+    qBO = function(i, nGrams) {
+      if (i > 1) nGrams$qBO <- ifelse(nGrams$qBOA > 0, nGrams$qBOA, nGrams, qBOB)
+      return(nGrams)
+    },
     #-------------------------------------------------------------------------#
     #                              discounts                                  #
     #         Computes discount rates to be applied to raw nGram counts       #
@@ -137,112 +177,61 @@ Katz <- R6::R6Class(
     build = function() {
 
       private$prepTrain()
-      private$initNGramTables()
+      private$..model$nGrams <- list()
+      private$..model$nGrams <-  private$initNGramTables(private$..corpora$train)
       private$totals()
       private$discounts()
 
-      for (i in 1:private$..parameters$modelSize) {
-        private$cKatz(i)
-        private$cPrefix(i)
-        private$qBOA(i)
+      for (i in 1:private$..settings$modelSize) {
+
+        if (i == 1) {
+          private$..model$nGrams[[i]] <-
+            private$pML(private$..model$nGrams[[i]])
+        } else {
+          private$..model$nGrams[[i]] <- private$cKatz(i, private$..model$nGrams[[i]])
+          private$..model$nGrams[[i]] <- private$cPrefix(i, private$..model$nGrams[[i]])
+          private$..model$nGrams[[i]] <- private$qBOA(i, private$..model$nGrams[[i]])
+          private$..model$nGrams[[i]] <- private$alpha(i, private$..model$nGrams[[i]])
+          private$..model$nGrams[[i]] <- private$qBOB(i, private$..model$nGrams[[i]],
+                                                      private$..model$nGrams[[i-1]])
+          private$..model$nGrams[[i]] <- private$qBO(private$..model$nGrams[[i]])
+        }
       }
+
     },
     #-------------------------------------------------------------------------#
     #                             EVALUATE METHODS                            #
     #-------------------------------------------------------------------------#
-    #-------------------------------------------------------------------------#
-    #                              Compute Alpha                              #
-    #-------------------------------------------------------------------------#
-    alpha = function(ngram, n) {
 
-      pfx <- gsub(private$..settings$regex$prefix[[n-1]], "\\1", ngram, perl = TRUE)
-
-      # If nGrams sharing the prefix are observed, compute alpha from counts
-      observed <- private$..model$nGrams[[n]] %>% filter(prefix == pfx)
-      if (nrow(observed) > 0) {
-        counts <- observed %>% summarise(cKatz = sum(cKatz), cPrefix = unique(cPrefix))
-        alpha <- 1 - (counts$cKatz / counts$cPrefix)
-      } else {
-        alpha <- 1
-      }
-
-      return(alpha)
-    },
-    #-------------------------------------------------------------------------#
-    #                               qBOB                                      #
-    #            Computes sum of probabilities from unobserved nGrams         #
-    #-------------------------------------------------------------------------#
-    qBOB = function(pfx, sfx, n) {
-
-      # Obtain observed ngram suffix, that start with prefix
-      suffixes <- private$..model$nGrams[[n]] %>% filter(prefix == pfx) %>%
-        select(suffix)
-      qBOA <- merge(private$..model$nGrams[[n-1]], suffixes,
-                    by.x = "nGram", by.y = 'suffix')
-      qBOBSum <- 1 - sum(qBOA$qBO)
-
-      return(qBOBSum)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                           scoreNGram                                    #
-    #               Assigns a probability to each test nGram                  #
-    #-------------------------------------------------------------------------#
-    qBO = function(ngram, n) {
-
-      # If unigram order, obtain pML. If unigram unobserved, set probability to zero
-      # and increment the number of OOV words.
-      if (n == 1) {
-        qBO <- as.numeric(private$..model$nGrams[[n]] %>% filter(nGram == ngram) %>%
-          select(pML))
-        if (is.na(qBO)) {
-          qBO <- 0
-          private$..evaluation$performance$oov <-
-            private$..evaluation$performance$oov + 1
-        }
-      # Otherwise recursively estimate backoff probabilities
-      } else {
-        qBO <- as.numeric(private$..model$nGrams[[n]] %>% filter(nGram == ngram) %>%
-          select(qBO))
-
-        if (is.na(qBO)) {
-          # Split nGram into prefix and suffix
-          pfx <- gsub(private$..settings$regex$prefix[[n-1]], "\\1", ngram, perl = TRUE)
-          sfx <- gsub(private$..settings$regex$suffix[[n-1]], "\\1", ngram, perl = TRUE)
-
-          # Compute alpha
-          alpha <- private$alpha(ngram, n)
-
-          # Compute lambda numerator: the backoff probability of nGram tail
-          qBOSfx <- private$qBO(sfx, n-1)
-
-          # Compute the probability mass for the n-1 ngrams that complete
-          # unobserved  nGrams that share the same prefix
-          qBOBSum <- private$qBOB(pfx, sfx, n)
-
-          # Compute qBO
-          qBO <- alpha * qBOSfx / qBOBSum
-        }
-      }
-      return(qBO)
-    },
     #-------------------------------------------------------------------------#
     #                                score                                    #
     #               Compute probabilities or each nGram                       #
     #-------------------------------------------------------------------------#
     score = function() {
 
-      private$initScoresTable()
+      private$prepTest()
+      private$..evaluation$nGrams <- list()
+      private$..evaluation$nGrams <-  private$initNGramTables(private$..corpora$test)
+      for (i in 1:private$..settings$modelSize) {
+        if (i == 1) {
+          private$..evaluation$nGrams[[i]] <-
+            private$pML(private$..evaluation$nGrams[[i]])
+        } else {
+          private$..evaluation$nGrams[[i]] <- private$cKatz(i, private$..evaluation$nGrams[[i]])
+          private$..evaluation$nGrams[[i]] <- private$cPrefix(i, private$..evaluation$nGrams[[i]])
+          private$..evaluation$nGrams[[i]] <- private$qBOA(i, private$..evaluation$nGrams[[i]])
+          private$..evaluation$nGrams[[i]] <- private$alpha(i, private$..evaluation$nGrams[[i]])
+          private$..evaluation$nGrams[[i]] <- private$qBOB(i, private$..evaluation$nGrams[[i]],
+                                                      private$..evaluation$nGrams[[i-1]])
+          private$..evaluation$nGrams[[i]] <- private$qBO(private$..evaluation$nGrams[[i]])
+        }
+      }
 
-      nGrams <- private$..evaluation$scores$nGram
-      scores <- rbindlist(lapply(nGrams, function(nGram) {
-        p <- list()
-        p$p <- private$qBO(nGram, n = private$..parameters$modelSize)
-        p
-      }))
-
-      private$..evaluation$scores <- cbind(private$..evaluation$scores, scores)
-      private$prepEvalReport()
+      # Extract backoff probabilities at highest nGram level
+      private$..evaluation$scores <-
+        private$..evaluation$nGrams[[private$..settings$modelSize]] %>%
+        select(nGram, qBO)
+      names(private$..evaluation$scores) <- c("nGram", "p")
 
       return(TRUE)
     },
@@ -300,10 +289,10 @@ Katz <- R6::R6Class(
       private$..parameters$k <- k
       private$..parameters$gtDiscount <- gtDiscount
       private$..parameters$estimateGT <- estimateGT
-      private$..parameters$fixedDiscount <- ifelse(gtDiscount == TRUE,
-                                                   "NA", fixedDiscount)
+      private$..parameters$fixedDiscount <- fixedDiscount
       private$..parameters$algorithm <- 'Katz'
       private$..parameters$modelType <- private$..settings$modelTypes[modelSize]
+      private$..parameters$openVocabulary <- openVocabulary
       private$..parameters$vocabulary <- ifelse(openVocabulary == TRUE,
                                                 'Open', 'Closed')
 

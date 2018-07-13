@@ -64,7 +64,7 @@ TextStudio <- R6::R6Class(
       if (private$..config$..remove$email)
         regex <- c(regex, private$..regex$email)
 
-      content <- gsub(paste(regex, collapse = '|'), "", content, perl = TRUE, ignore.case = TRUE)
+      content <- gsub(paste0(regex, collapse = '|'), "", content, perl = TRUE, ignore.case = TRUE)
       regex <- NULL
 
       # Remove sentences/vectors with profanity
