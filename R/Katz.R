@@ -299,8 +299,7 @@ Katz <- R6::R6Class(
       private$..parameters$modelSize <- modelSize
       private$..parameters$k <- k
       private$..parameters$gtDiscount <- gtDiscount
-      private$..parameters$estimateGT <- ifelse(gtDiscount == TRUE,
-                                                estimateGT, "NA")
+      private$..parameters$estimateGT <- estimateGT
       private$..parameters$fixedDiscount <- ifelse(gtDiscount == TRUE,
                                                    "NA", fixedDiscount)
       private$..parameters$algorithm <- 'Katz'

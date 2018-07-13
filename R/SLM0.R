@@ -133,7 +133,7 @@ SLM0 <- R6::R6Class(
       test <- private$..corpora$test
       size <- private$..parameters$modelSize
 
-      tokens <- Token$new(test)$nGrams('tokenizer', size)$getTokens()
+      tokens <- Token$new()$nGrams(x = test,'tokenizer', size)$getTokens()
       documents <- tokens$getDocuments()
       nGrams <- unlist(lapply(documents, function(d) {d$content}))
 
@@ -226,7 +226,7 @@ SLM0 <- R6::R6Class(
       # Initialize Tables
       private$..model$nGrams <- list()
       private$..model$nGrams <- lapply(seq(1:modelSize), function(n) {
-        corpus <- Token$new(private$..corpora$train)$nGrams('quanteda', n)$getTokens()
+        corpus <- Token$new()$nGrams(x = private$..corpora$train, 'quanteda', n)$getTokens()
         documents <- corpus$getDocuments()
         nGrams <- unlist(lapply(documents, function(d) {d$content}))
         private$createTable(nGrams, n)
@@ -281,7 +281,7 @@ SLM0 <- R6::R6Class(
     prepTrain = function() {
 
       # Extract vocabulary
-      train <- Token$new(private$..corpora$train)$words('quanteda')$getTokens()
+      train <- Token$new()$words(x = private$..corpora$train, 'quanteda')$getTokens()
       documents <- train$getDocuments()
       tokens <- unname(unlist(lapply(documents, function(d) {d$content})))
       private$..corpora$vocabulary <- unique(tokens)
@@ -323,7 +323,7 @@ SLM0 <- R6::R6Class(
     prepTest = function() {
 
       # Extract vocabulary
-      test <- Token$new(private$..corpora$test)$words('quanteda')$getTokens()
+      test <- Token$new()$words(x = private$..corpora$test, 'quanteda')$getTokens()
       documents <- test$getDocuments()
       testVocabulary <- unique(unlist(lapply(documents, function(d) {d$content})))
       oov <- unique(testVocabulary[!testVocabulary %fin% private$..corpora$vocabulary])

@@ -258,8 +258,7 @@ MKN <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                                Constructor                              #
     #-------------------------------------------------------------------------#
-    initialize = function(train, modelSize = 3, epsilon = 10^-7,
-                          openVocabulary = TRUE) {
+    initialize = function(train, modelSize = 3, openVocabulary = TRUE) {
 
       name <- paste0("Modified Kneser-Ney ",
                      private$..settings$modelTypes[modelSize], " Model")
@@ -273,7 +272,6 @@ MKN <- R6::R6Class(
       private$..parameters$modelName <- name
       private$..parameters$modelSize <- modelSize
       private$..parameters$algorithm <- 'Modified Kneser-Ney'
-      private$..parameters$epsilon <- epsilon
       private$..parameters$modelType <- private$..settings$modelTypes[modelSize]
       private$..parameters$vocabulary <- ifelse(openVocabulary == TRUE,
                                                 'Open', 'Closed')

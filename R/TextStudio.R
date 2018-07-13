@@ -235,14 +235,9 @@ TextStudio <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                             Constructor                                 #
     #-------------------------------------------------------------------------#
-    initialize = function() {
+    initialize = function(x) {
       private$loadServices(name = 'TextStudio')
-      invisible(self)
-    },
-    #-------------------------------------------------------------------------#
-    #                         Load Configuation                               #
-    #-------------------------------------------------------------------------#
-    loadConfig = function(x) {
+
       # Validate class of object.
       private$..params <- list()
       private$..params$classes$name <- list('x')
@@ -256,6 +251,7 @@ TextStudio <- R6::R6Class(
       private$..config <- x$getConfig()
       invisible(self)
     },
+
     #-------------------------------------------------------------------------#
     #                           Execute Method                                #
     #-------------------------------------------------------------------------#

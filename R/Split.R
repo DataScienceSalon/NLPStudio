@@ -42,10 +42,12 @@ Split <- R6::R6Class(
 
   private = list(
 
+    ..splits = list(),
+
     #-------------------------------------------------------------------------#
     #                                Build CV Set                             #
     #-------------------------------------------------------------------------#
-    buildCVSet = function(corpusDocs, labels, name) {
+    splitCorpus = function(corpusDocs, labels, name) {
 
       private$..cvSet <- CVSet$new()
 
@@ -80,8 +82,7 @@ Split <- R6::R6Class(
           corpus$addDocument(document)
         }
 
-        # Attach to CVSet
-        private$..cvSet <- private$..cvSet$addCorpus(corpus)
+        private$..splits[[labels[i]]] <- corpus
 
       }
       private$..corpus <- NULL
@@ -149,15 +150,26 @@ Split <- R6::R6Class(
 
       # Build the corpora and add to a CVSet
       corpusDocs <- private$..corpus$getDocuments()
-      private$buildCVSet(corpusDocs, labels, name)
+      private$splitCorpus(corpusDocs, labels, name)
 
       invisible(self)
     },
 
     #-------------------------------------------------------------------------#
-    #                       Get Cross-Validation Set                          #
+    #                             Accessor Methods                            #
     #-------------------------------------------------------------------------#
-    getCVSet = function() { private$..cvSet },
+    getSplits = function() { private$..splits },
+    getTrain = function() { private$..splits$training },
+    getValidation = function() {
+      if (exists(private$..splits$validation)) {
+        return(private$..splits$validation)
+      } else {
+        event <- "There is no validation set in this Split object."
+        private$logR$log(method = 'execute', event = event, level = "Warn")
+        return(FALSE)
+      }
+    },
+    getTest = function() { private$..splits$test },
 
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #
