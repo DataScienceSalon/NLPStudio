@@ -77,7 +77,7 @@ SLM0 <- R6::R6Class(
         perplexity = numeric()
       )
     ),
-    ..settings = list(
+    ..constants = list(
       modelTypes = c('Unigram', 'Bigram', 'Trigram', 'Quadgram', 'Quintgram'),
       regex = list(
         tail = "^.* ([[:alnum:]]+)$",
@@ -173,7 +173,7 @@ SLM0 <- R6::R6Class(
         df <- private$..model$nGrams[[n]] %>% filter(nGram != paste(rep('BOS',n), collapse = " "))
         nGramTypes <- data.frame(nGramTypes = nrow(df))
         nums <- unlist(lapply(df, is.numeric))
-        df <- as.data.frame(df[,nums])
+        df <- as.data.frame(df[,..nums])
         total <- as.data.frame(colSums(df))
         names(total) <- names(private$..model$nGrams[[n]])[nums]
         total <- cbind(n, nGramTypes, total)
@@ -182,45 +182,74 @@ SLM0 <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                           createTable                                   #
-    #         Creates and initializes an nGram table with raw counts          #
+    #                             initFitTables                               #
+    #                 Initialize  nGram tables from the test set              #
     #-------------------------------------------------------------------------#
-    createTable = function(nGrams, n) {
-      nGrams <- as.data.frame(table(nGrams), stringsAsFactors = FALSE)
-      dt <- data.table(nGram = nGrams[,1],
-                       cNGram = nGrams[,2])
+    initFitTables = function() {
 
-      dt <- dt[nGram != paste(rep("BOS", n), collapse = " ")]
+      # Initialize and obtain model parameters and training Corpus object.
+      private$..evaluation$nGrams <- list()
+      modelSize <- private$..parameters$modelSize
+      modelTypes <- private$..constants$modelTypes[1:private$..parameters$modelSize]
 
-      # Add prefix and suffix to nGram Table
-      if (n > 1) {
-        dt$prefix <- gsub(private$..settings$regex$prefix[[n-1]], "\\1", dt$nGram, perl = TRUE)
-        dt$suffix  <- gsub(private$..settings$regex$suffix[[n-1]], "\\1", dt$nGram, perl = TRUE)
-        dt$tail  <- sub(private$..settings$regex$tail, "\\1", dt$nGram, perl = TRUE)
-      }
+      # Initialize Tables
+      private$..evaluation$nGrams <- lapply(seq(1:modelSize), function(n) {
+        # Obtain nGrams from test set
+        corpus <- Token$new()$nGrams(x = private$..corpora$test,
+                                     'quanteda', n)$getTokens()
+        documents <- corpus$getDocuments()
+        nGrams <- unique(unlist(lapply(documents, function(d) {d$content})))
+        dt <- data.table(nGram = nGrams)
+        dt <- dt[nGram != paste(rep("BOS", n), collapse = " ")]
 
-      return(dt)
+        # Cross check counts from model nGram Tables
+        model <- private$..model$nGrams[[n]][nGram %in% nGrams][,c("nGram", "cNGram")]
+        dt <- merge(dt, model, by = "nGram", all.x = TRUE)
+        dt[is.na(cNGram), cNGram := 0]
+
+        # Add prefix and suffix to nGram Table
+        if (n > 1) {
+          dt$prefix <- gsub(private$..constants$regex$prefix[[n-1]], "\\1", dt$nGram, perl = TRUE)
+          dt$suffix  <- gsub(private$..constants$regex$suffix[[n-1]], "\\1", dt$nGram, perl = TRUE)
+        }
+        dt
+      })
+
+      names(private$..evaluation$nGrams) <- modelTypes
+      return(TRUE)
     },
 
     #-------------------------------------------------------------------------#
-    #                           initNGramTables                               #
+    #                           initModelTables                               #
     #            Initialize  nGram tables from the training text              #
     #-------------------------------------------------------------------------#
-    initNGramTables = function(corpus) {
+    initModelTables = function() {
 
-      # Obtain model parameters and training Corpus object.
+      # Initialize and obtain model parameters and training Corpus object.
+      private$..model$nGrams <- list()
       modelSize <- private$..parameters$modelSize
-      modelTypes <- private$..settings$modelTypes
+      modelTypes <- private$..constants$modelTypes[1:private$..parameters$modelSize]
 
       # Initialize Tables
-      tables <- lapply(seq(1:modelSize), function(n) {
-        corpus <- Token$new()$nGrams(x = corpus, 'quanteda', n)$getTokens()
+      private$..model$nGrams <- lapply(seq(1:modelSize), function(n) {
+        corpus <- Token$new()$nGrams(x = private$..corpora$train,
+                                     'quanteda', n)$getTokens()
         documents <- corpus$getDocuments()
         nGrams <- unlist(lapply(documents, function(d) {d$content}))
-        private$createTable(nGrams, n)
+        nGrams <- as.data.frame(table(nGrams), stringsAsFactors = FALSE)
+        dt <- data.table(nGram = nGrams[,1], cNGram = nGrams[,2])
+        dt <- dt[nGram != paste(rep("BOS", n), collapse = " ")]
+
+        # Add prefix and suffix to nGram Table
+        if (n > 1) {
+          dt$prefix <- gsub(private$..constants$regex$prefix[[n-1]], "\\1", dt$nGram, perl = TRUE)
+          dt$suffix  <- gsub(private$..constants$regex$suffix[[n-1]], "\\1", dt$nGram, perl = TRUE)
+        }
+        dt
       })
 
-      return(tables)
+      names(private$..model$nGrams) <- modelTypes
+      return(TRUE)
     },
 
     #-------------------------------------------------------------------------#
@@ -315,6 +344,7 @@ SLM0 <- R6::R6Class(
       documents <- test$getDocuments()
       testVocabulary <- unique(unlist(lapply(documents, function(d) {d$content})))
       oov <- unique(testVocabulary[!testVocabulary %fin% private$..corpora$vocabulary])
+      private$..evaluation$performance$oov <- length(oov)
 
       # If open vocabulary replace any word not in vocabulary with 'UNK'token
       if (private$..parameters$vocabulary == 'Open') {

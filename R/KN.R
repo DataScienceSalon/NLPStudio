@@ -86,8 +86,8 @@ KN <- R6::R6Class(
 
       } else {
         # Split nGram into prefix and suffix
-        pfx <- gsub(private$..settings$regex$prefix[[n-1]], "\\1", ngram, perl = TRUE)
-        sfx <- gsub(private$..settings$regex$suffix[[n-1]], "\\1", ngram, perl = TRUE)
+        pfx <- gsub(private$..constants$regex$prefix[[n-1]], "\\1", ngram, perl = TRUE)
+        sfx <- gsub(private$..constants$regex$suffix[[n-1]], "\\1", ngram, perl = TRUE)
         alpha <- private$alpha(ngram, pfx, n)
         lambda <- private$lambda(pfx, n)
         pKN <- alpha + (lambda * private$pKN(sfx, n-1))
@@ -139,7 +139,7 @@ KN <- R6::R6Class(
     totals = function() {
 
       modelSize <- private$..parameters$modelSize
-      modelTypes <- private$..settings$modelTypes
+      modelTypes <- private$..constants$modelTypes
 
       private$..model$totals <- rbindlist(lapply(seq(1:modelSize), function(i) {
         totals <- list()
@@ -160,7 +160,7 @@ KN <- R6::R6Class(
     build = function() {
 
       private$prepTrain()
-      private$initNGramTables()
+      private$initModelTables()
       private$totals()
       private$discounts()
       return(TRUE)
@@ -198,7 +198,7 @@ KN <- R6::R6Class(
     initialize = function(train, modelSize = 3,  openVocabulary = TRUE) {
 
       name <- paste0("Kneser-Ney ",
-                     private$..settings$modelTypes[modelSize], " Model")
+                     private$..constants$modelTypes[modelSize], " Model")
 
       private$loadServices(name)
 
@@ -209,7 +209,7 @@ KN <- R6::R6Class(
       private$..parameters$modelName <- name
       private$..parameters$modelSize <- modelSize
       private$..parameters$algorithm <- 'Kneser-Ney'
-      private$..parameters$modelType <- private$..settings$modelTypes[modelSize]
+      private$..parameters$modelType <- private$..constants$modelTypes[modelSize]
       private$..parameters$vocabulary <- ifelse(openVocabulary == TRUE,
                                             'Open', 'Closed')
 
@@ -218,7 +218,7 @@ KN <- R6::R6Class(
       private$meta$set(key = 'openVocabulary', value = openVocabulary, type = 'f')
       private$meta$set(key = 'modelSize', value = modelSize, type = 'f')
       private$meta$set(key = 'modelType',
-                       value = private$..settings$modelTypes[modelSize],
+                       value = private$..constants$modelTypes[modelSize],
                        type = 'f')
 
       private$..corpora$train <- Clone$new()$this(x = train, reference = TRUE,

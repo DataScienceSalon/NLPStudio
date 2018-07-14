@@ -126,8 +126,8 @@ MKN <- R6::R6Class(
 
       } else {
         # Split nGram into prefix and suffix
-        pfx <- gsub(private$..settings$regex$prefix[[n-1]], "\\1", ngram, perl = TRUE)
-        sfx <- gsub(private$..settings$regex$suffix[[n-1]], "\\1", ngram, perl = TRUE)
+        pfx <- gsub(private$..constants$regex$prefix[[n-1]], "\\1", ngram, perl = TRUE)
+        sfx <- gsub(private$..constants$regex$suffix[[n-1]], "\\1", ngram, perl = TRUE)
         alpha <- private$alpha(ngram, pfx, n)
         lambda <- private$lambda(pfx, n)
         pMKN <- alpha + (lambda * private$pMKN(sfx, n-1))
@@ -201,7 +201,7 @@ MKN <- R6::R6Class(
       for (i in 1:private$..parameters$modelSize) {
 
         # Summarize counts and store in summary table
-        nGram <- private$..settings$modelTypes[i]
+        nGram <- private$..constants$modelTypes[i]
         n <- nrow(private$..model$nGrams[[i]])
         n1 <- nrow(private$..model$nGrams[[i]] %>% filter(cNGram == 1))
         n2 <- nrow(private$..model$nGrams[[i]] %>% filter(cNGram == 2))
@@ -223,7 +223,7 @@ MKN <- R6::R6Class(
     build = function() {
 
       private$prepTrain()
-      private$initNGramTables()
+      private$initModelTables()
       private$totals()
       private$discounts()
       return(TRUE)
@@ -261,7 +261,7 @@ MKN <- R6::R6Class(
     initialize = function(train, modelSize = 3, openVocabulary = TRUE) {
 
       name <- paste0("Modified Kneser-Ney ",
-                     private$..settings$modelTypes[modelSize], " Model")
+                     private$..constants$modelTypes[modelSize], " Model")
 
       private$loadServices(name)
 
@@ -272,7 +272,7 @@ MKN <- R6::R6Class(
       private$..parameters$modelName <- name
       private$..parameters$modelSize <- modelSize
       private$..parameters$algorithm <- 'Modified Kneser-Ney'
-      private$..parameters$modelType <- private$..settings$modelTypes[modelSize]
+      private$..parameters$modelType <- private$..constants$modelTypes[modelSize]
       private$..parameters$vocabulary <- ifelse(openVocabulary == TRUE,
                                                 'Open', 'Closed')
 
@@ -281,7 +281,7 @@ MKN <- R6::R6Class(
       private$meta$set(key = 'openVocabulary', value = openVocabulary, type = 'f')
       private$meta$set(key = 'modelSize', value = modelSize, type = 'f')
       private$meta$set(key = 'modelType',
-                       value = private$..settings$modelTypes[modelSize],
+                       value = private$..constants$modelTypes[modelSize],
                        type = 'f')
 
       private$..corpora$train <- Clone$new()$this(x = train, reference = TRUE,
