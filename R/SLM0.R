@@ -23,7 +23,8 @@ SLM0 <- R6::R6Class(
       modelSize = numeric(),
       modelType = character(),
       openVocabulary = logical(),
-      vocabulary = character()
+      vocabulary = character(),
+      bosTags = logical()
     ),
     ..corpora = list(
       train = character(),
@@ -182,63 +183,29 @@ SLM0 <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                             initFitTables                               #
-    #                 Initialize  nGram tables from the test set              #
+    #                             initNGrams                                  #
+    #             Initialize nGram tables from the corpus                     #
     #-------------------------------------------------------------------------#
-    initFitTables = function() {
+    initNGrams = function(corpus, count = TRUE) {
 
       # Initialize and obtain model parameters and training Corpus object.
-      private$..evaluation$nGrams <- list()
       modelSize <- private$..parameters$modelSize
       modelTypes <- private$..constants$modelTypes[1:private$..parameters$modelSize]
 
       # Initialize Tables
-      private$..evaluation$nGrams <- lapply(seq(1:modelSize), function(n) {
-        # Obtain nGrams from test set
-        corpus <- Token$new()$nGrams(x = private$..corpora$test,
-                                     'quanteda', n)$getTokens()
-        documents <- corpus$getDocuments()
-        nGrams <- unique(unlist(lapply(documents, function(d) {d$content})))
-        dt <- data.table(nGram = nGrams)
-        dt <- dt[nGram != paste(rep("BOS", n), collapse = " ")]
+      nGrams <- lapply(seq(1:modelSize), function(n) {
 
-        # Cross check counts from model nGram Tables
-        model <- private$..model$nGrams[[n]][nGram %in% nGrams][,c("nGram", "cNGram")]
-        dt <- merge(dt, model, by = "nGram", all.x = TRUE)
-        dt[is.na(cNGram), cNGram := 0]
-
-        # Add prefix and suffix to nGram Table
-        if (n > 1) {
-          dt$prefix <- gsub(private$..constants$regex$prefix[[n-1]], "\\1", dt$nGram, perl = TRUE)
-          dt$suffix  <- gsub(private$..constants$regex$suffix[[n-1]], "\\1", dt$nGram, perl = TRUE)
-        }
-        dt
-      })
-
-      names(private$..evaluation$nGrams) <- modelTypes
-      return(TRUE)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                           initModelTables                               #
-    #            Initialize  nGram tables from the training text              #
-    #-------------------------------------------------------------------------#
-    initModelTables = function() {
-
-      # Initialize and obtain model parameters and training Corpus object.
-      private$..model$nGrams <- list()
-      modelSize <- private$..parameters$modelSize
-      modelTypes <- private$..constants$modelTypes[1:private$..parameters$modelSize]
-
-      # Initialize Tables
-      private$..model$nGrams <- lapply(seq(1:modelSize), function(n) {
-        corpus <- Token$new()$nGrams(x = private$..corpora$train,
-                                     'quanteda', n)$getTokens()
-        documents <- corpus$getDocuments()
-        nGrams <- unlist(lapply(documents, function(d) {d$content}))
+        # Tokenize corpus into nGrams of order i, and add counts if requested
+        nGrams <- Token$new()$nGrams(x = corpus, tokenizer = 'quanteda', n = n)$getNGrams()
         nGrams <- as.data.frame(table(nGrams), stringsAsFactors = FALSE)
-        dt <- data.table(nGram = nGrams[,1], cNGram = nGrams[,2])
-        dt <- dt[nGram != paste(rep("BOS", n), collapse = " ")]
+        if (count) {
+          dt <- data.table(nGram = nGrams[,1], cNGram = nGrams[,2])
+          dt$cNGram <- ifelse(dt$nGram == paste(rep("BOS", n), collapse = " "),
+                              private$..corporaStats$train$sentences,
+                              dt$cNGram)
+        } else {
+          dt <- data.table(nGram = nGrams[,1])
+        }
 
         # Add prefix and suffix to nGram Table
         if (n > 1) {
@@ -248,8 +215,8 @@ SLM0 <- R6::R6Class(
         dt
       })
 
-      names(private$..model$nGrams) <- modelTypes
-      return(TRUE)
+      names(nGrams) <- modelTypes
+      return(nGrams)
     },
 
     #-------------------------------------------------------------------------#
@@ -298,7 +265,7 @@ SLM0 <- R6::R6Class(
     prepTrain = function() {
 
       # Extract vocabulary
-      train <- Token$new()$words(x = private$..corpora$train, 'quanteda')$getTokens()
+      train <- Token$new()$words(x = private$..corpora$train, 'quanteda')$getCorpus()
       documents <- train$getDocuments()
       tokens <- unname(unlist(lapply(documents, function(d) {d$content})))
       private$..corpora$vocabulary <- unique(tokens)
@@ -332,6 +299,7 @@ SLM0 <- R6::R6Class(
 
       return(TRUE)
     },
+
     #-------------------------------------------------------------------------#
     #                               prepTest                                  #
     #   Annotates Training Set with BOS/EOS and closes Vocabulary by setting  #
@@ -340,7 +308,7 @@ SLM0 <- R6::R6Class(
     prepTest = function() {
 
       # Extract vocabulary
-      test <- Token$new()$words(x = private$..corpora$test, 'quanteda')$getTokens()
+      test <- Token$new()$words(x = private$..corpora$test, 'quanteda')$getCorpus()
       documents <- test$getDocuments()
       testVocabulary <- unique(unlist(lapply(documents, function(d) {d$content})))
       oov <- unique(testVocabulary[!testVocabulary %fin% private$..corpora$vocabulary])
@@ -376,10 +344,16 @@ SLM0 <- R6::R6Class(
       # Annotates text with appropriate start and end of sentence tokens.
       documents <- corpus$getDocuments()
       for (i in 1:length(documents)) {
-        documents[[i]]$content <-
-          paste(paste0(rep("BOS", times = private$..parameters$modelSize-1), collapse = " "),
-                documents[[i]]$content,
-                "EOS", sep = " ")
+        if (private$..parameters$bosTags) {
+          documents[[i]]$content <-
+            paste(paste0(rep("BOS", times = private$..parameters$modelSize-1), collapse = " "),
+                  documents[[i]]$content,
+                  "EOS", sep = " ")
+        } else {
+          documents[[i]]$content <-
+            paste(documents[[i]]$content, "EOS", sep = " ")
+        }
+
         corpus$addDocument(documents[[i]])
       }
       return(corpus)
@@ -430,7 +404,8 @@ SLM0 <- R6::R6Class(
       if (length(private$..model$nGrams) > 0) {
 
         for (i in 1:private$..parameters$modelSize) {
-          heading <- paste(private$..parameters$modelName, "nGram Detail")
+          nGram <- private$..constants$modelTypes[i]
+          heading <- paste(private$..parameters$modelName, nGram, "Detail")
           NLPStudio::printHeading(text = heading,
                                   symbol = "-",
                                   newlines = 2)
@@ -486,6 +461,8 @@ SLM0 <- R6::R6Class(
     getEval = function() {
       private$evalSummary()
       eval <- list()
+      #TODO: Remove the following line
+      eval$nGrams <- private$..evaluation$nGrams
       eval$parameters <- as.data.frame(private$..parameters)
       eval$timing <- rbindlist(private$..evaluation$timing)
       eval$performance <- as.data.frame(private$..evaluation$performance)

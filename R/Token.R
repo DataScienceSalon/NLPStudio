@@ -32,7 +32,7 @@ Token <- R6::R6Class(
 
   private = list(
     ..x = character(),
-    ..tokens = character(),
+    ..tokenizedCorpus = character(),
 
     validate = function(x) {
       private$..params <- list()
@@ -67,12 +67,12 @@ Token <- R6::R6Class(
       private$validate(x)
 
       if (grepl("^t", tokenizer, ignore.case = TRUE)) {
-        private$..tokens <-
-          Tokenizer$new()$chars(x)
+        private$..tokenizedCorpus <-
+          Tokenizer$new()$chars(x)$getCorpus()
 
       } else if (grepl("^q", tokenizer, ignore.case = TRUE)) {
-        private$..tokens <-
-          TokenizerQ$new()$chars(x)
+        private$..tokenizedCorpus <-
+          TokenizerQ$new()$chars(x)$getCorpus()
       } else {
         event <- paste("Invalid tokenizer type. Valid types include ",
                        "c('tokenizer', 'quanteda').  See ?",
@@ -80,6 +80,7 @@ Token <- R6::R6Class(
         private$logR$log(method = 'chars', event = event, level = "Error")
         stop()
       }
+      invisible(self)
     },
 
     #-------------------------------------------------------------------------#
@@ -90,16 +91,16 @@ Token <- R6::R6Class(
       private$validate(x)
 
       if (grepl("^o", tokenizer, ignore.case = TRUE)) {
-        private$..tokens <-
-          TokenizerNLP$new()$words(x)
+        private$..tokenizedCorpus <-
+          TokenizerNLP$new()$words(x)$getCorpus()
 
       } else if (grepl("^t", tokenizer, ignore.case = TRUE)) {
-        private$..tokens <-
-          Tokenizer$new()$words(x)
+        private$..tokenizedCorpus <-
+          Tokenizer$new()$words(x)$getCorpus()
 
       } else if (grepl("^q", tokenizer, ignore.case = TRUE)) {
-        private$..tokens <-
-          TokenizerQ$new()$words(x)
+        private$..tokenizedCorpus <-
+          TokenizerQ$new()$words(x)$getCorpus()
       } else {
         event <- paste("Invalid tokenizer type. Valid types include ",
                        "c('openNLP', 'tokenizer', 'quanteda').  See ?",
@@ -107,6 +108,7 @@ Token <- R6::R6Class(
         private$logR$log(method = 'words', event = event, level = "Error")
         stop()
       }
+      invisible(self)
     },
     #-------------------------------------------------------------------------#
     #                       Sentence Tokens Method                            #
@@ -116,16 +118,16 @@ Token <- R6::R6Class(
       private$validate(x)
 
       if (grepl("^o", tokenizer, ignore.case = TRUE)) {
-        private$..tokens <-
-          TokenizerNLP$new()$sentences(x)
+        private$..tokenizedCorpus <-
+          TokenizerNLP$new()$sentences(x)$getCorpus()
 
       } else if (grepl("^t", tokenizer, ignore.case = TRUE)) {
-        private$..tokens <-
-          Tokenizer$new()$sentences(x)
+        private$..tokenizedCorpus <-
+          Tokenizer$new()$sentences(x)$getCorpus()
 
       } else if (grepl("^q", tokenizer, ignore.case = TRUE)) {
-        private$..tokens <-
-          TokenizerQ$new()$sentences(x)
+        private$..tokenizedCorpus <-
+          TokenizerQ$new()$sentences(x)$getCorpus()
       } else {
         event <- paste("Invalid tokenizer type. Valid types include ",
                        "c('openNLP', 'tokenizer', 'quanteda').  See ?",
@@ -133,6 +135,7 @@ Token <- R6::R6Class(
         private$logR$log(method = 'sentences', event = event, level = "Error")
         stop()
       }
+      invisible(self)
     },
     #-------------------------------------------------------------------------#
     #                       Paragraph Tokens Method                           #
@@ -142,8 +145,8 @@ Token <- R6::R6Class(
       private$validate(x)
 
       if (grepl("^t", tokenizer, ignore.case = TRUE)) {
-        private$..tokens <-
-          Tokenizer$new()$paragraphs(x, paragraphBreak = paragraphBreak)
+        private$..tokenizedCorpus <-
+          Tokenizer$new()$paragraphs(x, paragraphBreak = paragraphBreak)$getCorpus()
 
       } else {
         event <- paste0("Tokenizer, ", tokenizer, ", does not support paragraph ",
@@ -152,6 +155,7 @@ Token <- R6::R6Class(
         private$logR$log(method = 'paragraphs', event = event, level = "Error")
         stop()
       }
+      invisible(self)
     },
 
     #-------------------------------------------------------------------------#
@@ -175,12 +179,12 @@ Token <- R6::R6Class(
       }
 
       if (grepl("^t", tokenizer, ignore.case = TRUE)) {
-        private$..tokens <-
-          Tokenizer$new()$nGrams(x, n = n, nGramDelim = nGramDelim)
+        private$..tokenizedCorpus <-
+          Tokenizer$new()$nGrams(x, n = n, nGramDelim = nGramDelim)$getCorpus()
 
       } else if (grepl("^q", tokenizer, ignore.case = TRUE)) {
-        private$..tokens <-
-          TokenizerQ$new()$nGrams(x, n = n, nGramDelim = nGramDelim)
+        private$..tokenizedCorpus <-
+          TokenizerQ$new()$nGrams(x, n = n, nGramDelim = nGramDelim)$getCorpus()
       } else {
         event <- paste("Invalid tokenizer type. Valid types include ",
                        "c('tokenizer', 'quanteda').  See ?",
@@ -188,12 +192,23 @@ Token <- R6::R6Class(
         private$logR$log(method = 'nGrams', event = event, level = "Error")
         stop()
       }
+      invisible(self)
     },
 
     #-------------------------------------------------------------------------#
-    #                               Get Method                                #
+    #                               Get Methods                               #
     #-------------------------------------------------------------------------#
-    getTokens = function() private$..tokens,
+    getCorpus = function() private$..tokenizedCorpus,
+    getNGrams = function() {
+      documents <- private$..tokenizedCorpus$getDocuments()
+      nGrams <- unlist(lapply(documents, function(d) { d$content }))
+      return(nGrams)
+    },
+    getTokens = function() {
+      documents <- private$..tokenizedCorpus$getDocuments()
+      tokens <- unlist(lapply(documents, function(d) { d$content }))
+      return(tokens)
+    },
 
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #

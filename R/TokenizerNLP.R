@@ -32,8 +32,8 @@ TokenizerNLP <- R6::R6Class(
 
   private = list(
     ..x = character(),
-    ..tokens = character(),
-    ..nGrams = c('Unigram', 'Bigram', 'Trigram', 'Quadgram', 'Quintgram'),
+    ..tokenizedCorpus = character(),
+    ..nGrams = character(),
 
     #-------------------------------------------------------------------------#
     #                           Validation Method                             #
@@ -105,7 +105,7 @@ TokenizerNLP <- R6::R6Class(
     execute = function(tokenUnit) {
 
       # Create tokens object
-      private$..tokens <- Clone$new()$this(private$..x, reference = FALSE,
+      private$..tokenizedCorpus <- Clone$new()$this(private$..x, reference = FALSE,
                                            content = FALSE)
 
       # Initialize counts
@@ -135,17 +135,17 @@ TokenizerNLP <- R6::R6Class(
         document$setMeta(key = 'tokenUnit', value = tokenUnit, type = 'f')
         document$setMeta(key = paste(tokenUnit, "Tokens"), value = counts, type = 'q')
 
-        private$..tokens$addDocument(document)
+        private$..tokenizedCorpus$addDocument(document)
 
       }
 
       # Update corpus metadata
-      name <- private$..tokens$getName()
+      name <- private$..tokenizedCorpus$getName()
       name <- paste0(name, " (", tokenUnit," Tokens)")
-      private$..tokens$setName(name)
-      private$..tokens$setMeta(key = 'tokenizer', value = 'openNLP Package', type = 'f')
-      private$..tokens$setMeta(key = 'tokenUnit', value = tokenUnit, type = 'f')
-      private$..tokens$setMeta(key = paste(tokenUnit, "Tokens"), value = totalCounts, type = 'q')
+      private$..tokenizedCorpus$setName(name)
+      private$..tokenizedCorpus$setMeta(key = 'tokenizer', value = 'openNLP Package', type = 'f')
+      private$..tokenizedCorpus$setMeta(key = 'tokenUnit', value = tokenUnit, type = 'f')
+      private$..tokenizedCorpus$setMeta(key = paste(tokenUnit, "Tokens"), value = totalCounts, type = 'q')
       return(TRUE)
     }
   ),
@@ -215,9 +215,14 @@ TokenizerNLP <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                               Get Method                                #
+    #                               Get Methods                               #
     #-------------------------------------------------------------------------#
-    getTokens = function() private$..tokens,
+    getCorpus = function() private$..tokenizedCorpus,
+    getTokens = function() {
+      documents <- private$..tokenizedCorpus$getDocuments()
+      tokenGrams <- unlist(lapply(documents, function(d) {d$content}))
+      return(tokenGrams)
+    },
 
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #

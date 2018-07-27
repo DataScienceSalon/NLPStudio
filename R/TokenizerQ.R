@@ -32,8 +32,8 @@ TokenizerQ <- R6::R6Class(
 
   private = list(
     ..x = character(),
-    ..tokens = character(),
-    ..nGrams = c('Unigram', 'Bigram', 'Trigram', 'Quadgram', 'Quintgram'),
+    ..tokenizedCorpus = character(),
+    ..nGrams = character(),
 
     #-------------------------------------------------------------------------#
     #                           Validation Method                             #
@@ -112,7 +112,7 @@ TokenizerQ <- R6::R6Class(
         if (n == 5)  tokenType <- "Quintgrams"
       }
       # Create tokens object
-      private$..tokens <- Clone$new()$this(private$..x, reference = FALSE,
+      private$..tokenizedCorpus <- Clone$new()$this(private$..x, reference = FALSE,
                                            content = FALSE)
 
       # Initialize counts
@@ -125,12 +125,11 @@ TokenizerQ <- R6::R6Class(
         # Clone document
         document <- Clone$new()$this(documents[[i]],  content = TRUE)
 
-
         # Tokenize
-        document$content <- private$tokenize(paste(document$content, collapse = " "),
-                                             n = n,
-                                             tokenUnit = tokenUnit,
-                                             nGramDelim = nGramDelim)
+        document$content <- unlist(lapply(document$content, function(d) {
+          private$tokenize(d, n = n, tokenUnit = tokenUnit,
+                           nGramDelim = nGramDelim)
+        }))
 
         # Get Counts
         counts <- length(document$content)
@@ -144,17 +143,17 @@ TokenizerQ <- R6::R6Class(
         document$setMeta(key = 'tokenUnit', value = tokenType, type = 'f')
         document$setMeta(key = paste(tokenType, 'Tokens'), value = counts, type = 'q')
 
-        private$..tokens$addDocument(document)
+        private$..tokenizedCorpus$addDocument(document)
 
       }
 
       # Update corpus metadata
-      name <- private$..tokens$getName()
+      name <- private$..tokenizedCorpus$getName()
       name <- paste0(name, " (", tokenType," Tokens)")
-      private$..tokens$setName(name)
-      private$..tokens$setMeta(key = 'tokenizer', value = 'quanteda package', type = 'f')
-      private$..tokens$setMeta(key = 'tokenUnit', value = tokenType, type = 'f')
-      private$..tokens$setMeta(key = paste(tokenType, 'Tokens'), value = totalCounts, type = 'q')
+      private$..tokenizedCorpus$setName(name)
+      private$..tokenizedCorpus$setMeta(key = 'tokenizer', value = 'quanteda package', type = 'f')
+      private$..tokenizedCorpus$setMeta(key = 'tokenUnit', value = tokenType, type = 'f')
+      private$..tokenizedCorpus$setMeta(key = paste(tokenType, 'Tokens'), value = totalCounts, type = 'q')
       return(TRUE)
     }
   ),
@@ -228,9 +227,20 @@ TokenizerQ <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                               Get Method                                #
+    #                               Get Methods                               #
     #-------------------------------------------------------------------------#
-    getTokens = function() private$..tokens,
+    getCorpus = function() private$..tokenizedCorpus,
+    getNGrams = function() {
+      documents <- private$..tokenizedCorpus$getDocuments()
+      nGrams <- unlist(lapply(documents, function(d) {
+        unlist(d$content)}))
+      return(nGrams)
+    },
+    getTokens = function() {
+      documents <- private$..tokenizedCorpus$getDocuments()
+      tokens <- unlist(lapply(documents, function(d) {d$content}))
+      return(tokens)
+    },
 
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #
