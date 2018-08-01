@@ -30,4 +30,5 @@ Other FileSource Family of Classes: \code{\link{FileSourceCSV}},
 \author{
 John James, \email{jjames@dataScienceSalon.org}
 }
+\concept{FileSource Family of Classes}
 \keyword{datasets}

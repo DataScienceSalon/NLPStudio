@@ -20,4 +20,5 @@ Other File Classes: \code{\link{File}}
 \author{
 John James, \email{jjames@dataScienceSalon.org}
 }
+\concept{File Classes}
 \keyword{datasets}

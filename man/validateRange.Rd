@@ -27,3 +27,4 @@ Other Validation Functions: \code{\link{validateClass}},
 \author{
 John James, \email{jjames@DataScienceSalon.org}
 }
+\concept{Validation Functions}

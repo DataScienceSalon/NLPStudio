@@ -42,4 +42,6 @@ Other CorpusStudio Family of Classes: \code{\link{CorpusStudio}},
 \author{
 John James, \email{jjames@datasciencesalon.org}
 }
+\concept{Corpus Sample Family of Classes}
+\concept{CorpusStudio Family of Classes}
 \keyword{datasets}

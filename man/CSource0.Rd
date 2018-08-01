@@ -33,4 +33,5 @@ Other Corpus Source Classes: \code{\link{CSourceDir}},
 \author{
 John James, \email{jjames@datasciencesalon.org}
 }
+\concept{Corpus Source Classes}
 \keyword{datasets}

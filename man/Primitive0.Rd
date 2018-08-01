@@ -30,4 +30,5 @@ Other Document Classes: \code{\link{Corpus}},
 \author{
 John James, \email{jjames@datasciencesalon.org}
 }
+\concept{Document Classes}
 \keyword{datasets}

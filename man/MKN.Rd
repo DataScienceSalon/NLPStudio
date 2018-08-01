@@ -36,4 +36,5 @@ Other Statistical Language Model Classes: \code{\link{KN}},
 \author{
 John James, \email{jjames@dataScienceSalon.org}
 }
+\concept{Statistical Language Model Classes}
 \keyword{datasets}

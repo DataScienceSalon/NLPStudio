@@ -81,4 +81,5 @@ Other CorpusStudio Family of Classes: \code{\link{KFold}},
 \author{
 John James, \email{jjames@dataScienceSalon.org}
 }
+\concept{CorpusStudio Family of Classes}
 \keyword{datasets}

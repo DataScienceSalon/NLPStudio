@@ -41,4 +41,5 @@ Other FileStudio Command Classes: \code{\link{CopyFileSet}},
 \author{
 John James, \email{jjames@dataScienceSalon.org}
 }
+\concept{FileStudio Command Classes}
 \keyword{datasets}

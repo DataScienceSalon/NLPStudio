@@ -31,4 +31,5 @@ Class creates IO objects based upon the file type
 \author{
 John James, \email{jjames@datasciencesalon.org}
 }
+\concept{IO Classes}
 \keyword{datasets}

@@ -24,4 +24,5 @@ The ValidationVisitor methods are as follows:
 \author{
 John James, \email{jjames@DataScienceSalon.org}
 }
+\concept{Validation Visitor Classes}
 \keyword{datasets}

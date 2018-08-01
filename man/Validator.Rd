@@ -37,4 +37,5 @@ This section summarizes the methods in the Validator class.
 \author{
 John James, \email{jjames@datasciencesalon.org}
 }
+\concept{Validation Classes}
 \keyword{datasets}

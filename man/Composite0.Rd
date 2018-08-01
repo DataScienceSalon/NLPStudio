@@ -36,4 +36,5 @@ This abstract class defines members and methods common to the composite classes.
 \author{
 John James, \email{jjames@datasciencesalon.org}
 }
+\concept{Child Classes}
 \keyword{datasets}

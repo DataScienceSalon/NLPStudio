@@ -33,4 +33,5 @@ Other Converter Classes: \code{\link{ConverterQ}},
 \author{
 John James, \email{jjames@datasciencesalon.org}
 }
+\concept{Converter Classes}
 \keyword{datasets}

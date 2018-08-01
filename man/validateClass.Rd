@@ -34,3 +34,4 @@ Other Validation Functions: \code{\link{validateDiscrete}},
 \author{
 John James, \email{jjames@DataScienceSalon.org}
 }
+\concept{Validation Functions}

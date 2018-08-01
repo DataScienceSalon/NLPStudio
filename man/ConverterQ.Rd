@@ -21,4 +21,5 @@ Other Converter Classes: \code{\link{Converter0}},
 \author{
 John James, \email{jjames@datasciencesalon.org}
 }
+\concept{Converter Classes}
 \keyword{datasets}

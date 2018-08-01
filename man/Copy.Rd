@@ -35,4 +35,5 @@ Copy family of classes.
 \author{
 John James, \email{jjames@datasciencesalon.org}
 }
+\concept{Copy Classes}
 \keyword{datasets}

@@ -26,4 +26,5 @@ Other FileSource Family of Classes: \code{\link{FileSource0}},
 \author{
 John James, \email{jjames@dataScienceSalon.org}
 }
+\concept{FileSource Family of Classes}
 \keyword{datasets}

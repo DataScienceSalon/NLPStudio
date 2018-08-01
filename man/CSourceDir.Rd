@@ -41,4 +41,5 @@ Other Corpus Source Classes: \code{\link{CSource0}},
 \author{
 John James, \email{jjames@datasciencesalon.org}
 }
+\concept{Corpus Source Classes}
 \keyword{datasets}

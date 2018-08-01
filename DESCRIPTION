@@ -30,7 +30,6 @@ Imports:
     NLP,
     openNLP,
     parsedate,
-    qdap,
     quanteda,
     R6,
     RCurl,
@@ -42,4 +41,4 @@ Imports:
     stringi,
     NLPLists
 Remotes: github::DataScienceSalon/NLPLists
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0

@@ -33,4 +33,5 @@ Director
 \author{
 John James, \email{jjames@datasciencesalon.org}
 }
+\concept{Director classes}
 \keyword{datasets}

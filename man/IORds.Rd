@@ -37,4 +37,5 @@ Other Input / Output Classes: \code{\link{IOBin}},
 \author{
 John James, \email{jjames@DataScienceSalon.org}
 }
+\concept{Input / Output Classes}
 \keyword{datasets}

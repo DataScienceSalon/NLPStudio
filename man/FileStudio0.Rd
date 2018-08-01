@@ -18,4 +18,5 @@ family of classes.
 \author{
 John James, \email{jjames@dataScienceSalon.org}
 }
+\concept{FileStudio Family of Classes}
 \keyword{datasets}
