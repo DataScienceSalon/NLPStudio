@@ -80,8 +80,8 @@ KN <- R6::R6Class(
         pKN <- nrow(private$..model$nGrams[[n+1]] %>% filter(suffix == ngram)) /
           nrow(private$..model$nGrams[[n+1]])
         if (pKN == 0) {
-          private$..evaluation$performance$oov <-
-            private$..evaluation$performance$oov + 1
+          private$..eval$score$oov <-
+            private$..eval$score$oov + 1
         }
 
       } else {
@@ -103,14 +103,14 @@ KN <- R6::R6Class(
 
       private$initTestTables()
 
-      nGrams <- private$..evaluation$scores$nGram
+      nGrams <- private$..eval$scores$nGram
       scores <- rbindlist(lapply(nGrams, function(nGram) {
         p <- list()
         p$p <- private$pKN(nGram, n = private$..parameters$modelSize)
         p
       }))
 
-      private$..evaluation$scores <- cbind(private$..evaluation$scores, scores)
+      private$..eval$scores <- cbind(private$..eval$scores, scores)
       private$prepEvalReport()
 
       return(TRUE)

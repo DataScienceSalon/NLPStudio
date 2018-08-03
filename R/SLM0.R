@@ -52,7 +52,7 @@ SLM0 <- R6::R6Class(
       discounts = data.frame(),
       totals = data.frame()
     ),
-    ..evaluation = list(
+    ..eval = list(
       nGrams = list(),
       timing = list(
         train = list(
@@ -68,7 +68,7 @@ SLM0 <- R6::R6Class(
           duration = character()
         )
       ),
-      performance = list(
+      score = list(
         nGrams = numeric(),
         oov = 0,
         oovRate = numeric(),
@@ -105,25 +105,25 @@ SLM0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     startTime = function(train = TRUE) {
       if (train) {
-        private$..evaluation$timing$train$process <- "Training"
-        private$..evaluation$timing$train$start <- as.character(Sys.time())
+        private$..eval$timing$train$process <- "Training"
+        private$..eval$timing$train$start <- as.character(Sys.time())
       } else {
-        private$..evaluation$timing$evaluation$process <- "Evaluation"
-        private$..evaluation$timing$evaluation$start <- as.character(Sys.time())
+        private$..eval$timing$evaluation$process <- "Evaluation"
+        private$..eval$timing$evaluation$start <- as.character(Sys.time())
       }
     },
 
     endTime = function(train = TRUE) {
       if (train) {
-        private$..evaluation$timing$train$end <- as.character(Sys.time())
-        private$..evaluation$timing$train$duration <- as.character(format(difftime(
-          private$..evaluation$timing$train$end,
-          private$..evaluation$timing$train$start, units = "auto")))
+        private$..eval$timing$train$end <- as.character(Sys.time())
+        private$..eval$timing$train$duration <- as.character(format(difftime(
+          private$..eval$timing$train$end,
+          private$..eval$timing$train$start, units = "auto")))
       } else {
-        private$..evaluation$timing$evaluation$end <- as.character(Sys.time())
-        private$..evaluation$timing$evaluation$duration <- as.character(format(difftime(
-          private$..evaluation$timing$evaluation$end,
-          private$..evaluation$timing$evaluation$start, units = "auto")))
+        private$..eval$timing$evaluation$end <- as.character(Sys.time())
+        private$..eval$timing$evaluation$duration <- as.character(format(difftime(
+          private$..eval$timing$evaluation$end,
+          private$..eval$timing$evaluation$start, units = "auto")))
       }
     },
 
@@ -133,28 +133,28 @@ SLM0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     prepEvalReport = function() {
       # Test set nGram count
-      private$..evaluation$performance$nGrams <- nrow(private$..evaluation$scores)
+      private$..eval$score$nGrams <- nrow(private$..eval$scores)
 
       # Test set OOV Rate
-      private$..evaluation$performance$oovRate <-
-        private$..evaluation$performance$oov /
+      private$..eval$score$oovRate <-
+        private$..eval$score$oov /
         private$..corporaStats$test$N
 
       # Number of zero probability nGrams and zero probability rate
-      private$..evaluation$performance$zeroProbs <-
-        nrow(subset(private$..evaluation$scores, p == 0))
-      private$..evaluation$performance$zeroProbRate <-
-        private$..evaluation$performance$zeroProbs /
-        private$..evaluation$performance$nGrams
+      private$..eval$score$zeroProbs <-
+        nrow(subset(private$..eval$scores, p == 0))
+      private$..eval$score$zeroProbRate <-
+        private$..eval$score$zeroProbs /
+        private$..eval$score$nGrams
 
       # Total Log probability
-      private$..evaluation$performance$logProb <-
-        as.numeric(sum(private$..evaluation$scores %>% filter(p != 0) %>%
+      private$..eval$score$logProb <-
+        as.numeric(sum(private$..eval$scores %>% filter(p != 0) %>%
         mutate(logProb = log(p)) %>% select(logProb)))
 
       # Perplexity
-      private$..evaluation$performance$perplexity <-
-        2^(-private$..evaluation$performance$logProb /
+      private$..eval$score$perplexity <-
+        2^(-private$..eval$score$logProb /
              private$..corporaStats$test$N)
     },
 
@@ -169,7 +169,7 @@ SLM0 <- R6::R6Class(
     # Note: Defaults to counting nGrams that start with one or several
     # start of sentence tags. Therefore, there total nGram counts are equal
     # across all nGrams.
-    totals = function() {
+    computeTotals = function() {
       private$..model$totals <- rbindlist(lapply(seq_along(private$..model$nGrams), function (n) {
         df <- private$..model$nGrams[[n]] %>% filter(nGram != paste(rep('BOS',n), collapse = " "))
         nGramTypes <- data.frame(nGramTypes = nrow(df))
@@ -180,43 +180,6 @@ SLM0 <- R6::R6Class(
         total <- cbind(n, nGramTypes, total)
       }))
       return(TRUE)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                             initNGrams                                  #
-    #             Initialize nGram tables from the corpus                     #
-    #-------------------------------------------------------------------------#
-    initNGrams = function(corpus, count = TRUE) {
-
-      # Initialize and obtain model parameters and training Corpus object.
-      modelSize <- private$..parameters$modelSize
-      modelTypes <- private$..constants$modelTypes[1:private$..parameters$modelSize]
-
-      # Initialize Tables
-      nGrams <- lapply(seq(1:modelSize), function(n) {
-
-        # Tokenize corpus into nGrams of order i, and add counts if requested
-        nGrams <- Token$new()$nGrams(x = corpus, tokenizer = 'quanteda', n = n)$getNGrams()
-        nGrams <- as.data.frame(table(nGrams), stringsAsFactors = FALSE)
-        if (count) {
-          dt <- data.table(nGram = nGrams[,1], cNGram = nGrams[,2])
-          dt$cNGram <- ifelse(dt$nGram == paste(rep("BOS", n), collapse = " "),
-                              private$..corporaStats$train$sentences,
-                              dt$cNGram)
-        } else {
-          dt <- data.table(nGram = nGrams[,1])
-        }
-
-        # Add prefix and suffix to nGram Table
-        if (n > 1) {
-          dt$prefix <- gsub(private$..constants$regex$prefix[[n-1]], "\\1", dt$nGram, perl = TRUE)
-          dt$suffix  <- gsub(private$..constants$regex$suffix[[n-1]], "\\1", dt$nGram, perl = TRUE)
-        }
-        dt
-      })
-
-      names(nGrams) <- modelTypes
-      return(nGrams)
     },
 
     #-------------------------------------------------------------------------#
@@ -312,7 +275,7 @@ SLM0 <- R6::R6Class(
       documents <- test$getDocuments()
       testVocabulary <- unique(unlist(lapply(documents, function(d) {d$content})))
       oov <- unique(testVocabulary[!testVocabulary %fin% private$..corpora$vocabulary])
-      private$..evaluation$performance$oov <- length(oov)
+      private$..eval$score$oov <- length(oov)
 
       # If open vocabulary replace any word not in vocabulary with 'UNK'token
       if (private$..parameters$vocabulary == 'Open') {
@@ -359,6 +322,34 @@ SLM0 <- R6::R6Class(
       return(corpus)
     },
 
+    #-------------------------------------------------------------------------#
+    #                             initModel                                   #
+    #           Initialize nGram tables from the training corpus              #
+    #-------------------------------------------------------------------------#
+    initModel = function() {
+
+      # Initialize and obtain model parameters and training Corpus object.
+      modelSize <- private$..parameters$modelSize
+      modelTypes <- private$..constants$modelTypes[1:private$..parameters$modelSize]
+
+      # Tokenize corpus into nGrams of order n, and compute counts
+      private$..model$nGrams <- lapply(seq(1:modelSize), function(n) {
+
+        nGrams <- Token$new()$nGrams(x = private$..corpora$train,
+                                     tokenizer = 'quanteda', n = n)$getNGrams()
+        nGrams <- as.data.frame(table(nGrams), stringsAsFactors = FALSE)
+        dt <- data.table(nGram = nGrams[,1], cNGram = nGrams[,2])
+
+        if (n > 1) {
+          dt$prefix <- gsub(private$..constants$regex$prefix[[n-1]], "\\1", dt$nGram, perl = TRUE)
+          dt$suffix  <- gsub(private$..constants$regex$suffix[[n-1]], "\\1", dt$nGram, perl = TRUE)
+        }
+        dt
+      })
+
+      names(private$..model$nGrams) <- modelTypes
+      return(TRUE)
+    },
     #-------------------------------------------------------------------------#
     #                           Summary Methods                               #
     #-------------------------------------------------------------------------#
@@ -432,11 +423,11 @@ SLM0 <- R6::R6Class(
       print(dataSummary, row.names = FALSE)
 
       cat("\nTiming Summary\n")
-      timings <- rbindlist(private$..evaluation$timing, fill = TRUE)
+      timings <- rbindlist(private$..eval$timing, fill = TRUE)
       print(timings, row.names = FALSE)
 
       cat("\nPerformance Summary\n")
-      print(as.data.frame(private$..evaluation$performance), row.names = FALSE)
+      print(as.data.frame(private$..eval$score), row.names = FALSE)
       cat("\n")
       return(TRUE)
     }
@@ -457,15 +448,15 @@ SLM0 <- R6::R6Class(
     getNGrams = function() private$..model$nGrams,
     getDiscounts = function() private$..model$discounts,
     getTotals = function() private$..model$totals,
-    getScores = function() private$..evaluation$scores,
+    getScores = function() private$..eval$scores,
     getEval = function() {
       private$evalSummary()
       eval <- list()
       #TODO: Remove the following line
-      eval$nGrams <- private$..evaluation$nGrams
+      eval$nGrams <- private$..eval$nGrams
       eval$parameters <- as.data.frame(private$..parameters)
-      eval$timing <- rbindlist(private$..evaluation$timing)
-      eval$performance <- as.data.frame(private$..evaluation$performance)
+      eval$timing <- rbindlist(private$..eval$timing)
+      eval$performance <- as.data.frame(private$..eval$score)
       return(eval)
     },
 
@@ -479,7 +470,7 @@ SLM0 <- R6::R6Class(
       if (length(private$..model$total) > 0) private$nGramSummary()
       if (length(private$..model$discounts) > 0) private$discountSummary()
       if (length(private$..model$nGrams) > 0) private$nGramDetail()
-      if (length(private$..evaluation$performance$perplexity) > 0) private$evalSummary()
+      if (length(private$..eval$score$perplexity) > 0) private$evalSummary()
       invisible(self)
     }
   )
