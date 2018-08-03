@@ -96,74 +96,12 @@ SLM0 <- R6::R6Class(
         )
       )
     ),
-    #-------------------------------------------------------------------------#
-    #                           EVALUATION METHODS                            #
-    #-------------------------------------------------------------------------#
-    #-------------------------------------------------------------------------#
-    #                                timing                                   #
-    #                 Captures process start and end times                    #
-    #-------------------------------------------------------------------------#
-    startTime = function(train = TRUE) {
-      if (train) {
-        private$..eval$timing$train$process <- "Training"
-        private$..eval$timing$train$start <- as.character(Sys.time())
-      } else {
-        private$..eval$timing$evaluation$process <- "Evaluation"
-        private$..eval$timing$evaluation$start <- as.character(Sys.time())
-      }
-    },
-
-    endTime = function(train = TRUE) {
-      if (train) {
-        private$..eval$timing$train$end <- as.character(Sys.time())
-        private$..eval$timing$train$duration <- as.character(format(difftime(
-          private$..eval$timing$train$end,
-          private$..eval$timing$train$start, units = "auto")))
-      } else {
-        private$..eval$timing$evaluation$end <- as.character(Sys.time())
-        private$..eval$timing$evaluation$duration <- as.character(format(difftime(
-          private$..eval$timing$evaluation$end,
-          private$..eval$timing$evaluation$start, units = "auto")))
-      }
-    },
+    #=========================================================================#
+    #                         LANGUAGE MODEL TABLES                           #
+    #=========================================================================#
 
     #-------------------------------------------------------------------------#
-    #                           prepEvalReport                                #
-    # Computes OOV Rates, Zero Probabilities Log probabilities and Perplexity #
-    #-------------------------------------------------------------------------#
-    prepEvalReport = function() {
-      # Test set nGram count
-      private$..eval$score$nGrams <- nrow(private$..eval$scores)
-
-      # Test set OOV Rate
-      private$..eval$score$oovRate <-
-        private$..eval$score$oov /
-        private$..corporaStats$test$N
-
-      # Number of zero probability nGrams and zero probability rate
-      private$..eval$score$zeroProbs <-
-        nrow(subset(private$..eval$scores, p == 0))
-      private$..eval$score$zeroProbRate <-
-        private$..eval$score$zeroProbs /
-        private$..eval$score$nGrams
-
-      # Total Log probability
-      private$..eval$score$logProb <-
-        as.numeric(sum(private$..eval$scores %>% filter(p != 0) %>%
-        mutate(logProb = log(p)) %>% select(logProb)))
-
-      # Perplexity
-      private$..eval$score$perplexity <-
-        2^(-private$..eval$score$logProb /
-             private$..corporaStats$test$N)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                             NGRAM TABLES                                #
-    #-------------------------------------------------------------------------#
-
-    #-------------------------------------------------------------------------#
-    #                                 totals                                  #
+    #                           computeTotals                                 #
     #                 Summarizes totals from nGram Tables                     #
     #-------------------------------------------------------------------------#
     # Note: Defaults to counting nGrams that start with one or several
@@ -183,9 +121,6 @@ SLM0 <- R6::R6Class(
     },
 
     #-------------------------------------------------------------------------#
-    #                        TEXT PROCESSING METHODS                          #
-    #-------------------------------------------------------------------------#
-    #-------------------------------------------------------------------------#
     #               Gsub - Replaces selected words with 'UNK'                 #
     #-------------------------------------------------------------------------#
     gsubq = function(text, words) {
@@ -202,10 +137,10 @@ SLM0 <- R6::R6Class(
       return(text)
     },
     #-------------------------------------------------------------------------#
-    #                               corpusStats                               #
+    #                               computeCorpusStats                        #
     #         Final summary of corpus statistics for evaluation report        #
     #-------------------------------------------------------------------------#
-    corpusStats = function(corpus) {
+    computeCorpusStats = function(corpus) {
 
       stats <- list()
       documents <- corpus$getDocuments()
@@ -255,7 +190,7 @@ SLM0 <- R6::R6Class(
 
       # Finalize corpus statistics for evaluation report
       private$..corporaStats$train <-
-        private$corpusStats(private$..corpora$train)
+        private$computeCorpusStats(private$..corpora$train)
 
       # Annotate training corpus with sentence boundary tokens
       private$..corpora$train <- private$annotate(private$..corpora$train)
@@ -291,7 +226,7 @@ SLM0 <- R6::R6Class(
 
       # Finalize corpus statistics for evaluation report
       private$..corporaStats$test <-
-        private$corpusStats(private$..corpora$test)
+        private$computeCorpusStats(private$..corpora$test)
 
       # Annotate test corpus with sentence boundary tokens
       private$..corpora$test <- private$annotate(private$..corpora$test)
@@ -350,10 +285,15 @@ SLM0 <- R6::R6Class(
       names(private$..model$nGrams) <- modelTypes
       return(TRUE)
     },
+
+    #=========================================================================#
+    #                       SUMMARY AND REPORTING METHODS                     #
+    #=========================================================================#
     #-------------------------------------------------------------------------#
-    #                           Summary Methods                               #
+    #                         printOverview Method                            #
+    #                 Summarizes the model and parameters                     #
     #-------------------------------------------------------------------------#
-    overview = function() {
+    printOverview = function() {
 
       meta <- private$meta$get()
 
@@ -362,15 +302,21 @@ SLM0 <- R6::R6Class(
 
       NLPStudio::printHeading(text = heading, symbol = "=", newlines = 2)
 
-      cat(paste0("\nId         : ", meta$identity$id))
-      cat(paste0("\nName       : ", private$..parameters$modelName))
-      cat(paste0("\nType       : ", private$..parameters$modelType))
-      cat(paste0("\nAlgorithm  : ", private$..parameters$algorithm))
+      cat(paste0("\nId            : ", meta$identity$id))
+      cat(paste0("\nName          : ", private$..parameters$modelName))
+      cat(paste0("\nType          : ", private$..parameters$modelType))
+      cat(paste0("\nAlgorithm     : ", private$..parameters$algorithm))
+      cat(paste0("\nVocabulary    : ", private$..parameters$vocabulary))
+      cat(paste0("\nModel <s> tags: ", private$..parameters$bosTags))
       return(TRUE)
 
     },
 
-    nGramSummary = function() {
+    #-------------------------------------------------------------------------#
+    #                         printNGramSummary                               #
+    #                       Summarizes ngGram Totals                          #
+    #-------------------------------------------------------------------------#
+    printNGramSummary = function() {
 
       heading <- paste(private$..parameters$modelName, "nGram Summary")
 
@@ -380,7 +326,11 @@ SLM0 <- R6::R6Class(
 
     },
 
-    discountSummary = function() {
+    #-------------------------------------------------------------------------#
+    #                           printDiscountSummary                               #
+    #                        Summarizes Discounts                             #
+    #-------------------------------------------------------------------------#
+    printDiscountSummary = function() {
 
       heading <- paste(private$..parameters$modelName, "Discount Summary")
 
@@ -390,30 +340,74 @@ SLM0 <- R6::R6Class(
 
     },
 
-    nGramDetail = function() {
 
-      if (length(private$..model$nGrams) > 0) {
-
-        for (i in 1:private$..parameters$modelSize) {
-          nGram <- private$..constants$modelTypes[i]
-          heading <- paste(private$..parameters$modelName, nGram, "Detail")
-          NLPStudio::printHeading(text = heading,
-                                  symbol = "-",
-                                  newlines = 2)
-          setkey(private$..model$nGrams[[i]], nGram)
-          print(private$..model$nGrams[[i]][, tail(.SD, 10), by=nGram])
-        }
+    #-------------------------------------------------------------------------#
+    #                                timing                                   #
+    #                 Captures process start and end times                    #
+    #-------------------------------------------------------------------------#
+    startTime = function(train = TRUE) {
+      if (train) {
+        private$..eval$timing$train$process <- "Training"
+        private$..eval$timing$train$start <- as.character(Sys.time())
+      } else {
+        private$..eval$timing$evaluation$process <- "Evaluation"
+        private$..eval$timing$evaluation$start <- as.character(Sys.time())
       }
-      return(TRUE)
     },
 
-    evalSummary = function() {
+    endTime = function(train = TRUE) {
+      if (train) {
+        private$..eval$timing$train$end <- as.character(Sys.time())
+        private$..eval$timing$train$duration <- as.character(format(difftime(
+          private$..eval$timing$train$end,
+          private$..eval$timing$train$start, units = "auto")))
+      } else {
+        private$..eval$timing$evaluation$end <- as.character(Sys.time())
+        private$..eval$timing$evaluation$duration <- as.character(format(difftime(
+          private$..eval$timing$evaluation$end,
+          private$..eval$timing$evaluation$start, units = "auto")))
+      }
+    },
+
+    #-------------------------------------------------------------------------#
+    #                           prepEvalReport                                #
+    # Computes OOV Rates, Zero Probabilities Log probabilities and Perplexity #
+    #-------------------------------------------------------------------------#
+    prepEvalReport = function() {
+      # Test set nGram count
+      private$..eval$score$nGrams <- nrow(private$..eval$scores)
+
+      # Test set OOV Rate
+      private$..eval$score$oovRate <-
+        private$..eval$score$oov /
+        private$..corporaStats$test$N
+
+      # Number of zero probability nGrams and zero probability rate
+      private$..eval$score$zeroProbs <-
+        nrow(subset(private$..eval$scores, p == 0))
+      private$..eval$score$zeroProbRate <-
+        private$..eval$score$zeroProbs /
+        private$..eval$score$nGrams
+
+      # Total Log probability
+      private$..eval$score$logProb <-
+        as.numeric(sum(private$..eval$scores %>% filter(p != 0) %>%
+                         mutate(logProb = log(p)) %>% select(logProb)))
+
+      # Perplexity
+      private$..eval$score$perplexity <-
+        2^(-private$..eval$score$logProb /
+             private$..corporaStats$test$N)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                           printEvalSummary                              #
+    #                    Prints evaluation summary                            #
+    #-------------------------------------------------------------------------#
+    printEvalSummary = function() {
 
       heading <- paste(private$..parameters$modelName, "Evaluation")
-
       NLPStudio::printHeading(text = heading, symbol = "-", newlines = 2)
-      cat("\nParameters\n")
-      print(as.data.frame(private$..parameters), row.names = FALSE)
 
       cat("\nData Summary\n")
       train <- as.data.frame(private$..corporaStats$train)
@@ -449,28 +443,15 @@ SLM0 <- R6::R6Class(
     getDiscounts = function() private$..model$discounts,
     getTotals = function() private$..model$totals,
     getScores = function() private$..eval$scores,
-    getEval = function() {
-      private$evalSummary()
-      eval <- list()
-      #TODO: Remove the following line
-      eval$nGrams <- private$..eval$nGrams
-      eval$parameters <- as.data.frame(private$..parameters)
-      eval$timing <- rbindlist(private$..eval$timing)
-      eval$performance <- as.data.frame(private$..eval$score)
-      return(eval)
-    },
 
     #-------------------------------------------------------------------------#
     #                             Summary Method                              #
     #-------------------------------------------------------------------------#
     summary = function() {
-      private$overview()
-      if (length(private$..corpora$train) > 0) private$..corpora$train$summary()
-      if (length(private$..corpora$test) > 0) private$..corpora$test$summary()
-      if (length(private$..model$total) > 0) private$nGramSummary()
-      if (length(private$..model$discounts) > 0) private$discountSummary()
-      if (length(private$..model$nGrams) > 0) private$nGramDetail()
-      if (length(private$..eval$score$perplexity) > 0) private$evalSummary()
+      private$printOverview()
+      if (length(private$..model$total) > 0) private$printNGramSummary()
+      if (length(private$..model$discounts) > 0) private$printDiscountSummary()
+      if (length(private$..eval$score$perplexity) > 0) private$printEvalSummary()
       invisible(self)
     }
   )

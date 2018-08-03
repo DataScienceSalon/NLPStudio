@@ -96,8 +96,9 @@ Katz <- R6::R6Class(
         nGrams <- merge(nGrams, lower, by = "prefix", all.x = TRUE)
 
         # Count start of sentence tokens
-        nGrams[ prefix == paste(rep("BOS", (i-1)), collapse = " "),
-                cPrefix := private$..corporaStats$train$sentences]
+        nGrams$cPrefix <- ifelse(nGrams$prefix == paste(rep("BOS", (i-1)), collapse = " "),
+                                 private$..corporaStats$train$sentences,
+                                 nGrams$cPrefix)
 
         # Replace NA values with zeros
         nGrams[is.na(nGrams)] <- 0
@@ -310,8 +311,6 @@ Katz <- R6::R6Class(
     #-------------------------------------------------------------------------#
     score = function(){
 
-      print(private$..eval$nGrams)
-
       # Extract backoff probabilities at highest nGram level
       private$..eval$scores <-
         private$..eval$nGrams[[private$..parameters$modelSize]] %>%
@@ -339,9 +338,10 @@ Katz <- R6::R6Class(
         private$..eval$score$zeroProbs /
         private$..eval$score$nGrams
 
-      # Compute Log Probability
+      # Compute Log Probability from non-zero probabilities
+      nonZero <- private$..eval$scores %>% filter(p > 0)
       private$..eval$score$logProb <-
-        sum(log(private$..eval$scores$p))
+        sum(log(nonZero$p))
 
       # Compute perplexity
       private$..eval$score$perplexity <-
@@ -371,14 +371,15 @@ Katz <- R6::R6Class(
         d_r <- list()
         for (r in 1:k) {
 
+          # Compute adjusted count
           n_1 <- nrow(private$..model$nGrams[[i]] %>% filter(cNGram == 1))
-          if (private$..parameters$estimateGT) {
-            # Use expected value of counts instead of counts
+          n_rPLus1 <- nrow(private$..model$nGrams[[i]] %>% filter(cNGram == (r + 1)))
+          n_r <- nrow(private$..model$nGrams[[i]] %>% filter(cNGram == r))
+
+          # If n_r = 0, use expected counts, otherwise us actual counts
+          if (n_r == 0) {
             rStar <-  (r / (r+1)) * (1 - (n_1 / nTotal))
           } else {
-            # Use actual counts
-            n_rPLus1 <- nrow(private$..model$nGrams[[i]] %>% filter(cNGram == (r + 1)))
-            n_r <- nrow(private$..model$nGrams[[i]] %>% filter(cNGram == r))
             rStar <- (r + 1) * n_rPLus1 / n_r
           }
 
@@ -386,6 +387,7 @@ Katz <- R6::R6Class(
           n_kPLus1 <- nrow(private$..model$nGrams[[i]] %>% filter(cNGram == (k+1)))
           k_ratio <- (k+1) * n_kPLus1 / n_1
           d_r[[r]] <- ((rStar / r) - k_ratio) / (1 - k_ratio)
+          d_r[[r]][is.na(d_r[[r]])] <- 0
         }
         df <- cbind(as.data.frame(d_r))
         df <- cbind(i, df)
@@ -416,7 +418,33 @@ Katz <- R6::R6Class(
 
       return(TRUE)
     },
+    #-------------------------------------------------------------------------#
+    #                         printOverview Method                            #
+    #                 Summarizes the model and parameters                     #
+    #-------------------------------------------------------------------------#
+    printOverview = function() {
 
+      meta <- private$meta$get()
+
+      heading <- paste(private$..parameters$modelName, "Summary")
+      discountType <- ifelse(private$..parameters$gtDiscount, "Good Turing",
+                             "Fixed")
+
+      NLPStudio::printHeading(text = heading, symbol = "=", newlines = 2)
+
+      cat(paste0("\nId            : ", meta$identity$id))
+      cat(paste0("\nName          : ", private$..parameters$modelName))
+      cat(paste0("\nType          : ", private$..parameters$modelType))
+      cat(paste0("\nDiscount Type : ", discountType))
+      if (private$..parameters$gtDiscount == FALSE) {
+        cat(paste0("\nDiscount      : ", private$..parameters$fixedDiscount))
+      }
+      cat(paste0("\nVocabulary    : ", private$..parameters$vocabulary))
+      cat(paste0("\nModel <s> tags: ", private$..parameters$bosTags))
+
+      return(TRUE)
+
+    },
     #-------------------------------------------------------------------------#
     #                           Validation Methods                            #
     #-------------------------------------------------------------------------#
@@ -451,12 +479,11 @@ Katz <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                                Constructor                              #
     #-------------------------------------------------------------------------#
-    initialize = function(train, modelSize = 3, k = 5,
-                          gtDiscount = FALSE, estimateGT = TRUE,
+    initialize = function(train, modelSize = 3, k = 5, gtDiscount = FALSE,
                           fixedDiscount = 0.5, openVocabulary = TRUE,
-                          bosTags = FALSE) {
+                          bosTags = TRUE) {
 
-      name <- paste0("Modified Kneser-Ney ",
+      name <- paste0("Katz ",
                      private$..constants$modelTypes[modelSize], " Model")
 
       private$loadServices(name)
@@ -470,7 +497,6 @@ Katz <- R6::R6Class(
       private$..parameters$modelSize <- modelSize
       private$..parameters$k <- k
       private$..parameters$gtDiscount <- gtDiscount
-      private$..parameters$estimateGT <- estimateGT
       private$..parameters$fixedDiscount <- fixedDiscount
       private$..parameters$algorithm <- 'Katz'
       private$..parameters$modelType <- private$..constants$modelTypes[modelSize]
