@@ -91,9 +91,11 @@ ConverterTM <- R6::R6Class(
 
       # Create corpus object and meta data
       corpus <- Corpus$new()
-      keys <- names(cMeta)
-      values <- cMeta
-      corpus$setMeta(key = keys, value = values)
+      if (length(cMeta) > 0) {
+        keys <- names(cMeta)
+        values <- cMeta
+        corpus$setMeta(key = keys, value = values)
+      }
 
       # Add documents
       for (i in 1:length(docs)) {

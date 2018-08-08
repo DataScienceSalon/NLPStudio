@@ -80,7 +80,7 @@ Token <- R6::R6Class(
         private$logR$log(method = 'chars', event = event, level = "Error")
         stop()
       }
-      invisible(self)
+      return(private$..tokenizedCorpus)
     },
 
     #-------------------------------------------------------------------------#
@@ -108,7 +108,7 @@ Token <- R6::R6Class(
         private$logR$log(method = 'words', event = event, level = "Error")
         stop()
       }
-      invisible(self)
+      return(private$..tokenizedCorpus)
     },
     #-------------------------------------------------------------------------#
     #                       Sentence Tokens Method                            #
@@ -135,7 +135,7 @@ Token <- R6::R6Class(
         private$logR$log(method = 'sentences', event = event, level = "Error")
         stop()
       }
-      invisible(self)
+      return(private$..tokenizedCorpus)
     },
     #-------------------------------------------------------------------------#
     #                       Paragraph Tokens Method                           #
@@ -155,7 +155,7 @@ Token <- R6::R6Class(
         private$logR$log(method = 'paragraphs', event = event, level = "Error")
         stop()
       }
-      invisible(self)
+      return(private$..tokenizedCorpus)
     },
 
     #-------------------------------------------------------------------------#
@@ -192,22 +192,7 @@ Token <- R6::R6Class(
         private$logR$log(method = 'nGrams', event = event, level = "Error")
         stop()
       }
-      invisible(self)
-    },
-
-    #-------------------------------------------------------------------------#
-    #                               Get Methods                               #
-    #-------------------------------------------------------------------------#
-    getCorpus = function() private$..tokenizedCorpus,
-    getNGrams = function() {
-      documents <- private$..tokenizedCorpus$getDocuments()
-      nGrams <- unlist(lapply(documents, function(d) { d$content }))
-      return(nGrams)
-    },
-    getTokens = function() {
-      documents <- private$..tokenizedCorpus$getDocuments()
-      tokens <- unlist(lapply(documents, function(d) { d$content }))
-      return(tokens)
+      return(private$..tokenizedCorpus)
     },
 
     #-------------------------------------------------------------------------#

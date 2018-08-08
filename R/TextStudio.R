@@ -273,9 +273,9 @@ TextStudio <- R6::R6Class(
       private$..corpus <- Clone$new()$this(corpus, reference = TRUE, content = TRUE)
       if (!is.null(name)) private$..corpus$setName(name)
       private$processCorpus()
-      invisible(self)
+
+      return(private$..corpus)
     },
-    getClean = function()  private$..corpus,
     #-------------------------------------------------------------------------#
     #                           Visitor Method                                #
     #-------------------------------------------------------------------------#
