@@ -85,9 +85,16 @@ TokenizerQ <- R6::R6Class(
                                 remove_hyphens = FALSE,
                                 remove_url = FALSE)))
       } else if (grepl("^n", tokenUnit, ignore.case = TRUE)) {
-        tokenObject <- quanteda::tokens(x,what = 'word')
-        return(as.character(quanteda::tokens_ngrams(x = tokenObject, n = n,
-                                       concatenator = nGramDelim)))
+        return(as.character(quanteda::tokens(x = x, what = 'word',
+                                             ngrams = n,
+                                             concatenator = nGramDelim,
+                                             remove_numbers = FALSE,
+                                             remove_punct = FALSE,
+                                             remove_symbols = FALSE,
+                                             remove_separators = TRUE,
+                                             remove_twitter = FALSE,
+                                             remove_hyphens = FALSE,
+                                             remove_url = FALSE)))
       } else {
         event <- paste0("Invalid token unit. Must be c('character', 'word',",
                         " 'sentence'). See ?", class(self)[1],

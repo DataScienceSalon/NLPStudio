@@ -129,39 +129,6 @@ Katz <- R6::R6Class(
     #=========================================================================#
 
     #-------------------------------------------------------------------------#
-    #                             initEvalNGrams                              #
-    #         Initialize evaluation nGram tables from the test corpus         #
-    #-------------------------------------------------------------------------#
-    initEvalNGrams = function() {
-
-      modelSize <- private$..parameters$modelSize
-      modelTypes <- private$..constants$modelTypes[1:private$..parameters$modelSize]
-
-      # Tokenize corpus into nGrams of order n and create nGram table
-      private$..eval$nGrams <- lapply(seq(1:modelSize), function(n) {
-
-        # Obtain nGrams and create table
-        nGrams <- Token$new()$nGrams(x = private$..corpora$test,
-                                     tokenizer = 'quanteda', n = n)$getNGrams()
-        dt <- data.table(nGram = unique(nGrams))
-
-        # Obtain counts from model and add to eval nGram table
-        cNGram <- private$..model$nGrams[[n]] %>% select(nGram, cNGram)
-        dt <- merge(dt, cNGram, by = 'nGram', all.x = TRUE)
-
-        # Add prefix and suffix to nGram Table
-        if (n > 1) {
-          dt$prefix <- gsub(private$..constants$regex$prefix[[n-1]], "\\1", dt$nGram, perl = TRUE)
-          dt$suffix  <- gsub(private$..constants$regex$suffix[[n-1]], "\\1", dt$nGram, perl = TRUE)
-        }
-        dt
-      })
-
-      names(private$..eval$nGrams) <- modelTypes
-      return(TRUE)
-    },
-
-    #-------------------------------------------------------------------------#
     #                           computeAlpha                                  #
     #       Compute alpha, the probability mass taken by discounting          #
     #-------------------------------------------------------------------------#
@@ -171,6 +138,7 @@ Katz <- R6::R6Class(
 
         cKatzPfxSum <- private$..model$nGrams[[i]] %>% group_by(prefix) %>%
           summarise(cKatzPfxSum = sum(cKatz)) %>% select(prefix, cKatzPfxSum)
+
 
         # Add the values to the evaluation nGram table
         private$..eval$nGrams[[i]] <- merge(private$..eval$nGrams[[i]],
@@ -184,9 +152,8 @@ Katz <- R6::R6Class(
           private$..eval$nGrams[[i]] %>%
           mutate(alpha = 1 - (cKatzPfxSum / cPrefix))
 
-        # Replace NA values with zeros
-        private$..eval$nGrams[[i]][is.na(private$..eval$nGrams[[i]])] <- 0
-
+        # Replace NA with 1, since NA implies zero counts
+        private$..eval$nGrams[[i]]$alpha[is.na(private$..eval$nGrams[[i]]$alpha)] <- 1
 
       }
       return(TRUE)
@@ -203,9 +170,9 @@ Katz <- R6::R6Class(
 
         # Add suffix probabilities to evaluation nGram table
         if (i == 2) {
-          qBO = private$..model$nGrams[[i-1]] %>% select(nGram, qML)
+          qBO = private$..eval$nGrams[[i-1]] %>% select(nGram, qML)
         } else {
-          qBO = private$..model$nGrams[[i-1]] %>% select(nGram, qBOA)
+          qBO = private$..eval$nGrams[[i-1]] %>% select(nGram, qBO)
         }
         names(qBO) <- c("suffix", "qSfx")
 
@@ -213,18 +180,29 @@ Katz <- R6::R6Class(
         private$..eval$nGrams[[i]] <- merge(private$..eval$nGrams[[i]],
                                             qBO, by = 'suffix', all.x = TRUE)
 
-        # Compute Denominator: Merge the probability of the suffix into the model
-        qSfx  <- merge(private$..model$nGrams[[i]],
-                       qBO, by = 'suffix', all.x = TRUE)
+        # Compute Denominator
+        # Get lower order observeed nGram probabilities
+        if (i == 2) {
+          qBO = private$..model$nGrams[[i-1]] %>% select(nGram, qML)
+        } else {
+          qBO = private$..model$nGrams[[i-1]] %>% select(nGram, qBOA)
+        }
+        names(qBO) <- c("suffix", "qSfx")
 
-        # Summarize qSfx by prefix
-        qSfxSum <- qSfx %>% group_by(prefix) %>%
-          summarise(qSfxSum = sum(qSfx)) %>% select(prefix, qSfxSum)
+        # Get observed prefix suffix combinations
+        pfxSfx <- private$..model$nGrams[[i]] %>% select(prefix, suffix)
 
-        # Add the probability of the suffix from observed nGrams to eval table
-        private$..eval$nGrams[[i]] <- merge(private$..eval$nGrams[[i]],
-                                            qSfxSum, by = 'prefix',
-                                            all.x = TRUE)
+        # Merge in suffix probabilities
+        qSfxSum <- merge(pfxSfx, qBO, by = 'suffix', all.x = TRUE)
+
+        # Summarize probabilities by prefix
+        qSfxSum <- qSfxSum %>% group_by(prefix) %>% summarise(qSfxSum = sum(qSfx)) %>%
+          select(prefix, qSfxSum)
+
+        # Add the above to eval nGrams by prefix
+        private$..eval$nGrams[[i]] <- merge(private$..eval$nGrams[[i]], qSfxSum,
+                                            by = 'prefix', all.x = TRUE)
+        private$..eval$nGrams[[i]][is.na(private$..eval$nGrams[[i]])] <- 0
 
         # Compute beta as 1 - the previous sum
         private$..eval$nGrams[[i]]$beta <- 1 - private$..eval$nGrams[[i]]$qSfxSum
@@ -234,8 +212,6 @@ Katz <- R6::R6Class(
           private$..eval$nGrams[[i]]$qSfx /
           private$..eval$nGrams[[i]]$beta
 
-        # Replace NA values with zeros
-        private$..eval$nGrams[[i]][is.na(private$..eval$nGrams[[i]])] <- 0
       }
 
       return(TRUE)
@@ -346,7 +322,7 @@ Katz <- R6::R6Class(
       # Compute perplexity
       private$..eval$score$perplexity <-
         2^(-private$..eval$score$logProb /
-             private$..corporaStats$train$vocabulary)
+             private$..corporaStats$test$N)
 
       return(TRUE)
     },
@@ -571,14 +547,6 @@ Katz <- R6::R6Class(
       private$endTime(train = FALSE)
 
       invisible(self)
-    },
-
-
-    #-------------------------------------------------------------------------#
-    #                            Predict Method                               #
-    #-------------------------------------------------------------------------#
-    predict = function(nGram) {
-
     },
 
     #-------------------------------------------------------------------------#

@@ -203,10 +203,14 @@ TextStudio <- R6::R6Class(
 
       # Clean symbols, punctuation, numbers, stray apostrophe, commas, and extra whitespace.
       regex <- NULL
-      if (private$..config$..remove$symbols)
+      if (private$..config$..remove$symbols) {
         regex <- c(regex, private$..regex$symbols)
-      if (private$..config$..remove$punct)
+        regex <- c(regex, private$..regex$trailingApostrophe)
+      }
+      if (private$..config$..remove$punct) {
         regex <- c(regex, private$..regex$punct)
+        regex <- c(regex, private$..regex$trailingApostrophe)
+      }
       if (private$..config$..remove$numbers)
         regex <- c(regex, private$..regex$numbers)
 
@@ -237,6 +241,13 @@ TextStudio <- R6::R6Class(
     #-------------------------------------------------------------------------#
     initialize = function(x) {
       private$loadServices(name = 'TextStudio')
+      invisible(self)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                             Configure                                   #
+    #-------------------------------------------------------------------------#
+    configure = function(x) {
 
       # Validate class of object.
       private$..params <- list()
@@ -245,7 +256,7 @@ TextStudio <- R6::R6Class(
       private$..params$classes$valid <- list(c('TextConfig'))
       v <- private$validator$validate(self)
       if (v$code == FALSE) {
-        private$logR$log(method = 'config', event = v$msg, level = "Error")
+        private$logR$log(method = 'configure', event = v$msg, level = "Error")
         stop()
       }
       private$..config <- x$getConfig()

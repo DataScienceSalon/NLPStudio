@@ -158,7 +158,7 @@ CorpusStudio <- R6::R6Class(
 
       private$validate(corpus, methodName = 'clean')
 
-      ts <- TextStudio$new(config)
+      ts <- TextStudio$new()$configure(config)
       cleanCorpus <- ts$execute(corpus, name)
 
       return(cleanCorpus)
@@ -167,7 +167,7 @@ CorpusStudio <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                         Corpus Split Method                             #
     #-------------------------------------------------------------------------#
-    split = function(corpus, train = .7, validation = .15, test = .15,
+    split = function(corpus, train = .75, validation = 0, test = .25,
                      stratify = TRUE, seed = NULL, name = NULL) {
 
       private$validate(corpus, methodName = 'split')
@@ -178,7 +178,7 @@ CorpusStudio <- R6::R6Class(
                                     validation = validation,
                                     test = test,
                                     stratify = stratify,
-                                    seed = seed)$getCVSet()
+                                    seed = seed)$getSplits()
 
       return(splits)
     },

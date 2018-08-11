@@ -270,10 +270,13 @@ SLM0 <- R6::R6Class(
       # Tokenize corpus into nGrams of order n, and compute counts
       private$..model$nGrams <- lapply(seq(1:modelSize), function(n) {
 
-        nGrams <- Token$new()$nGrams(x = private$..corpora$train,
-                                     tokenizer = 'quanteda', n = n)$getNGrams()
+        nGrams <- Token$new()$nGrams(x = private$..corpora$train, tokenizer = 'quanteda', n = n)$getNGrams()
         nGrams <- as.data.frame(table(nGrams), stringsAsFactors = FALSE)
+
         dt <- data.table(nGram = nGrams[,1], cNGram = nGrams[,2])
+        dt$cNGram <- ifelse(dt$nGram == paste(rep("BOS", n), collapse = " "),
+                            private$..corporaStats$train$sentences,
+                            dt$cNGram)
 
         if (n > 1) {
           dt$prefix <- gsub(private$..constants$regex$prefix[[n-1]], "\\1", dt$nGram, perl = TRUE)
@@ -285,6 +288,40 @@ SLM0 <- R6::R6Class(
       names(private$..model$nGrams) <- modelTypes
       return(TRUE)
     },
+
+    #-------------------------------------------------------------------------#
+    #                             initEvalNGrams                              #
+    #         Initialize evaluation nGram tables from the test corpus         #
+    #-------------------------------------------------------------------------#
+    initEvalNGrams = function() {
+
+      modelSize <- private$..parameters$modelSize
+      modelTypes <- private$..constants$modelTypes[1:private$..parameters$modelSize]
+
+      # Tokenize corpus into nGrams of order n and create nGram table
+      private$..eval$nGrams <- lapply(seq(1:modelSize), function(n) {
+
+        # Obtain nGrams and create table
+        nGrams <- Token$new()$nGrams(x = private$..corpora$test,
+                                     tokenizer = 'quanteda', n = n)$getNGrams()
+        dt <- data.table(nGram = unique(nGrams))
+
+        # Obtain counts from model and add to eval nGram table
+        cNGram <- private$..model$nGrams[[n]] %>% select(nGram, cNGram)
+        dt <- merge(dt, cNGram, by = 'nGram', all.x = TRUE)
+
+        # Add prefix and suffix to nGram Table
+        if (n > 1) {
+          dt$prefix <- gsub(private$..constants$regex$prefix[[n-1]], "\\1", dt$nGram, perl = TRUE)
+          dt$suffix  <- gsub(private$..constants$regex$suffix[[n-1]], "\\1", dt$nGram, perl = TRUE)
+        }
+        dt
+      })
+
+      names(private$..eval$nGrams) <- modelTypes
+      return(TRUE)
+    },
+
 
     #=========================================================================#
     #                       SUMMARY AND REPORTING METHODS                     #
@@ -439,9 +476,10 @@ SLM0 <- R6::R6Class(
     #-------------------------------------------------------------------------#
     getCorpora = function() private$..corpora,
     getModel = function() private$..model,
-    getNGrams = function() private$..model$nGrams,
+    getModelNGrams = function() private$..model$nGrams,
     getDiscounts = function() private$..model$discounts,
     getTotals = function() private$..model$totals,
+    getEvalNGrams = function() private$..eval$nGrams,
     getScores = function() private$..eval$scores,
 
     #-------------------------------------------------------------------------#
