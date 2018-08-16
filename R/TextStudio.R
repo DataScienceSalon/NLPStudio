@@ -28,7 +28,7 @@ TextStudio <- R6::R6Class(
       twitter = '\\B[@#]\\w*[a-zA-Z]+\\w*',
       url = "(?:(?:https?:\\/\\/)|(?:www\\.))[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,4}\\b(?:[-a-zA-Z0-9@:%_\\+.~#?&/=]*)",
       email = "[a-zA-Z0-9\\-_~]+(\\.[a-zA-Z0-9\\-_~]+)*@[a-zA-Z0-9\\-_~]+(\\.[a-zA-Z0-9\\-_~]+)*\\.[a-zA-Z]{2,}",
-      strayApostrophe = "\\s'\\B|\\B'\\s*",
+      strayApostrophe = "\\s*'\\B|\\B'\\s*",
       strayHyphen = "\\s*-\\B|\\B-\\s*",
       strayComma = "\\s,\\B|\\B,\\s*",
       singles = '\\b[b-hj-z]{1}\\b',

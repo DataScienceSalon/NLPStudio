@@ -33,7 +33,7 @@ IOCSV <- R6::R6Class(
       invisible(self)
     },
 
-    read = function(path, header = TRUE) {
+    read = function(path, safe = FALSE, header = TRUE) {
 
       fileName <- basename(path)
 

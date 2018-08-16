@@ -93,8 +93,8 @@ CorpusStudio <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                       Corpus Sourcing Methods                           #
     #-------------------------------------------------------------------------#
-    sourceDir = function(path, name = NULL) {
-      return(CSourceDir$new()$source(x = path, name))
+    sourceDir = function(path, name = NULL, safe = FALSE) {
+      return(CSourceDir$new()$source(x = path, name, safe = safe))
     },
 
     sourceQ = function(corpus, name = NULL) {

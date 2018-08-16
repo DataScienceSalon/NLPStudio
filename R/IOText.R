@@ -29,6 +29,45 @@ IOText <- R6::R6Class(
   lock_class = FALSE,
   inherit = Super,
 
+  private = list(
+    #-------------------------------------------------------------------------#
+    #                            Read File                                    #
+    #-------------------------------------------------------------------------#
+    readFile = function(path) {
+
+      fileName <- basename(path)
+
+      con <- file(path)
+      on.exit(close(con))
+      text <- readLines(con)
+      event <- paste0("Successfully read ", fileName, ".")
+      private$logR$log( event = event)
+
+      return(text)
+    },
+
+    #-------------------------------------------------------------------------#
+    #                             Read Safe                                   #
+    #-------------------------------------------------------------------------#
+    readSafe = function(path, codes = NLPStudio:::nonPrintables) {
+
+      ioBin <- IOBin$new()
+
+      # Read and FileStudio content
+      content <- ioBin$read(path = path)
+      for (i in 1:length(codes)) {
+        content[content == as.raw(codes[i])] = as.raw(0x20)
+      }
+
+      # Save to temp file, then re-read
+      d <- tempfile(fileext = '.txt')
+      ioBin$write(path = d, content = content)
+      content <- private$readFile(d)
+      unlink(d)
+
+      return(content)
+    }
+  ),
 
   public = list(
 
@@ -40,16 +79,14 @@ IOText <- R6::R6Class(
       invisible(self)
     },
 
-    read = function(path) {
-
-      fileName <- basename(path)
+    read = function(path, safe = FALSE) {
 
       if (file.exists(path)) {
-        con <- file(path)
-        on.exit(close(con))
-        text <- readLines(con)
-        event <- paste0("Successfully read ", fileName, ".")
-        private$logR$log( event = event)
+        if (safe) {
+          text <- private$readSafe(path)
+        } else {
+          text <- private$readFile(path)
+        }
       } else {
         event <- paste0('Unable to read ', path, '. ',
                                   'File does not exist.')

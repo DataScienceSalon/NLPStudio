@@ -35,7 +35,7 @@ IORdata <- R6::R6Class(
       invisible(self)
     },
 
-    read = function(path) {
+    read = function(path, safe = FALSE) {
 
       fileName <- basename(path)
 

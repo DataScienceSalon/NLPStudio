@@ -41,7 +41,7 @@ CSourceDir <- R6::R6Class(
     #-------------------------------------------------------------------------#
     #                           Source Method                                 #
     #-------------------------------------------------------------------------#
-    source = function(x, name = NULL) {
+    source = function(x, name = NULL, safe = FALSE) {
 
       # Validation
       private$..params <- list()
@@ -64,7 +64,7 @@ CSourceDir <- R6::R6Class(
       lapply(paths, function(p) {
 
         io <- IOFactory$new()$strategy(p)
-        content <- io$read(p)
+        content <- io$read(p, safe)
 
         # Instantiate Document objects
         name <- tools::file_path_sans_ext(basename(p))
