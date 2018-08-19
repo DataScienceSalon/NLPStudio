@@ -23,7 +23,7 @@ Suggests:
     rmarkdown
 VignetteBuilder: knitr
 Imports:
-    doParallel,
+    foreach,
     hashids,
     Hmisc,
     installr,

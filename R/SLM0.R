@@ -104,9 +104,6 @@ SLM0 <- R6::R6Class(
     #                           computeTotals                                 #
     #                 Summarizes totals from nGram Tables                     #
     #-------------------------------------------------------------------------#
-    # Note: Defaults to counting nGrams that start with one or several
-    # start of sentence tags. Therefore, there total nGram counts are equal
-    # across all nGrams.
     computeTotals = function() {
       private$..model$totals <- rbindlist(lapply(seq_along(private$..model$nGrams), function (n) {
         df <- private$..model$nGrams[[n]] %>% filter(nGram != paste(rep('BOS',n), collapse = " "))
@@ -140,15 +137,14 @@ SLM0 <- R6::R6Class(
     #                               computeCorpusStats                        #
     #         Final summary of corpus statistics for evaluation report        #
     #-------------------------------------------------------------------------#
-    computeCorpusStats = function(corpus) {
+    computeCorpusStats = function(corpus, tokens) {
 
       stats <- list()
       documents <- corpus$getDocuments()
       content <- unlist(lapply(documents, function(d) { d$content }))
 
-      stats$vocabulary <-
-        length(unique(unlist(tokenizers::tokenize_words(content, strip_punct = FALSE, lowercase = FALSE))))
-      stats$words <- sum(tokenizers::count_words(content))
+      stats$vocabulary <- length(unique(tokens))
+      stats$words <- length(tokens)
       stats$sentences <- sum(tokenizers::count_sentences(content))
       stats$oov <- sum(grepl("UNK", content, fixed = TRUE, ignore.case = FALSE))
       stats$N <- stats$words + stats$sentences
@@ -163,7 +159,7 @@ SLM0 <- R6::R6Class(
     prepTrain = function() {
 
       # Extract vocabulary
-      train <- Token$new()$words(x = private$..corpora$train, 'quanteda')$getCorpus()
+      train <- Token$new()$words(x = private$..corpora$train, 'tokenizers')$getCorpus()
       documents <- train$getDocuments()
       tokens <- unname(unlist(lapply(documents, function(d) {d$content})))
       private$..corpora$vocabulary <- unique(tokens)
@@ -183,14 +179,15 @@ SLM0 <- R6::R6Class(
           private$..corpora$train$addDocument(documents[[i]])
         }
 
-        # Remove hapax legomena from vocabulary
+        # Remove hapax legomena from vocabulary and tokens
         private$..corpora$vocabulary <-
           private$..corpora$vocabulary[!private$..corpora$vocabulary %in% hapax]
+        tokens <- tokens[!tokens %in% hapax]
       }
 
       # Finalize corpus statistics for evaluation report
       private$..corporaStats$train <-
-        private$computeCorpusStats(private$..corpora$train)
+        private$computeCorpusStats(private$..corpora$train, tokens)
 
       # Annotate training corpus with sentence boundary tokens
       private$..corpora$train <- private$annotate(private$..corpora$train)
@@ -206,9 +203,10 @@ SLM0 <- R6::R6Class(
     prepTest = function() {
 
       # Extract vocabulary
-      test <- Token$new()$words(x = private$..corpora$test, 'quanteda')$getCorpus()
+      test <- Token$new()$words(x = private$..corpora$test, 'tokenizer')$getCorpus()
       documents <- test$getDocuments()
-      testVocabulary <- unique(unlist(lapply(documents, function(d) {d$content})))
+      tokens <- unlist(lapply(documents, function(d) {d$content}))
+      testVocabulary <- unique(tokens)
       oov <- unique(testVocabulary[!testVocabulary %fin% private$..corpora$vocabulary])
       private$..eval$score$oov <- length(oov)
 
@@ -222,11 +220,14 @@ SLM0 <- R6::R6Class(
                                                   words = oov)
           private$..corpora$test$addDocument(documents[[i]])
         }
+
+        # Remove OOV words from test tokens
+        tokens <- tokens[!tokens %in% oov]
       }
 
       # Finalize corpus statistics for evaluation report
       private$..corporaStats$test <-
-        private$computeCorpusStats(private$..corpora$test)
+        private$computeCorpusStats(private$..corpora$test, tokens)
 
       # Annotate test corpus with sentence boundary tokens
       private$..corpora$test <- private$annotate(private$..corpora$test)
@@ -270,7 +271,7 @@ SLM0 <- R6::R6Class(
       # Tokenize corpus into nGrams of order n, and compute counts
       private$..model$nGrams <- lapply(seq(1:modelSize), function(n) {
 
-        nGrams <- Token$new()$nGrams(x = private$..corpora$train, tokenizer = 'quanteda', n = n)$getNGrams()
+        nGrams <- Token$new()$nGrams(x = private$..corpora$train, tokenizer = 'tokenizer', n = n)$getNGrams()
         nGrams <- as.data.frame(table(nGrams), stringsAsFactors = FALSE)
 
         dt <- data.table(nGram = nGrams[,1], cNGram = nGrams[,2])
@@ -303,7 +304,7 @@ SLM0 <- R6::R6Class(
 
         # Obtain nGrams and create table
         nGrams <- Token$new()$nGrams(x = private$..corpora$test,
-                                     tokenizer = 'quanteda', n = n)$getNGrams()
+                                     tokenizer = 'tokenizer', n = n)$getNGrams()
         dt <- data.table(nGram = unique(nGrams))
 
         # Obtain counts from model and add to eval nGram table

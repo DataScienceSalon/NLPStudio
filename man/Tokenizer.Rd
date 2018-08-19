@@ -10,8 +10,6 @@ Tokenizer
 }
 \arguments{
 \item{x}{Corpus object}
-
-\item{n}{Numeric for the nGram method. Indicates the nGram size.}
 }
 \value{
 Tokenizer object

@@ -457,7 +457,7 @@ Katz <- R6::R6Class(
     #-------------------------------------------------------------------------#
     initialize = function(train, modelSize = 3, k = 5, gtDiscount = FALSE,
                           fixedDiscount = 0.5, openVocabulary = TRUE,
-                          bosTags = TRUE) {
+                          estimateGT = FALSE, bosTags = TRUE) {
 
       name <- paste0("Katz ",
                      private$..constants$modelTypes[modelSize], " Model")

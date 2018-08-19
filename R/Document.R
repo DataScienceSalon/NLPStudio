@@ -60,12 +60,17 @@ Document <- R6::R6Class(
     },
 
     setQuant = function(x) {
-      x <- paste0(unlist(x), sep = ' ')
       vectors <- length(x)
       sentences <- sum(tokenizers::count_sentences(x))
-      words <- sum(tokenizers::count_words(x))
-      types <- sum(quanteda::ntype(unlist(x)))
+      gc()
+
+      txt <- unlist(x)
+      tokens <- unlist(tokenizers::tokenize_words(txt))
+      words <- length(tokens)
+      types <- length(unique(tokens))
       characters <- sum(tokenizers::count_characters(x))
+      gc()
+
       k <- c("vectors", "sentences", "words", "types", "characters")
       v <- c(vectors, sentences, words, types, characters)
       private$meta$set(key = k, value = v, type = 'quant')

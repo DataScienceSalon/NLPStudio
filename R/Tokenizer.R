@@ -16,7 +16,6 @@
 #'  }
 #'
 #' @param x Corpus object
-#' @param n Numeric for the nGram method. Indicates the nGram size.
 #' @return Tokenizer object
 #'
 #' @docType class
@@ -33,7 +32,8 @@ Tokenizer <- R6::R6Class(
   private = list(
     ..x = character(),
     ..tokenizedCorpus = character(),
-    ..nGrams = c('Unigram', 'Bigram', 'Trigram', 'Quadgram', 'Quintgram'),
+    ..counts = data.frame(),
+    ..tokenUnit = character(),
 
     #-------------------------------------------------------------------------#
     #                           Validation Method                             #
@@ -51,106 +51,110 @@ Tokenizer <- R6::R6Class(
 
       return(TRUE)
     },
-
-    #-------------------------------------------------------------------------#
-    #                           Tokenize Method                               #
-    #-------------------------------------------------------------------------#
-    tokenize = function(x, n, tokenUnit, stopwords = character(),
-                        paragraphBreak = "\n\n",  nGramDelim = " ") {
-
-      if (grepl("^c", tokenUnit, ignore.case = TRUE)) {
-        return(unlist(tokenizers::tokenize_characters(x = x,
-                                               lowercase = FALSE,
-                                               strip_non_alphanum = FALSE,
-                                               simplify = FALSE)))
-      } else if (grepl("^w", tokenUnit, ignore.case = TRUE)) {
-        return(unlist(tokenizers::tokenize_words(x = x,
-                                   lowercase = FALSE,
-                                   strip_punct = FALSE,
-                                   strip_numeric = FALSE,
-                                   simplify = FALSE)))
-      } else if (grepl("^s", tokenUnit, ignore.case = TRUE)) {
-        return(unlist(tokenizers::tokenize_sentences(x = x,
-                                              lowercase = FALSE,
-                                              strip_punct = FALSE,
-                                              simplify = FALSE)))
-      } else if (grepl("^p", tokenUnit, ignore.case = TRUE)) {
-        return(unlist(tokenizers::tokenize_paragraphs(x = x,
-                                              paragraph_break = paragraphBreak,
-                                              simplify = FALSE)))
-      } else if (grepl("^n", tokenUnit, ignore.case = TRUE)) {
-        return(unlist(tokenizers::tokenize_ngrams(x = x, lowercase = FALSE,
-                                           n = n, stopwords = stopwords,
-                                           ngram_delim = nGramDelim,
-                                           simplify = FALSE)))
-      } else {
-        event <- paste0("Invalid token unit. Must be c('character', 'word',",
-                        " 'sentence', 'paragraph'). See ?", class(self)[1],
-                        " for further assistance.")
-        private$logR$log(method = 'tokenize', event = event, level = "Error")
-        stop()
-      }
-    },
-
     #-------------------------------------------------------------------------#
     #                           Execute Method                                #
     #-------------------------------------------------------------------------#
-    execute = function(tokenUnit, n = NULL, paragraphBreak = "\n\n",
-                       stopwords = character(), nGramDelim = " ") {
+    execute = function() {
 
       # Format nGram Type
-      tokenType <- tokenUnit
-      if (grepl("^n", tokenUnit, ignore.case = TRUE)) {
+      tokenType <- private$..tokenUnit
+      if (grepl("^n", private$..tokenUnit, ignore.case = TRUE)) {
         if (n == 1)  tokenType <- "Unigrams"
         if (n == 2)  tokenType <- "Bigrams"
         if (n == 3)  tokenType <- "Trigrams"
         if (n == 4)  tokenType <- "Quadgrams"
         if (n == 5)  tokenType <- "Quintgrams"
       }
-      # Create tokens object
+      # Create tokens object and obtain documents fro
       private$..tokenizedCorpus <- Clone$new()$this(private$..x, reference = FALSE,
                                            content = FALSE)
-
-      # Initialize counts
-      totalCounts <- 0
-
       documents <- private$..x$getDocuments()
 
-      for (i in 1:length(documents)) {
+      # Prepare for parallel processing
+      numCores <- detectCores()
+      cl <- makeCluster(numCores-1)
+      clusterExport(cl, varlist = c("documents", "Clone", "private"), envir = environment())
+      junk <- clusterEvalQ(cl, library(tokenizers))
+      junk <- clusterEvalQ(cl, library(futile.logger))
 
-        # Clone document
+      docs <- parallel::parLapply(cl, seq(1:length(documents)), function(i) {
+
+         #-----------------------------------------------------------------------#
+         #                           Tokenize Function                           #
+         #-----------------------------------------------------------------------#
+         tokenize = function(content) {
+
+           if (grepl("^c", private$..tokenUnit, ignore.case = TRUE)) {
+             return(unlist(tokenizers::tokenize_characters(x = content,
+                                                           lowercase = FALSE,
+                                                           strip_non_alphanum = FALSE,
+                                                           simplify = FALSE)))
+           } else if (grepl("^w", private$..tokenUnit, ignore.case = TRUE)) {
+             return(unlist(tokenizers::tokenize_words(x = content,
+                                                      lowercase = FALSE,
+                                                      strip_punct = FALSE,
+                                                      strip_numeric = FALSE,
+                                                      simplify = FALSE)))
+           } else if (grepl("^s", private$..tokenUnit, ignore.case = TRUE)) {
+             return(unlist(tokenizers::tokenize_sentences(x = content,
+                                                          lowercase = FALSE,
+                                                          strip_punct = FALSE,
+                                                          simplify = FALSE)))
+           } else if (grepl("^p", private$..tokenUnit, ignore.case = TRUE)) {
+             return(unlist(tokenizers::tokenize_paragraphs(x = content,
+                                                           paragraph_break = private$..paragraphBreak,
+                                                           simplify = FALSE)))
+           } else if (grepl("^n", private$..tokenUnit, ignore.case = TRUE)) {
+             return(unlist(tokenizers::tokenize_ngrams(x = content, lowercase = FALSE,
+                                                       n = private$..n, n_min = private$..n,
+                                                       stopwords = private$..stopwords,
+                                                       ngram_delim = private$..nGramDelim,
+                                                       simplify = FALSE)))
+           } else {
+             event <- paste0("Invalid token unit. Must be c('character', 'word',",
+                             " 'sentence', 'paragraph'). See ?", class(self)[1],
+                             " for further assistance.")
+             private$logR$log(method = 'tokenize', event = event, level = "Error")
+             stop()
+           }
+         }
+
+        # Clone and tokenize document
         document <- Clone$new()$this(documents[[i]],  content = TRUE)
+        document$content <- unlist(lapply(document$content, function(d){ tokenize(d)}))
+        document
+      })
+      stopCluster(cl)
 
-        # Tokenize by sentence or vector
-        document$content <- unlist(lapply(document$content, function(d) {
-          private$tokenize(d, n = n, paragraphBreak = paragraphBreak,
-                           tokenUnit = tokenUnit, stopwords = stopwords,
-                           nGramDelim = nGramDelim)
-        }))
+      # Compute counts
+      private$..counts <- rbindlist(lapply(docs, function(d) {
+        document <- d$getName()
+        terms <- length(unlist(d$content))
+        types <- length(unique(unlist(d$content)))
+        counts <- data.frame(document = document,
+                             terms = terms,
+                             types = types, stringsAsFactors = FALSE)
+        counts
+      }))
+      types <- length(unique(unlist(lapply(docs, function(d) {d$content}))))
+      counts <- data.frame(document = "Total",
+                           terms = sum(private$..counts$terms),
+                           types = types)
+      private$..counts <- rbind(private$..counts, counts)
 
-        # Get Counts
-        counts <- length(document$content)
-        totalCounts <- totalCounts + counts
 
-        # Update documents metadata
-        name <- document$getName()
-        name <- paste0(name, " (", tokenType, " Tokens)")
-        document$setName(name)
-        document$setMeta(key = 'tokenizer', value = 'Tokenizer package', type = 'f')
-        document$setMeta(key = 'tokenUnit', value = tokenType, type = 'f')
-        document$setMeta(key = paste(tokenType, 'Tokens'), value = counts, type = 'q')
-
-        private$..tokenizedCorpus$addDocument(document)
-
+      # Create tokenized corpus object and add documents
+      private$..tokenizedCorpus <- Clone$new()$this(private$..x, reference = FALSE,
+                                                    content = FALSE)
+      for (i in 1:length(docs)) {
+        private$..tokenizedCorpus$addDocument(docs[[i]])
       }
 
       # Update corpus metadata
       name <- private$..tokenizedCorpus$getName()
       name <- paste0(name, " (", tokenType," Tokens)")
       private$..tokenizedCorpus$setName(name)
-      private$..tokenizedCorpus$setMeta(key = 'tokenizer', value = 'Tokenizer package', type = 'f')
-      private$..tokenizedCorpus$setMeta(key = 'tokenUnit', value = tokenType, type = 'f')
-      private$..tokenizedCorpus$setMeta(key = paste(tokenType, 'Tokens'), value = totalCounts, type = 'q')
+
       return(TRUE)
     }
   ),
@@ -173,8 +177,9 @@ Tokenizer <- R6::R6Class(
       private$validate(x)
 
       private$..x <- x
+      private$..tokenUnit <- 'character'
 
-      private$execute(x, tokenUnit = 'Character')
+      private$execute()
 
       invisible(self)
     },
@@ -186,7 +191,8 @@ Tokenizer <- R6::R6Class(
 
       private$validate(x)
       private$..x <- x
-      private$execute(tokenUnit = 'Word')
+      private$..tokenUnit <- 'word'
+      private$execute()
 
       invisible(self)
     },
@@ -198,7 +204,8 @@ Tokenizer <- R6::R6Class(
 
       private$validate(x)
       private$..x <- x
-      private$execute(tokenUnit = 'Sentence')
+      private$..tokenUnit <- 'sentence'
+      private$execute()
 
       invisible(self)
     },
@@ -210,7 +217,9 @@ Tokenizer <- R6::R6Class(
 
       private$validate(x)
       private$..x <- x
-      private$execute(tokenUnit = 'Paragraph', paragraphBreak = paragraphBreak)
+      private$..tokenUnit <- 'Paragraph'
+      private$..paragraphBreak <- paragraphBreak
+      private$execute()
 
       invisible(self)
     },
@@ -222,8 +231,11 @@ Tokenizer <- R6::R6Class(
 
       private$validate(x)
       private$..x <- x
-      private$execute(tokenUnit = 'nGram', n = n,  stopwords = stopwords,
-                      nGramDelim = nGramDelim)
+      private$..tokenUnit <- 'nGram'
+      private$..n <- n
+      private$..stopwords <- stopwords
+      private$..nGramDelim <- nGramDelim
+      private$execute()
 
       invisible(self)
     },
