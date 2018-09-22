@@ -2,9 +2,16 @@
 .Rhistory
 .RData
 .Ruserdata
+.Rproj
+.R_Cache/
+data
+data-raw
 test
+man
+man-roxygen
 NLPStudio/logs
 lab
 notes
 stage
 inst/doc
+log

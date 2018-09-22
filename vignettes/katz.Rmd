@@ -9,6 +9,7 @@ output:
     number_sections: false
 editor_options: 
   chunk_output_type: inline
+bibliography: NLP.bib
 ---
 
 
@@ -44,71 +45,76 @@ library(NLPStudio)
 ```
 
 
-"Prediction is very difficult, especially if it's about the ...."  
+"Prediction is very difficult, especially if it's about the future."  
+- Nils Bohr, Nobel laureate in physics
 
-One doesn't need to know this famous quote by Nobel laureate Nils Bohr, in order to predict the next word in that sentence. That's because we have an innate sense of language, its rules, grammar, and use, such that we can probably guess, with a fairly high probability, the correct word that ends that sentence. How about this one?
+In this article, we set ourselves the natural language processing (NLP) task of word prediction using a generative n-gram language model, and in doing so, we will show that it's actually not that hard. 
 
-"One morning, I shot an elephant in my ..."
+# Why should I read this?
+Generative language models are used in range of NLP applications such as chatbots for messaging apps, digital assistants, statistical machine translation, speech recognition, handwriting recognition, spelling correction, Augmented and Alternative Communication (AAC), and word prediction. In fact, the demand for NLP skills is hot!   
 
-Our Groucho Marx fans will immediately appreciate the richness, possibility, and beauty in language. And it is those qualities make word prediction such an interesting area of study. 
+1. According to Upwork,NLP ranks first among the fastest growing skills in the global job market. The demand for workers with experience in (NLP) grew by more than 200% in Q4 2016, faster than any other skillset [@Upwork2017].    
+2. Forbes ranked natural language generation, speech recognition, text analytics, and natural language processing among the Top 10 Hot Artificial Intelligence (AI) Technologies [@Press2018].    
+3. By 2021, more than 50% of enterprises will be spending more per annum on language model based bots and chatbot creation than traditional mobile app development [@Gartner2018].    
 
-Our task is to explore the way in which humans perform word prediction and to formalize our intuition into a language model that assigns probability to each possible word that might complete a set of prior words. We'll examine a generative n-gram language model introduced by Slava Katz in his 1987 paper "Estimation of Probabilities from Sparse Data for the Language Model Component of a Speech Recognizer".
+# What will I learn?
+The focus of this article is word prediction using an n-gram language model with a smoothing algorithm developed by Slava Katz in his 1987 paper "Estimation of Probabilities from Sparse Data for the Language Model Component of a Speech Recognizer" [@Katz1987].  By the end of this piece, you will:  
 
-Our examination will assume no prior knowledge of conditional probability, Markov assumptions, maximum likelihood estimation, probability densities or the chain rule of probabilities, although some working knowledge will be useful. Hopefully, we'll be able to proceed without too much math and for those of us who wish to dive deeper, references to further reading will be provided. 
+* have a working knowledge of generative, n-gram based language models,   
+* understand how smoothing techniques are used to deal with unseen words and word sequences,  
+* obtain a detailed understanding of the Katz Back-off smoothing algorithm, and  
+* learn how to evaluate a language model.
 
-Before we dive into the design and implementation details, we'll:    
-1. Define what we mean by language model     
-2. Introduce N-Grams     
-3. Discuss Probability Estimation    
-4. Interpret the Katz Back-off Algorithm    
+Ultimately you will be able to design and implement your own generative language model in R, python or any other language of your choosing 
 
-Then we'll dive into the design and implementation of an object oriented R-based Katz-Backoff word prediction language.
+# Ok, What's the Plan? 
+First, we'll build the foundation
+1. Generative Language Models   
+2. 
 
-Oh, it's "pajamas", btw.  And HOW did an elephant get into his pajamas?
+Let's get started!
 
 # What is a language model?
-Wikipedia offers the following definition:
+Wikipedia offers the following definition:  
 
 >A statistical language model is a probability distribution over sequences of words. Given such a sequence, say of length m, it assigns a probability ${\displaystyle P(w_{1},\ldots ,w_{m})}$ to the whole sequence.
 
+Such a model, for example, would predict that the following sentence has a much higher probability of appearing in a text:
 
-Language models are essential components within a range of natural language processing (NLP) applications such as Augmented and Alternative Communication (AAC), statistical machine translation, speech recognition, handwriting recognition, word-sense disambiguation, spelling correction and predictive text entry. This article describes the design and implementation of a word prediction language model using a smoothing algorithm developed by Slava Katz in his 1987 paper "Estimation of Probabilities from Sparse Data for the Language Model Component of a Speech Recognizer".
+> “I’m just one stomach flu away from my goal weight.”
 
-No prior knowledge of language models, maximum likelihood estimation, smoothing algorithms, conditional probabilities, Markov assumptions, etc... is required, but useful. We'll cover mo 
+-- Devil Wears Prada (2006)
 
+than does:   
+> "Stomach, goal flu I'm from my just weight one away"
 
-This work is the first phase of a series of experiments designed to determine the combination of language model types, language models, features, corpus sizes, and algorithms provide best overall performance and prediction accuracy within a *simulated* mobile device environment. The aim of this first phase is to determine which probabilistic language model feature set and corpus size provide the best combination of user performance and prediction accuracy within a typical mobile device environment.  Trigram and quadgram language models, using Modified Kneser-Ney Smoothing were implemented and systematically evaluated on training sets of various sizes. 
+Language models that assign probabilities to entire sentences may also be used to predict the next word in a sentence by assigning probabilities to candidate words, given the preceding sequence of words, or 'history'. Probabilities of words and sequences of words are based upon their observed frequencies in a collection of written texts, known as a *corpus* of text. 
 
-The remainder of this section provides an introduction to probabilistic word prediction and n-Gram language models. Section 2 surveys related work in terms of the best performing n-Gram based-models and smoothing techniques. Section 3 outlines the details of the experimental methodology including corpus analysis, preprocessing, and sampling, as well as language model implementation and parameter selection.  Section 4 outlines the results of the study and finally, section 5 summarizes the most important conclusions of the work.
+## Maximum Likelihood Estimation 
+Let's begin by estimating the probability of the word "weight" given its history “I’m just one stomach flu away from my goal”, which we notate as the conditional probability, $P(w|h)$ or $P(w_n|w_1^{n-1})$. Concretely we want to know:
 
-## Probabilistic Word Prediction
-The problem of predicting the next word, given a sentence or some history, begs the question, "what is the most probable word?", given the history. Language models assign probabilities to words and sequences of words, based upon observed frequencies in corpus of text. Theoretically, one might estimate the probability that word, ${w_n}$, is the next word in a sequence of words (${w_1}$,${w_2}$, ..., $w_{n-1}$) (or the probability of the sequence (${w_1}$,${w_2}$, ..., $w_{n}$) by counting the number of times the sequence occurs and normalizing that by the number of times the history occurs as follows:
+> $P(weight | I'm just one stomach flue away from my goal)
 
-$$P({w_1},{w_2}, ..., w_{n}) = \frac{C({w_1},{w_2}, ..., w_{n})}{C({w_1},{w_2}, ..., w_{n-1})}$$
-Even with a corpus as large as the internet, new language and sequences are created all the time and it may not be possible to estimate such long sequences. Using the chain rule of probabilities, we can decompose the problem into a list of conditional probabilities as follows [@Jurafsky2016]:
-$$P({w_1^n}) = P({w_1})P({w_2}|{w_1})P({w_3}|{w_1^2})...P({w_n}|{w_1^{n-1}})$$
-Still one is left with estimating the probability of long sequences. 
+Theoretically, we might estimate the probability of the sequence ${w_1}$,${w_2}$, ..., $w_{n}$ by counting the number of times the sequence occurs and normalizing that by the number of times the history (${w_1}$,${w_2}$, ..., $w_{n-1}$) occurs as follows:
 
-### N-Grams
-Russian mathematician Andrey Markov observed that the language production is a "memoryless" stochastical process where the conditional probability distribution of A future word depends only upon the present word [@Markov1906]. Thus one can estimate the probability of word given its entire history by calculating the probability of the word given the prior word.  Thus:
+$$P(w_n | {w_1}, ..., w_{n-1}) = \frac{C({w_1},{w_2}, ..., w_{n})}{C({w_1},{w_2}, ..., w_{n-1})}$$
+This is known as **maximum likelihood estimation**  or **MLE** because it is the probability that maximizes the likelihood of the data. Yet, even with a corpus as large as the internet, new language and sequences are created all the time and it may not be possible to estimate such long sequences. We need a smarter way to estimate the probability of the next word, given its history.
+
+## Markov Assumption
+Russian mathematician Andrey Markov observed that the language production is a "memoryless" stochastical process where the conditional probability distribution of a future word depends only upon the present word [@Markov1906]. Thus we can estimate the probability of word given its entire history by calculating the probability of the word given the prior word.  Thus:
 $$P({w_n}|{w_1^{n-1}}) \approx P({w_n}|{w_{n-1}})$$
-The language model that estimates the probability using only the previous word is called the bigram model.  This can be generalized to the trigram model that takes into account, the previous two words and the N-gram model that considers the previous N-1 words. Thus the general equation for the N-gram approximation of the conditional probability of the next word in a sentence is [@Jurafsky2016]:
+The Markov assumption is the basis for the simplest language model that assigns probabilities to sentences and sequences of words, the N-gram model.  
+
+## N-Grams
+The N-Gram is simply a sequence of $N$ words. A unigram is a sequence of one word (if there is such a thing), a bigram is a sequence of two words, such as "my goal"; analogously, a trigram is a sequence of three words as in "from my goal". The trigram model is fairly standard; although, models up to 5-grams are not uncommon.
+
+The language model that estimates the probability using only the previous word is the bigram model.  This can be generalized to the trigram model that takes into account, the previous two words and to the N-gram model that considers the previous N-1 words. Thus the general equation for the N-gram approximation of the conditional probability of the next word in a sentence is [@Jurafsky2016]:
 $$P({w_n}|{w_1^{n-1}}) \approx P({w_n}|{w_{n-N+1}^{n-1}})$$
-To calculate these N-gram probabilities, one performs a **maximum likelihood estimation** or **MLE** as follows:
+We can now compute the maximum likelood estimation of the N-gram probabilities as follows:
 $$P({w_n}|{w_{n-N+1}^{n-1}}) = \frac{C({w_{n-N+1}^{n-1}},{w_n})}{C({w_{n-N+1}^{n-1}})}$$
 Equation `r figr("mleEstimation-I", F, type="Equation")` uses the relative frequency of a particular sequence and its prefix to estimate N-gram probabilities.
 
-### Evaluating Language Models
-Assuming a researcher has the resources and time, the true measure of the performance of a language model is obtained by conducting an end-to-end **extrinsic evaluation** of the model within an application [@Jurafsky2016]. **Intrinsic evaluations**, on the other hand, provide performance metrics independent of any application. Given a training set, upon which the language model is trained, a researcher can measure the performance on an unseen test set by evaluating the degree to which the model models the test set. This can be performed by calculating the probability of the test set, but this metric is rarely used in practice. **Perplexity**,  the inverse probability of the test set, normalized by the number of words, is the metric commonly used in intrinsic evaluations and is defined as follows:
-$$PP(W) = \sqrt[@N]{\frac{1}{P(w_1 w_2 ... w_N)}} = \sqrt[@N]{\displaystyle\prod_{i=1}^{N}\frac{1}{P(w_i | w_1...w_{i-1})}}$$
-where a test set $W = w_1 w_2 ... w_N$ [@Jurafsky2016]. 
-
-Multiplying all the probabilities of all the N-gram together can result in numeric underflow. Instead one works in log space, adding the log of the probabilities together, then taking the average of the sum of the log probabilities over the entire corpus.  Lastly, we take the negative of the corpus log probability and raise that to the power of 2, resulting in a positive number.  The final equation is as follows:
-$$Perplexity = 2^{-{1/N}{\displaystyle\sum_{i=1}^N{log p({s_i})}}}$$
-
-Note that perplexity calculation fails with zeros in the denominator if a word or N-gram sequence from the test set doesn't occur in the training set. The next section provides techniques for dealing with such out-of-vocabulary (OOV) words and sequences. 
-
-### Out-of-Vocabulary (OOV) Words
+# Out-of-Vocabulary (OOV) Words
 Intrinsic evaluations require language models to deal with unseen words in the perplexity calculation. There are essentially two techniques for training probabilities of unseen words. The first is to choose a fixed vocabulary in advance, convert in the training set, any word that is not in the vocabulary set, to an unknown word token <UNK>, then estimate the probabilities for <UNK> from counts in the training set. The other method, should a fixed vocabulary not be available, is to convert the first occurrence of each word type in the training set to <UNK>, then train the model as normal [@Jurafsky2016].
 
 ### Smoothing
